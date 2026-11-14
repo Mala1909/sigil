@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0a0e">
+  <meta name="description" content="SIGIL: sei ore, tre rovine, cinque casate. Un duello di carte contro la tua stessa Ombra. Gratis e senza pubblicità.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>SIGIL — sei ore, tre rovine</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap">
+  <link rel="stylesheet" href="styles.css?v=18">
+</head>
+<body>
+  <!-- Simboli: il Sigillo e i sigilli delle cinque casate -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="g-sigillo" viewBox="0 0 64 64">
+        <circle cx="32" cy="32" r="29" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="32" cy="32" r="22" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="2 3"/>
+        <g stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+          <path d="M32 3v6M32 55v6M7 17.5l5 3M52 43.5l5 3M7 46.5l5-3M52 20.5l5-3"/>
+        </g>
+        <path d="M32 16l9 16-9 16-9-16z" fill="currentColor"/>
+        <circle cx="32" cy="32" r="3.2" fill="var(--sigil-core, #0b0a0e)"/>
+      </symbol>
+      <symbol id="g-guardia" viewBox="0 0 24 24">
+        <path d="M12 2.5l8 3v6.2c0 4.9-3.4 8.6-8 10.3-4.6-1.7-8-5.4-8-10.3V5.5z" fill="currentColor"/>
+        <path d="M12 6.5v11M8 10.5h8" stroke="var(--sigil-core, #0b0a0e)" stroke-width="1.8" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="g-selva" viewBox="0 0 24 24">
+        <path d="M5.5 21c3-5.5 3.2-11.5 1-17.5M12 22c1.8-6.5 1.8-13 0-19.5M18.5 21c-3-5.5-3.2-11.5-1-17.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+      </symbol>
+      <symbol id="g-congrega" viewBox="0 0 24 24">
+        <path d="M15.5 2.5a9.5 9.5 0 1 0 6 16.6A7.6 7.6 0 0 1 15.5 2.5z" fill="currentColor"/>
+        <circle cx="10.5" cy="12.5" r="2.2" fill="var(--sigil-core, #0b0a0e)"/>
+      </symbol>
+      <symbol id="g-tesoro" viewBox="0 0 24 24">
+        <path d="M6 2.5h12M6 21.5h12M7.5 2.5c0 5 9 6.6 9 9.5s-9 4.5-9 9.5M16.5 2.5c0 5-9 6.6-9 9.5s9 4.5 9 9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M9.5 19.5h5l-2.5-3z" fill="currentColor"/>
+      </symbol>
+      <symbol id="g-fondo" viewBox="0 0 24 24">
+        <path d="M12 2.5a8 8 0 0 0-8 8c0 3.2 1.8 5 3.4 6v3.5h9.2V16.5c1.6-1 3.4-2.8 3.4-6a8 8 0 0 0-8-8z" fill="currentColor"/>
+        <circle cx="9" cy="11" r="2" fill="var(--sigil-core, #0b0a0e)"/>
+        <circle cx="15" cy="11" r="2" fill="var(--sigil-core, #0b0a0e)"/>
+        <path d="M10.5 20v-2.5M13.5 20v-2.5" stroke="var(--sigil-core, #0b0a0e)" stroke-width="1.4"/>
+      </symbol>
+      <symbol id="g-misto" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M12 5l4 7-4 7-4-7z" fill="currentColor"/>
+      </symbol>
+      <symbol id="g-flame" viewBox="0 0 24 24">
+        <path d="M12 2c1.2 3.6 5.5 5.6 5.5 10.4A5.5 5.5 0 0 1 12 18a5.5 5.5 0 0 1-5.5-5.6C6.5 9.2 9 8 9.6 5.4c1.4 1.6 1.6 3 1.4 4.6C12.6 8.6 12.8 5.6 12 2z" fill="currentColor"/>
+        <rect x="9" y="19" width="6" height="3" rx="1" fill="currentColor" opacity=".55"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- ARENA: lo sfondo vivo della partita -->
+  <div class="arena" id="arena" aria-hidden="true">
+    <div class="arena-media" id="arenaMedia"></div>
+    <canvas class="arena-fx" id="arenaFx"></canvas>
+    <div class="arena-shade"></div>
+  </div>
+
+  <div class="app" id="app">
+    <!-- BARRA ALTA -->
+    <header class="top">
+      <div class="brand">
+        <svg class="brand-sigil"><use href="#g-sigillo"/></svg>
+        <div>
+          <strong>SIGIL</strong>
+          <span><b id="hourName">Prima ora</b> · <i id="arenaName"></i></span>
+        </div>
+      </div>
+      <div class="hours" id="hours" aria-label="Le sei ore"></div>
+      <div class="top-side">
+        <div class="lume" id="lume" aria-label="Lume disponibile">
+          <svg><use href="#g-flame"/></svg><b>0</b>
+          <small id="lumeNext"></small>
+        </div>
+        <div class="pegno" id="pegno" aria-label="Pegno in gioco" title="Pegno in gioco">
+          <svg><use href="#g-sigillo"/></svg><b>1</b>
+        </div>
+        <button id="soundButton" class="icon-button" type="button" aria-label="Audio" aria-pressed="true">♪</button>
+        <button id="helpButton" class="icon-button" type="button" aria-label="Regole">?</button>
+        <button id="leaveButton" class="icon-button" type="button" aria-label="Torna alla soglia">⌂</button>
+      </div>
+    </header>
+
+    <!-- TAVOLO -->
+    <main class="board-wrap">
+      <div class="side-label rival-label">
+        <span class="who"><svg class="mini-sigil" id="rivalSigil"><use href="#g-misto"/></svg> L'Ombra</span>
+        <span id="rivalInfo">4 carte in mano</span>
+        <span class="prio" id="priority"></span>
+      </div>
+      <div class="board" id="board"></div>
+      <div class="side-label you-label">
+        <span class="who"><svg class="mini-sigil" id="youSigil"><use href="#g-misto"/></svg> Custode</span>
+        <span id="youInfo">mazzo 8</span>
+        <span class="whisper" id="whisper"></span>
+      </div>
+    </main>
+
+    <!-- MANO -->
+    <section class="hand-wrap">
+      <button id="undoButton" class="text-button undo" type="button">↶ Riprendi la carta</button>
+      <div class="hand" id="hand" aria-label="La tua mano"></div>
+    </section>
+
+    <!-- PANNELLO LATERALE -->
+    <aside class="side" id="side">
+      <div class="inspector" id="inspector"></div>
+      <div class="chronicle">
+        <p class="eyebrow">Cronaca</p>
+        <ol id="chronicle" aria-live="polite"></ol>
+      </div>
+      <div class="actions">
+        <button id="endButton" class="commit" type="button">Rivela</button>
+        <div class="actions-row">
+          <button id="snapButton" class="snap" type="button"><svg><use href="#g-sigillo"/></svg><span>Alza il pegno</span></button>
+          <button id="retreatButton" class="quiet" type="button">Abbandona</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- INGRESSO -->
+    <section class="sheet menu-sheet" id="menu">
+      <div class="menu-bg" aria-hidden="true"><div class="live" id="menuLive"></div></div>
+      <div class="menu-main">
+        <p class="eyebrow">Un duello di carte · sei ore · tre rovine</p>
+        <h1>SIGIL</h1>
+        <p class="tagline">Sotto la valle dorme qualcosa che non deve svegliarsi.<br>Ogni notte, per sei ore, il Sigillo si allenta.</p>
+        <p class="lore-intro">Tre rovine lo inchiodano alla terra. Tu sei il Custode, l'ultimo a vegliarle. Di fronte a te siede l'Ombra: conosce le tue carte, perché è nata dal tuo stesso buio. Tieni due rovine quando suona la sesta campana, e il Sigillo reggerà ancora una notte.</p>
+
+        <p class="menu-level" id="menuLevel"></p>
+
+        <div class="menu-buttons">
+          <button id="journeyButton" class="button primary" type="button">Il Viaggio <small id="journeyLabel"></small></button>
+          <button id="duelButton" class="button ghost duel" type="button">Duello tra Custodi <small>PvP</small></button>
+          <button id="deckButton" class="button ghost deck" type="button">Mazzo e collezione</button>
+          <div class="menu-row">
+            <button id="shopButton" class="button ghost shop" type="button">Bottega</button>
+            <button id="objButton" class="button ghost shop" type="button">Obiettivi</button>
+            <button id="passButton" class="button ghost shop" type="button">Pass della veglia</button>
+          </div>
+          <div class="menu-row">
+            <button id="playButton" class="button ghost" type="button">Partita libera</button>
+            <button id="dailyButton" class="button ghost" type="button">Veglia di stanotte <small id="dailyLabel"></small></button>
+          </div>
+        </div>
+        <form id="seedForm" class="seed-form" autocomplete="off">
+          <label for="seedInput">Evoca una notte già vissuta, dal suo seme</label>
+          <div class="seed-row">
+            <input id="seedInput" name="seme" inputmode="numeric" placeholder="il numero inciso sul seme" aria-label="Seme della partita">
+            <button class="button ghost tiny" type="submit">Evoca</button>
+          </div>
+        </form>
+        <div class="menu-meta">
+          <span>Pegni <strong id="menuCoins">0</strong></span>
+          <span>Veglie di fila <strong id="menuStreak">0</strong></span>
+          <span>Notti salvate <strong id="menuWins">0</strong></span>
+          <span>Stanotte <strong id="menuDaily">—</strong></span>
+        </div>
+        <div class="menu-links">
+          <button id="codexButton" class="text-button" type="button">Il grimorio</button>
+          <button id="rulesFromMenu" class="text-button" type="button">Il giuramento del Custode</button>
+        </div>
+      </div>
+      <div class="menu-show" id="menuShow" aria-hidden="true"></div>
+    </section>
+
+    <!-- FINE NOTTE -->
+    <section class="modal end-sheet" id="end" hidden>
+      <div class="end-card">
+        <svg class="end-sigil" id="endSigil"><use href="#g-sigillo"/></svg>
+        <p class="eyebrow" id="endEyebrow">Sesta campana</p>
+        <h2 id="endTitle">Il Sigillo regge.</h2>
+        <p class="end-sub" id="endSub"></p>
+        <ol class="end-lanes" id="endLanes"></ol>
+        <div class="end-extra" id="endExtra"></div>
+        <p class="end-stake" id="endStake"></p>
+        <div class="end-actions">
+          <button id="againButton" class="button primary" type="button">Veglia ancora</button>
+          <div class="end-row">
+            <button id="copyButton" class="button ghost" type="button">Copia la cronaca</button>
+            <button id="cardButton" class="button ghost" type="button">Pergamena</button>
+          </div>
+          <button id="endMenuButton" class="text-button" type="button">Torna alla soglia</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- REGOLE -->
+    <section class="sheet rules-sheet" id="rules" hidden>
+      <div class="rules-inner">
+        <p class="eyebrow">Il giuramento del Custode</p>
+        <h2>Come si tiene il Sigillo</h2>
+        <ol class="rules-steps">
+          <li><b>1</b><div><strong>Sei ore di veglia.</strong> A ogni rintocco peschi una carta e si accendono tanti lumi quante sono le ore suonate: uno, poi due, fino a sei. Cominci con quattro carte, e almeno una costa un solo lume.</div></li>
+          <li><b>2</b><div><strong>Posa nel buio.</strong> Spendi i lumi e deponi la carta, coperta, su una delle tre rovine. Ogni lato ne accoglie al più quattro. L'Ombra ha già scelto le sue mosse, ma non puoi vederle.</div></li>
+          <li><b>3</b><div><strong>Rivela.</strong> Allo scoccare dell'ora le carte si voltano. Chi tiene più rovine rivela per primo, nell'ordine in cui ha deposto le sue.</div></li>
+          <li><b>4</b><div><strong>Tieni le rovine.</strong> Quando suona la sesta campana, ogni rovina appartiene a chi vi ha radunato più forza. Un pari non appartiene a nessuno. Tieni più rovine dell'Ombra e il Sigillo regge.</div></li>
+          <li><b>5</b><div><strong>Il pegno.</strong> Puoi alzarlo una volta per notte, e allora raddoppia. Se la veglia volge al peggio puoi abbandonarla e perdere solo quanto è già sul tavolo. L'Ombra conosce gli stessi patti.</div></li>
+        </ol>
+        <h3>Le parole incise sulle carte</h3>
+        <dl class="glossary">
+          <dt><span class="kw reveal">Scopri</span></dt><dd>Accade una volta sola, nell'istante in cui la carta si volta.</dd>
+          <dt><span class="kw ongoing">Sempre</span></dt><dd>Dura finché la carta resta svelata. Nella Cripta del Silenzio tace.</dd>
+          <dt><span class="kw anchor">Fermo</span></dt><dd>Nessun vento, spettro o cacciatore può smuoverla.</dd>
+          <dt><span class="kw">Ruba</span></dt><dd>Strappa forza a una carta nemica già svelata.</dd>
+        </dl>
+        <h3>Le rovine</h3>
+        <p>Ogni notte si destano tre rovine diverse, e ognuna piega una regola a suo modo. Leggi le loro pietre prima di deporre una carta.</p>
+        <p class="keys">Tastiera: 1–9 scegli la carta, Q W E (R T) le rovine, Invio rivela, Backspace riprende, P alza il pegno, Esc chiude.</p>
+        <button id="closeRules" class="button primary" type="button">Lo giuro</button>
+      </div>
+    </section>
+
+    <!-- CONFERMA RITIRO -->
+    <div class="modal" id="confirm" hidden>
+      <div class="modal-card">
+        <p class="eyebrow">Abbandonare la veglia</p>
+        <p id="confirmText">L'Ombra prende il pegno.</p>
+        <div class="modal-actions">
+          <button id="confirmStay" class="button ghost" type="button">Resto</button>
+          <button id="confirmLeave" class="button danger" type="button">Abbandono</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- DETTAGLIO SU TELEFONO -->
+    <div class="peek" id="peek" hidden></div>
+  </div>
+
+  <!-- INTRO -->
+  <section class="intro" id="intro" hidden>
+    <div class="intro-inner">
+     <h1>SIGIL</h1>
+      <p class="intro-line">Sei ore. Tre rovine. Una sola Ombra.</p>
+      <p class="intro-hint">Tocca o premi un tasto per entrare</p>
+    </div>
+  </section>
+
+  <!-- GRIMORIO -->
+  <section class="sheet codex-sheet" id="codex" hidden>
+    <div class="codex-inner">
+      <header class="codex-head">
+        <div>
+          <p class="eyebrow">Ogni carta conosciuta</p>
+          <h2>Il grimorio</h2>
+        </div>
+        <button id="closeCodex" class="button ghost tiny" type="button">Chiudi</button>
+      </header>
+      <div class="codex-filters" id="codexFilters"></div>
+      <p class="codex-blurb" id="codexBlurb"></p>
+      <div class="codex-grid" id="codexGrid"></div>
+    </div>
+  </section>
+
+  <script src="engine.js?v=11"></script>
+  <script src="paint.js?v=7"></script>
+  <script src="live.js?v=12"></script>
+  <script src="game.js?v=13"></script>
+  <script src="cloud.js?v=4"></script>
+  <script src="viaggio.js?v=12"></script>
+  <script src="duello.js?v=12"></script>
+  <script src="collezione.js?v=13"></script>
+  <script src="negozio.js?v=4"></script>
+  <script src="account.js?v=1"></script>
+  <script>if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(function () {});</script>
+</body>
+</html>
