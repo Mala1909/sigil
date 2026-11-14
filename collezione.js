@@ -411,7 +411,8 @@
     }
     var fresh = Object.keys(s.fresh || {}).length;
     var btn = document.getElementById("deckButton");
-    if (btn) btn.innerHTML = "Mazzo e collezione" + (fresh ? ' <small class="new-badge">' + fresh + " nuove</small>" : "");
+    var badge = btn && btn.querySelector(".mode-badge");
+    if (badge) badge.innerHTML = fresh ? '<small class="new-badge">' + fresh + " nuove</small>" : "";
   }
   var prev = G.onMenu;
   G.onMenu = function () { if (prev) prev(); menuLine(); };

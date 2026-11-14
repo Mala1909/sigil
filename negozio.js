@@ -319,12 +319,16 @@
           if (ps.premium && !ps.claimed[("premium:" + t)]) n++;
         }
       }
-      b.innerHTML = "Pass della veglia" + (n ? ' <small class="new-badge">' + n + "</small>" : "");
+      setBadge(b, n);
+    }
+    function setBadge(btn, n) {
+      var s = btn.querySelector(".mode-badge");
+      if (s) s.innerHTML = n ? '<small class="new-badge">' + n + "</small>" : "";
     }
     var ob = document.getElementById("objButton");
     if (ob) {
       var ready = objData ? (objData.list || []).filter(function (o) { return !o.claimed && o.progress >= o.target; }).length : 0;
-      ob.innerHTML = "Obiettivi" + (ready ? ' <small class="new-badge">' + ready + "</small>" : "");
+      setBadge(ob, ready);
     }
   }
   // Gli obiettivi si rileggono quando torni alla soglia (al massimo ogni 20 secondi).

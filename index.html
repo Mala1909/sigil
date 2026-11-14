@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap">
-  <link rel="stylesheet" href="styles.css?v=18">
+  <link rel="stylesheet" href="styles.css?v=19">
 </head>
 <body>
   <!-- Simboli: il Sigillo e i sigilli delle cinque casate -->
@@ -53,6 +53,15 @@
       <symbol id="g-misto" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
         <path d="M12 5l4 7-4 7-4-7z" fill="currentColor"/>
+      </symbol>
+      <symbol id="g-bottega" viewBox="0 0 24 24">
+        <path d="M8 7.5c0-2.4 1.8-4 4-4s4 1.6 4 4" fill="none" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M4.5 8h15l-1.3 12a1.6 1.6 0 0 1-1.6 1.5H7.4a1.6 1.6 0 0 1-1.6-1.5z" fill="currentColor"/>
+        <circle cx="12" cy="14.5" r="2.4" fill="var(--sigil-core, #0b0a0e)"/>
+      </symbol>
+      <symbol id="g-obiettivi" viewBox="0 0 24 24">
+        <path d="M6 3.5h10.5a2 2 0 0 1 2 2V19a2 2 0 0 0 2 2H8a2 2 0 0 1-2-2z" fill="currentColor"/>
+        <path d="M9 9.5l1.8 1.8L14.5 7.5M9 15h6" fill="none" stroke="var(--sigil-core, #0b0a0e)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
       </symbol>
       <symbol id="g-flame" viewBox="0 0 24 24">
         <path d="M12 2c1.2 3.6 5.5 5.6 5.5 10.4A5.5 5.5 0 0 1 12 18a5.5 5.5 0 0 1-5.5-5.6C6.5 9.2 9 8 9.6 5.4c1.4 1.6 1.6 3 1.4 4.6C12.6 8.6 12.8 5.6 12 2z" fill="currentColor"/>
@@ -134,40 +143,46 @@
     <section class="sheet menu-sheet" id="menu">
       <div class="menu-bg" aria-hidden="true"><div class="live" id="menuLive"></div></div>
       <div class="menu-main">
-        <p class="eyebrow">Un duello di carte · sei ore · tre rovine</p>
-        <h1>SIGIL</h1>
-        <p class="tagline">Sotto la valle dorme qualcosa che non deve svegliarsi.<br>Ogni notte, per sei ore, il Sigillo si allenta.</p>
-        <p class="lore-intro">Tre rovine lo inchiodano alla terra. Tu sei il Custode, l'ultimo a vegliarle. Di fronte a te siede l'Ombra: conosce le tue carte, perché è nata dal tuo stesso buio. Tieni due rovine quando suona la sesta campana, e il Sigillo reggerà ancora una notte.</p>
+        <header class="menu-title">
+          <p class="eyebrow">Un duello di carte · sei ore · tre rovine</p>
+          <h1>SIGIL</h1>
+          <p class="tagline">Sotto la valle dorme qualcosa che non deve svegliarsi.<br>Ogni notte, per sei ore, il Sigillo si allenta.</p>
+          <p class="lore-intro">Tre rovine lo inchiodano alla terra. Tu sei il Custode, l'ultimo a vegliarle. Di fronte a te siede l'Ombra: conosce le tue carte, perché è nata dal tuo stesso buio. Tieni due rovine quando suona la sesta campana, e il Sigillo reggerà ancora una notte.</p>
+        </header>
 
         <p class="menu-level" id="menuLevel"></p>
 
-        <div class="menu-buttons">
-          <button id="journeyButton" class="button primary" type="button">Il Viaggio <small id="journeyLabel"></small></button>
-          <button id="duelButton" class="button ghost duel" type="button">Duello tra Custodi <small>PvP</small></button>
-          <button id="deckButton" class="button ghost deck" type="button">Mazzo e collezione</button>
-          <div class="menu-row">
-            <button id="shopButton" class="button ghost shop" type="button">Bottega</button>
-            <button id="objButton" class="button ghost shop" type="button">Obiettivi</button>
-            <button id="passButton" class="button ghost shop" type="button">Pass della veglia</button>
+        <nav class="menu-buttons" aria-label="Modalità">
+          <button id="journeyButton" class="button primary mode mode-journey" type="button"><span class="mode-name">Il Viaggio</span> <small id="journeyLabel"></small><em class="mode-desc">Trenta tappe sull'atlante del Sigillo</em></button>
+          <button id="duelButton" class="button ghost duel mode mode-duel" type="button"><span class="mode-name">Duello tra Custodi</span> <small>PvP</small><em class="mode-desc">Contro un altro Custode, dal vivo</em></button>
+          <button id="deckButton" class="button ghost deck mode mode-deck" type="button"><span class="mode-name">Mazzo e collezione</span><span class="mode-badge"></span><em class="mode-desc">Le tue carte e il tuo mazzo</em></button>
+          <div class="menu-row menu-play">
+            <button id="playButton" class="button ghost mode mode-free" type="button"><span class="mode-name">Partita libera</span><em class="mode-desc">Una veglia qualsiasi</em></button>
+            <button id="dailyButton" class="button ghost mode mode-daily" type="button"><span class="mode-name">Veglia di stanotte</span> <small id="dailyLabel"></small><em class="mode-desc">Lo stesso tavolo per tutti, oggi</em></button>
           </div>
-          <div class="menu-row">
-            <button id="playButton" class="button ghost" type="button">Partita libera</button>
-            <button id="dailyButton" class="button ghost" type="button">Veglia di stanotte <small id="dailyLabel"></small></button>
+          <div class="menu-row menu-shop">
+            <button id="shopButton" class="button ghost shop chip" type="button"><svg aria-hidden="true"><use href="#g-bottega"/></svg><span class="mode-name">Bottega</span></button>
+            <button id="objButton" class="button ghost shop chip" type="button"><svg aria-hidden="true"><use href="#g-obiettivi"/></svg><span class="mode-name">Obiettivi</span><span class="mode-badge"></span></button>
+            <button id="passButton" class="button ghost shop chip" type="button"><svg aria-hidden="true"><use href="#g-flame"/></svg><span class="mode-name">Pass della veglia</span><span class="mode-badge"></span></button>
           </div>
-        </div>
-        <form id="seedForm" class="seed-form" autocomplete="off">
-          <label for="seedInput">Evoca una notte già vissuta, dal suo seme</label>
-          <div class="seed-row">
-            <input id="seedInput" name="seme" inputmode="numeric" placeholder="il numero inciso sul seme" aria-label="Seme della partita">
-            <button class="button ghost tiny" type="submit">Evoca</button>
-          </div>
-        </form>
+        </nav>
+
         <div class="menu-meta">
           <span>Pegni <strong id="menuCoins">0</strong></span>
           <span>Veglie di fila <strong id="menuStreak">0</strong></span>
           <span>Notti salvate <strong id="menuWins">0</strong></span>
           <span>Stanotte <strong id="menuDaily">—</strong></span>
         </div>
+        <details class="seed-details">
+          <summary>Evoca una notte già vissuta, dal suo seme</summary>
+          <form id="seedForm" class="seed-form" autocomplete="off">
+            <label for="seedInput" class="sr-only">Seme della partita</label>
+            <div class="seed-row">
+              <input id="seedInput" name="seme" inputmode="numeric" placeholder="il numero inciso sul seme" aria-label="Seme della partita">
+              <button class="button ghost tiny" type="submit">Evoca</button>
+            </div>
+          </form>
+        </details>
         <div class="menu-links">
           <button id="codexButton" class="text-button" type="button">Il grimorio</button>
           <button id="rulesFromMenu" class="text-button" type="button">Il giuramento del Custode</button>
@@ -192,6 +207,7 @@
             <button id="copyButton" class="button ghost" type="button">Copia la cronaca</button>
             <button id="cardButton" class="button ghost" type="button">Pergamena</button>
           </div>
+          <button id="analyzeButton" class="button ghost analyze" type="button">Analizza il risultato</button>
           <button id="endMenuButton" class="text-button" type="button">Torna alla soglia</button>
         </div>
       </div>
@@ -265,14 +281,15 @@
   </section>
 
   <script src="engine.js?v=11"></script>
+  <script src="anteprima.js?v=2"></script>
   <script src="paint.js?v=7"></script>
   <script src="live.js?v=12"></script>
-  <script src="game.js?v=13"></script>
-  <script src="cloud.js?v=4"></script>
+  <script src="game.js?v=14"></script>
+  <script src="cloud.js?v=5"></script>
   <script src="viaggio.js?v=12"></script>
   <script src="duello.js?v=12"></script>
-  <script src="collezione.js?v=13"></script>
-  <script src="negozio.js?v=4"></script>
+  <script src="collezione.js?v=14"></script>
+  <script src="negozio.js?v=5"></script>
   <script src="account.js?v=1"></script>
   <script>if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js").catch(function () {});</script>
 </body>

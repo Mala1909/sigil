@@ -240,6 +240,8 @@
     laneInfo = null;
     seenFresh = {};
     lastScores = null;
+    reviewing = false;
+    endAt = 0;
     var C = window.SigilCollezione;
     if (C && !(opts && opts.seat) && C.needOath()) return;
     hooks = modeHooks || {};
@@ -338,8 +340,32 @@
     renderSide(view);
 
     bindArt(app);
-    show(endSheet, view.phase === "over");
-    if (view.phase === "over") fillEnd(view);
+    // Fine della veglia: prima si lascia vedere il tavolo com'è finito, poi arriva il cartiglio.
+    // «Analizza il risultato» lo chiude e lascia il tavolo da esplorare con calma.
+    var over = view.phase === "over";
+    if (over && !endAt) {
+      endAt = Date.now() + (reduced() ? 0 : END_PAUSE);
+      setTimeout(function () { if (match && match.phase === "over") render(); }, Math.max(0, endAt - Date.now()) + 20);
+    }
+    var endNow = over && Date.now() >= endAt;
+    show(endSheet, endNow && !reviewing);
+    show(reviewBar, over && reviewing);
+    app.classList.toggle("reviewing", over && reviewing);
+    if (over) fillEnd(view);
+  }
+  var END_PAUSE = 1800;
+  var endAt = 0;
+  var reviewing = false;
+  var reviewBar = document.createElement("div");
+  reviewBar.className = "review-bar";
+  reviewBar.hidden = true;
+  reviewBar.innerHTML = '<span class="review-note">La veglia è finita. Tocca carte e rovine per rileggerla.</span>' +
+    '<button type="button" class="button primary" id="reviewBack">Torna al risultato</button>';
+  app.appendChild(reviewBar);
+  function review(on) {
+    reviewing = on;
+    if (!on) endAt = Math.min(endAt, Date.now());
+    render();
   }
 
   function renderTop(view) {
@@ -724,6 +750,10 @@
     var o = Object.assign({}, lastOpts || {});
     if (!o.daily) delete o.seed;
     start(o);
+  });
+  $("analyzeButton").addEventListener("click", function () { review(true); });
+  reviewBar.addEventListener("click", function (e) {
+    if (e.target.closest("#reviewBack")) review(false);
   });
   $("endMenuButton").addEventListener("click", function () {
     if (hooks.back) { var b = hooks.back; clearMatch(); b(); return; }

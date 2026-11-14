@@ -14,9 +14,9 @@
  */
 (function () {
   var G = window.SigilGame;
-  if (!G) return;
+  if (!G || window.SIGIL_ANTEPRIMA) return; // in anteprima niente registro (vedi anteprima.js)
 
-  var URL = "https://bvjpmvdwdnqgverhxckj.supabase.co";
+  var URL ="https://bvjpmvdwdnqgverhxckj.supabase.co";
   var KEY = "sb_publishable_eWFok_txjIBccYLVLvC0vA_GhlmsSvi";
   var LIB = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js";
 
