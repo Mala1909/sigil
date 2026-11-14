@@ -48,6 +48,12 @@
   var confirmBox = $("confirm");
   var peek = $("peek");
   var narrow = window.matchMedia ? window.matchMedia("(max-width: 980px)") : { matches: false };
+  // Telefoni, tablet e pieghevoli (schermi touch) giocano «alla Snap»: in mano solo
+  // l'illustrazione, e la carta toccata si apre grande con le rovine dove deporla.
+  var snapMode = window.matchMedia ? window.matchMedia("(pointer: coarse), (max-width: 699px)") : { matches: false };
+  function applySnapMode() { document.documentElement.classList.toggle("alla-snap", !!snapMode.matches); }
+  applySnapMode();
+  if (snapMode.addEventListener) snapMode.addEventListener("change", applySnapMode);
 
   /* ───────── salvataggio ───────── */
   function loadSave() {
@@ -729,6 +735,40 @@
   /* ───────── dettaglio su telefono ───────── */
   function openPeek(html) {
     peek.innerHTML = '<div class="peek-body">' + html + "</div>";
+    peek.dataset.uid = "";
+    show(peek, true);
+    bindArt(peek);
+  }
+
+  // La carta della mano, grande, con le rovine su cui si può deporre.
+  function openPlay(uid) {
+    var view = E.view(match);
+    var card = view.hand.filter(function (c) { return c.uid === uid; })[0];
+    if (!card) return;
+    var held = match.you.hand.some(function (c) { return c.uid === uid && c.hold; });
+    var quotes = E.quote(match, uid);
+    var html = '<div class="play-sheet">' + cardHTML(card, { cls: "play-card" });
+    if (card.text && card.lore) html += '<p class="lore-line">' + esc(card.lore) + "</p>";
+    if (view.phase !== "plan" || locked()) {
+      html += '<p class="play-ask">Aspetta: le carte si stanno voltando.</p>';
+    } else if (held) {
+      html += '<p class="play-ask">Questa carta si potrà giocare dall’ora dopo.</p>';
+    } else {
+      html += '<p class="play-ask">Dove la deponi?</p><div class="play-lanes" style="--n:' + Math.min(3, view.lanes.length) + '">' +
+        view.lanes.map(function (lane, i) {
+          var q = quotes[i];
+          var used = lane.yours.length + lane.incoming.length;
+          var why = q.ok ? "costa " + q.paid
+            : lane.closed ? "chiusa"
+            : used >= lane.max ? "piena"
+            : "servono " + q.paid + (q.paid === 1 ? " lume" : " lumi");
+          return '<button type="button" class="play-lane' + (q.ok ? "" : " no") + '" data-play-lane="' + i + '"' + (q.ok ? "" : " disabled") + ">" +
+            '<span class="pl-name">' + esc(lane.name) + '</span><span class="pl-cost">' + esc(why) + "</span></button>";
+        }).join("") + "</div>";
+    }
+    html += '<button type="button" class="text-button play-cancel" data-play-cancel="1">Rimettila in mano</button></div>';
+    peek.innerHTML = html;
+    peek.dataset.uid = uid;
     show(peek, true);
     bindArt(peek);
   }
@@ -792,13 +832,50 @@
     openCodex();
   });
   $("soundButton").addEventListener("click", function () { if (window.SigilImpostazioni) window.SigilImpostazioni.open(); });
-  peek.addEventListener("click", function () { show(peek, false); });
+  peek.addEventListener("click", function (event) {
+    var lane = event.target.closest("[data-play-lane]");
+    if (lane) {
+      show(peek, false);
+      onPlay(peek.dataset.uid, Number(lane.dataset.playLane));
+      return;
+    }
+    if (event.target.closest("[data-play-cancel]")) {
+      selected = null;
+      detailId = null;
+      show(peek, false);
+      render();
+      return;
+    }
+    show(peek, false); // toccare fuori chiude: la carta resta scelta e si può toccare una rovina
+  });
+
+  // App installata su un telefono: si gioca in verticale. Android la blocca davvero;
+  // su iPhone (che non lo permette) e nel browser lo dice la scritta «Gira il telefono».
+  // Il Fold aperto e i tablet restano liberi di girare.
+  function lockPortrait() {
+    try {
+      var o = screen.orientation;
+      if (!o || !o.lock || !window.matchMedia("(display-mode: standalone), (display-mode: fullscreen)").matches) return;
+      if (Math.min(screen.width, screen.height) < 520) o.lock("portrait").catch(function () {});
+      else if (o.unlock) o.unlock();
+    } catch (e) { /* non supportato */ }
+  }
+  lockPortrait();
+  window.addEventListener("resize", lockPortrait);
 
   app.addEventListener("click", function (event) {
     var act = event.target.closest("[data-act]");
     if (!act || !match) return;
     var kind = act.dataset.act;
     if (kind === "hand") {
+      if (snapMode.matches) {
+        selected = act.dataset.uid;
+        detailId = selected;
+        laneInfo = null;
+        render();
+        openPlay(selected);
+        return;
+      }
       selected = selected === act.dataset.uid ? null : act.dataset.uid;
       detailId = selected;
       laneInfo = null;
