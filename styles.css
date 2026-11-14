@@ -2019,3 +2019,12 @@ html[data-menu="b"] .mode { padding: 14px 20px 16px 24px; }
 .menu-pick .text-button { padding: 6px 7px; color: var(--muted); }
 .menu-pick .text-button.on { color: var(--gold-2); text-decoration: underline; text-underline-offset: 4px; }
 @media (max-width: 600px) and (min-height: 700px) { html[data-menu="b"] .lore-intro { font-size: 14px; } }
+/* B: più spazio sotto, il bordo a pennello non deve mangiare le lettere */
+html[data-menu="b"] .mode { padding-bottom: 24px; }
+@media (max-width: 400px) { html[data-menu="b"] .mode { padding-bottom: 22px; } }
+@media (max-height: 420px) and (max-width: 480px) { html[data-menu="b"] .mode { padding-bottom: 16px; } }
+html[data-menu="b"] .mode .mode-desc { line-height: 1.25; padding-bottom: 1px; }
+/* La soglia: il dipinto della valle sotto il video (si vede mentre il video carica o con meno animazioni) */
+html:is([data-menu="b"], [data-menu="c"]) .menu-bg { background: #08070a url("art/arene/soglia.jpg") 62% center / cover no-repeat; }
+#menuLive .loop-video { object-position: 62% center; }
+@media (max-aspect-ratio: 3/4) { #menuLive .loop-video { object-position: 58% center; } html:is([data-menu="b"], [data-menu="c"]) .menu-bg { background-position: 58% center; } }

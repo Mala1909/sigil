@@ -229,7 +229,9 @@
     if (menuLoop || reduced()) return;
     var host = document.getElementById("menuLive");
     if (!host) return;
-    menuLoop = Looper(host, "art/intro-2.mp4", { mirror: true, rate: 0.85 });
+    // La soglia (Gemini, 14 nov): la valle delle tre torri e il Custode di spalle, a destra.
+    // Il file è già un loop senza stacco (la fine sfuma nell'inizio).
+    menuLoop = Looper(host, "art/arene/soglia.mp4", { rate: 0.85, fade: 1.2 });
   }
   function stopMenu() {
     if (!menuLoop) return;
