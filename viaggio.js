@@ -424,6 +424,7 @@
     close();
     G.start({
       mode: "viaggio",
+      journeyLevel: l.n, // serve alla musica (musica.js)
       seed: l.seed,
       lanes: l.lanes,
       aiLevel: l.aiLevel,

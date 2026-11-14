@@ -2028,3 +2028,50 @@ html[data-menu="b"] .mode .mode-desc { line-height: 1.25; padding-bottom: 1px; }
 html:is([data-menu="b"], [data-menu="c"]) .menu-bg { background: #08070a url("art/arene/soglia.jpg") 62% center / cover no-repeat; }
 #menuLive .loop-video { object-position: 62% center; }
 @media (max-aspect-ratio: 3/4) { #menuLive .loop-video { object-position: 58% center; } html:is([data-menu="b"], [data-menu="c"]) .menu-bg { background-position: 58% center; } }
+
+/* ───────── Impostazioni e crediti (impostazioni.js) ───────── */
+.settings-fab {
+  position: fixed;
+  left: max(12px, env(safe-area-inset-left));
+  bottom: max(12px, env(safe-area-inset-bottom));
+  z-index: 50;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--line-2);
+  background: rgba(16, 13, 22, 0.82);
+  color: var(--gold-2);
+  font-size: 20px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.settings-fab:hover { transform: rotate(30deg); border-color: var(--gold); }
+.settings-fab[hidden] { display: none; }
+.settings-box { z-index: 58; }
+.settings-card { text-align: left; }
+.settings-card h2 { margin: 0 0 16px; font-family: var(--display); font-size: 26px; letter-spacing: 0.04em; }
+.settings-card .eyebrow { margin: 0 0 2px; }
+.set-row { display: grid; grid-template-columns: 84px 1fr 36px; align-items: center; gap: 12px; margin: 0 0 14px; }
+.set-row label { font-family: var(--display); font-size: 14px; letter-spacing: 0.06em; }
+.set-row output { font-family: var(--display); color: var(--gold-2); text-align: right; font-size: 14px; }
+.set-row input[type="range"] { width: 100%; accent-color: var(--gold); height: 28px; }
+.set-switch { display: flex; align-items: center; gap: 10px; margin: 4px 0 12px; cursor: pointer; font-size: 15px; }
+.set-switch input { width: 20px; height: 20px; accent-color: var(--gold); }
+.set-now { font-size: 13.5px !important; color: var(--muted); margin: 0 0 16px !important; }
+.set-now b { color: var(--parch-2); font-weight: 600; }
+.credits { max-height: min(60dvh, 520px); overflow: auto; padding-right: 4px; margin: 0 0 14px; }
+.credits h3 { margin: 16px 0 6px; font-family: var(--display); font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); }
+.credits h3:first-child { margin-top: 0; }
+.credits p { font-size: 14px !important; line-height: 1.5; color: var(--parch-2); margin: 0 0 8px !important; }
+.credits-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 7px; }
+.credits-list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; font-size: 14px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+.credits-list a { color: var(--parch); text-decoration: none; }
+.credits-list a:hover { color: var(--gold-2); text-decoration: underline; }
+.credits-list span { color: var(--muted); font-size: 13px; }
+.credits-list span a { color: var(--muted); text-decoration: underline; }
+.credits-note { font-size: 12.5px !important; color: var(--muted) !important; margin-top: 8px !important; }

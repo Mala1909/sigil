@@ -112,7 +112,7 @@
         osc.type = t[2];
         osc.frequency.value = t[0];
         gain.gain.setValueAtTime(0.0001, at);
-        gain.gain.exponentialRampToValueAtTime(kind === "no" ? 0.025 : 0.07, at + 0.02);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, (kind === "no" ? 0.025 : 0.07) * sfxVolume()), at + 0.02);
         gain.gain.exponentialRampToValueAtTime(0.0001, at + t[1]);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
@@ -121,12 +121,15 @@
       });
     } catch (err) { /* niente audio */ }
   }
+  // Volume degli effetti (0-1), deciso nelle impostazioni (impostazioni.js).
+  function sfxVolume() { return save.sfxVol == null ? 1 : Math.max(0, Math.min(1, save.sfxVol)); }
   function setSound(on) {
     save.sound = on;
     saveSave();
-    var button = $("soundButton");
-    button.setAttribute("aria-pressed", on ? "true" : "false");
-    button.textContent = on ? "♪" : "×";
+  }
+  // Avvisa gli altri moduli (musica, impostazioni) di cosa succede al tavolo.
+  function tell(phase, extra) {
+    try { window.dispatchEvent(new CustomEvent("sigil:match", { detail: Object.assign({ phase: phase }, extra || {}) })); } catch (err) { /* ignora */ }
   }
 
   /* ───────── arte ───────── */
@@ -265,6 +268,7 @@
       $("arenaName").textContent = arena ? arena.name : "";
     }
     render();
+    tell("start", { mode: match.mode, opts: lastOpts });
     if (match.phase === "reveal") pump();
   }
 
@@ -287,6 +291,7 @@
     show(confirmBox, false);
     show(peek, false);
     paintMenu();
+    tell("leave");
   }
 
   function settle(view) {
@@ -344,6 +349,7 @@
     // «Analizza il risultato» lo chiude e lascia il tavolo da esplorare con calma.
     var over = view.phase === "over";
     if (over && !endAt) {
+      tell("over", { winner: view.winner, mode: match.mode, opts: lastOpts });
       endAt = Date.now() + (reduced() ? 0 : END_PAUSE);
       setTimeout(function () { if (match && match.phase === "over") render(); }, Math.max(0, endAt - Date.now()) + 20);
     }
@@ -785,7 +791,7 @@
     codexFilter = b.dataset.filter;
     openCodex();
   });
-  $("soundButton").addEventListener("click", function () { setSound(!save.sound); });
+  $("soundButton").addEventListener("click", function () { if (window.SigilImpostazioni) window.SigilImpostazioni.open(); });
   peek.addEventListener("click", function () { show(peek, false); });
 
   app.addEventListener("click", function (event) {
@@ -871,6 +877,7 @@
     clearMatch: clearMatch,
     say: say,
     blip: blip,
+    setSound: setSound,
     match: function () { return match; },
     save: function () { return save; },
     persist: saveSave,
