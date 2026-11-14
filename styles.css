@@ -2075,3 +2075,6 @@ html:is([data-menu="b"], [data-menu="c"]) .menu-bg { background: #08070a url("ar
 .credits-list span { color: var(--muted); font-size: 13px; }
 .credits-list span a { color: var(--muted); text-decoration: underline; }
 .credits-note { font-size: 12.5px !important; color: var(--muted) !important; margin-top: 8px !important; }
+/* Ciò che è nascosto resta nascosto, qualunque sia la versione della soglia
+   (le regole di b e c mettono display:block sulla soglia e vincerebbero su [hidden]). */
+html .menu-sheet[hidden], .review-bar[hidden], .sheet[hidden], .modal[hidden] { display: none !important; }
