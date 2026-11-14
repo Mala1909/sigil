@@ -2307,3 +2307,26 @@ html.alla-snap .hand .empty { padding: 26px 0; font-size: 15px; }
 .peek:has(.play-sheet) { background: rgba(6, 5, 8, 0.9); backdrop-filter: blur(3px); }
 .play-lane.no { opacity: 1; color: var(--muted); }
 .play-lane.no .pl-name { opacity: 0.6; }
+
+/* ───────── Trascinare le carte (game.js) ───────── */
+.hand .card { touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.hand .card img { -webkit-user-drag: none; pointer-events: none; }
+.hand .card.dragging { opacity: 0.25; }
+.drag-ghost {
+  position: fixed !important;
+  left: 0;
+  top: 0;
+  z-index: 40;
+  margin: 0 !important;
+  pointer-events: none;
+  flex: none !important;
+  max-width: none !important;
+  box-shadow: 0 24px 40px rgba(0, 0, 0, 0.7), 0 0 0 2px var(--gold-2), 0 0 30px rgba(242, 208, 138, 0.35) !important;
+  transition: none !important;
+  will-change: transform;
+}
+html.drag-on, html.drag-on * { cursor: grabbing !important; }
+#board .lane.drag-ok { border-color: var(--gold-2); box-shadow: 0 0 0 1px rgba(242, 208, 138, 0.5), 0 0 20px rgba(242, 208, 138, 0.12); }
+#board .lane.drag-no { opacity: 0.45; }
+#board .lane.drop-target.drag-ok { box-shadow: 0 0 0 2px var(--gold-2), 0 0 34px rgba(242, 208, 138, 0.45); background: linear-gradient(180deg, transparent 45%, rgba(242, 208, 138, 0.14)), var(--bg-2); }
+.hand.drag-layer { position: fixed; inset: 0; z-index: 40; display: block; padding: 0; margin: 0; overflow: visible; pointer-events: none; }

@@ -863,6 +863,96 @@
   lockPortrait();
   window.addEventListener("resize", lockPortrait);
 
+  /* ───────── trascinare una carta sulla rovina (come su Snap) ─────────
+   * Dito o mouse: si prende la carta dalla mano, si porta sopra una rovina e si
+   * lascia. Le rovine dove può andare si accendono; quella sotto il dito brilla.
+   * Un tocco senza trascinare resta un tocco (apre la carta o la sceglie). */
+  var drag = null;
+  var eatClick = false;
+  function laneAt(x, y) {
+    var el = document.elementFromPoint(x, y);
+    var lane = el && el.closest ? el.closest("#board .lane") : null;
+    return lane ? Number(lane.dataset.lane) : null;
+  }
+  function dragEnd(play) {
+    if (!drag) return;
+    var d = drag;
+    drag = null;
+    if (d.layer) d.layer.remove();
+    d.el.classList.remove("dragging");
+    document.documentElement.classList.remove("drag-on");
+    Array.prototype.forEach.call(document.querySelectorAll("#board .lane"), function (l) {
+      l.classList.remove("drag-ok", "drag-no", "drop-target");
+    });
+    if (!d.moving) return;
+    eatClick = true;
+    setTimeout(function () { eatClick = false; }, 0);
+    if (play && d.over != null && d.quotes[d.over] && d.quotes[d.over].ok) {
+      selected = null;
+      onPlay(d.uid, d.over);
+    } else {
+      if (play && d.over != null) { blip("no"); say("Lì non può andare."); }
+      render();
+    }
+  }
+  $("hand").addEventListener("pointerdown", function (event) {
+    var card = event.target.closest(".card[data-act='hand']");
+    if (!card || !match || match.phase !== "plan" || locked() || event.button > 0) return;
+    if (card.classList.contains("held")) return;
+    drag = { uid: card.dataset.uid, el: card, x: event.clientX, y: event.clientY, id: event.pointerId, moving: false, over: null, ghost: null, quotes: E.quote(match, card.dataset.uid) };
+    try { card.setPointerCapture(event.pointerId); } catch (e) { /* ignora */ }
+  });
+  window.addEventListener("pointermove", function (event) {
+    if (!drag || event.pointerId !== drag.id) return;
+    var dx = event.clientX - drag.x, dy = event.clientY - drag.y;
+    if (!drag.moving) {
+      if (dx * dx + dy * dy < 100) return;
+      drag.moving = true;
+      show(peek, false);
+      var r = drag.el.getBoundingClientRect();
+      var ghost = drag.el.cloneNode(true);
+      ghost.classList.add("drag-ghost");
+      ghost.classList.remove("selected");
+      ghost.removeAttribute("data-act");
+      ghost.style.width = r.width + "px";
+      ghost.style.height = r.height + "px";
+      drag.w = r.width;
+      drag.h = r.height;
+      drag.ghost = ghost;
+      // Il fantasma sta in un contenitore con la classe della mano, così ha lo stesso aspetto.
+      var layer = document.createElement("div");
+      layer.className = "hand drag-layer";
+      layer.appendChild(ghost);
+      document.body.appendChild(layer);
+      drag.layer = layer;
+      drag.el.classList.add("dragging");
+      document.documentElement.classList.add("drag-on");
+      Array.prototype.forEach.call(document.querySelectorAll("#board .lane"), function (l) {
+        var q = drag.quotes[Number(l.dataset.lane)];
+        l.classList.add(q && q.ok ? "drag-ok" : "drag-no");
+      });
+    }
+    event.preventDefault();
+    // Sopra il dito, così la carta si vede mentre la porti.
+    var lift = event.pointerType === "touch" ? drag.h * 0.55 : 0;
+    drag.ghost.style.transform = "translate(" + (event.clientX - drag.w / 2) + "px," + (event.clientY - drag.h / 2 - lift) + "px) rotate(" + Math.max(-8, Math.min(8, dx / 30)) + "deg) scale(1.08)";
+    var over = laneAt(event.clientX, event.clientY - lift * 0.5);
+    if (over !== drag.over) {
+      drag.over = over;
+      Array.prototype.forEach.call(document.querySelectorAll("#board .lane"), function (l) {
+        l.classList.toggle("drop-target", Number(l.dataset.lane) === over);
+      });
+    }
+  });
+  window.addEventListener("pointerup", function (event) {
+    if (drag && event.pointerId === drag.id) dragEnd(true);
+  });
+  window.addEventListener("pointercancel", function () { dragEnd(false); });
+  // Il trascinamento finito non deve diventare anche un tocco.
+  app.addEventListener("click", function (event) {
+    if (eatClick) { event.stopPropagation(); event.preventDefault(); eatClick = false; }
+  }, true);
+
   app.addEventListener("click", function (event) {
     var act = event.target.closest("[data-act]");
     if (!act || !match) return;
