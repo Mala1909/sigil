@@ -15,9 +15,9 @@
   if (!E || !G) return;
 
   var CHAPTERS = [
-    { id: "valle", name: "Valle delle tre rovine", arena: "valle", poster: "art/copertina.jpg", lanes: 3, ai: [1, 1, 2, 2, 2, 3], sign: "fontana",
+    { id: "valle", name: "Valle delle tre rovine", arena: "valle", poster: "art/copertina.jpg", lanes: 3, ai: [0, 0, 1, 1, 1, 2], sign: "fontana",
       boss: "Il Guardiano della Valle", tale: "Dove tutto comincia: tre torri, tre fiamme, e un'Ombra che ancora non conosce le tue mani." },
-    { id: "cripta", name: "Cripta del Silenzio", arena: "cripta", poster: "art/places/vicolo.jpg", lanes: 3, ai: [2, 3, 3, 3, 4, 4], sign: "vicolo",
+    { id: "cripta", name: "Cripta del Silenzio", arena: "cripta", poster: "art/places/vicolo.jpg", lanes: 3, ai: [1, 2, 2, 2, 3, 3], sign: "vicolo",
       boss: "La Badessa muta", tale: "Sotto la valle le candele non si spengono mai. Qui le preghiere non fanno eco, e le abilità Sempre tacciono spesso." },
     { id: "palude", name: "Palude dei Rovi", arena: "palude", poster: "art/arene/palude.jpg", lanes: 4, ai: [3, 4, 4, 4, 5, 5], sign: "cantiere",
       boss: "La Strega dei Rovi", tale: "La terra cede. Quattro rovine affiorano dal fango, e l'Ombra ha imparato ad aspettare." },
@@ -29,7 +29,7 @@
 
   var HOUSE_IDS = E.HOUSES.map(function (h) { return h.id; });
   var LOC_IDS = E.LOCATIONS.map(function (l) { return l.id; });
-  var DIFF = ["", "Ombra acerba", "Ombra incerta", "Ombra attenta", "Ombra scaltra", "Ombra antica", "Ombra feroce", "Ombra senza nome"];
+  var DIFF = ["Ombra assopita", "Ombra acerba", "Ombra incerta", "Ombra attenta", "Ombra scaltra", "Ombra antica", "Ombra feroce", "Ombra senza nome"];
 
   function hash(text) {
     var h = 2166136261;
@@ -165,6 +165,7 @@
         '<button type="button" class="icon-button" data-zoom="all" aria-label="Tutto l\'atlante" title="Tutto l\'atlante">⤢</button>' +
       "</div>" +
       '<p class="atlas-hint">Trascina per muoverti · rotella o due dita per avvicinarti</p>' +
+      '<div class="atlas-pick" id="atlasPick"></div>' +
     "</div>" +
     '<div class="modal" id="levelBox" hidden><div class="modal-card level-card" id="levelCard"></div></div>';
   document.body.appendChild(sheet);
@@ -175,6 +176,28 @@
   var levelCard = sheet.querySelector("#levelCard");
   map.style.width = W + "px";
   map.style.height = H + "px";
+
+  // Le versioni del dipinto della valle; il selettore è provvisorio, finché non se ne sceglie una.
+  var MAPS = { "1": "art/arene/atlante-1.jpg", "2": "art/arene/atlante-2.jpg", "3": "art/arene/atlante-3.jpg", "0": null };
+  function atlasPickId() {
+    var v = null;
+    try { v = localStorage.getItem("sigil-atlante"); } catch (e) { /* ignora */ }
+    return MAPS.hasOwnProperty(v) ? v : "1";
+  }
+  function atlasMap() { return MAPS[atlasPickId()]; }
+  var pickBox = sheet.querySelector("#atlasPick");
+  function paintPick() {
+    var cur = atlasPickId();
+    pickBox.innerHTML = "Mappa: " + ["1", "2", "3", "0"].map(function (k) {
+      return '<button type="button" class="text-button' + (k === cur ? " on" : "") + '" data-map="' + k + '">' + (k === "0" ? "nessuna" : k) + "</button>";
+    }).join("");
+  }
+  pickBox.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-map]");
+    if (!b) return;
+    try { localStorage.setItem("sigil-atlante", b.dataset.map); } catch (x) { /* ignora */ }
+    paintMap();
+  });
 
   function stateOf(l, j) {
     var st = j.stars[l.n] || 0;
@@ -192,6 +215,10 @@
     sheet.querySelector("#journeyTotal").innerHTML = "★ " + totalStars() + " / " + LEVELS.length * 3;
     var html = "";
     var currentChapter = (LEVELS[Math.min(j.unlocked, LEVELS.length) - 1] || LEVELS[0]).chapter;
+    // Il dipinto della valle sotto tutto (Gemini, 14 nov). Si sceglie tra le versioni in prova.
+    var mapPick = atlasMap();
+    map.classList.toggle("has-map", !!mapPick);
+    if (mapPick) html += '<div class="atlas-map" style="background-image:url(\'' + mapPick + '\')"></div>';
 
     // Il Sigillo: anelli che girano piano dietro a tutto, e i raggi verso le regioni.
     var seal = '<svg class="atlas-seal" viewBox="0 0 ' + W + " " + H + '" aria-hidden="true"><g class="seal-turn">' +
@@ -264,6 +291,7 @@
         "</button>";
     });
     map.innerHTML = html;
+    paintPick();
     apply();
   }
 
@@ -318,7 +346,7 @@
   var drag = null;
   var moved = false;
   atlas.addEventListener("pointerdown", function (e) {
-    if (e.target.closest(".atlas-tools")) return;
+    if (e.target.closest(".atlas-tools, .atlas-pick")) return;
     atlas.classList.add("used");
     pts[e.pointerId] = { x: e.clientX, y: e.clientY };
     var ids = Object.keys(pts);
@@ -419,13 +447,31 @@
     levelBox.hidden = false;
   }
 
+  // Bilanciamento del 14 nov (simulazione con i mazzi iniziali di ogni casata):
+  // - fino alla tappa 9 l'Ombra gioca un mazzo iniziale come il tuo (le 12 carte più economiche
+  //   della sua casata), non un mazzo pescato tra tutti i costi;
+  // - ogni tentativo pesca in un ordine diverso: riprovare una tappa non ripete la stessa partita
+  //   (rovine e casata dell'Ombra restano quelle della tappa).
+  var EASY_UNTIL = 9;
+  function starterDeck(house) {
+    return E.CARDS.filter(function (c) { return c.house === house; })
+      .sort(function (a, b) { return a.cost - b.cost || (a.id < b.id ? -1 : 1); }).slice(0, E.DECK_SIZE || 12)
+      .map(function (c) { return c.id; });
+  }
+
   function play(n) {
     var l = LEVELS[n - 1];
+    var j = J();
+    j.tries = j.tries || {};
+    var tries = j.tries[n] || 0;
+    j.tries[n] = tries + 1;
+    G.persist();
     close();
     G.start({
       mode: "viaggio",
       journeyLevel: l.n, // serve alla musica (musica.js)
-      seed: l.seed,
+      seed: (l.seed + tries * 7919) >>> 0,
+      rivalDeck: l.n <= EASY_UNTIL ? starterDeck(l.rivalHouse) : undefined,
       lanes: l.lanes,
       aiLevel: l.aiLevel,
       rivalHouse: l.rivalHouse,

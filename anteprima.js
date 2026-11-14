@@ -52,7 +52,7 @@
     deck: mine.slice(0, 12).map(function (c) { return c.id; }),
     level: 4, xp: 62, gettoni: 48, ambra: 300, wins: 7, losses: 4, ties: 1, streak: 2, bestStreak: 3,
     journey: { unlocked: 5, stars: { 1: 3, 2: 2, 3: 3, 4: 1 } },
-    pass: { season: 1, xp: 340, premium: false, claimed: {} }, daily: {}, sound: false
+    pass: { season: 1, xp: 340, premium: false, claimed: {} }, pvp: { w: 5, l: 3, t: 1, rating: 1043 }, daily: {}, sound: false
   };
   // Il gioco legge il salvataggio da qui; in anteprima non si scrive niente di vero.
   var real = Storage.prototype.setItem;

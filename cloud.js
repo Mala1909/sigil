@@ -69,7 +69,7 @@
     s.level = p.level;
     s.gettoni = p.gold;
     s.ambra = p.ambra;
-    s.journey = { unlocked: (p.journey && p.journey.unlocked) || 1, stars: (p.journey && p.journey.stars) || {}, finished: !!(p.journey && p.journey.finished) };
+    s.journey = { unlocked: (p.journey && p.journey.unlocked) || 1, stars: (p.journey && p.journey.stars) || {}, finished: !!(p.journey && p.journey.finished), tries: (s.journey && s.journey.tries) || {} };
     s.pass = { season: p.pass_season, xp: p.pass_xp, premium: p.pass_premium, claimed: p.pass_claimed || {} };
     s.pvp = { w: p.pvp_w, l: p.pvp_l, t: p.pvp_t, rating: p.rating };
     G.persist();

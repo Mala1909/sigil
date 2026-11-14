@@ -394,6 +394,7 @@
    * awakened: l'Ombra pesca anche dalle carte del Risveglio (livelli avanzati).
    */
   var AI_LEVELS = {
+    0: { beam: 1, depth: 1, slip: 0.7, bonus: 0, bonusFrom: 0, extraCard: 0, snaps: false }, // l'Ombra assopita: solo le prime tappe
     1: { beam: 1, depth: 1, slip: 0.45, bonus: 0, bonusFrom: 0, extraCard: 0, snaps: false },
     2: { beam: 2, depth: 2, slip: 0.25, bonus: 0, bonusFrom: 0, extraCard: 0, snaps: false },
     3: { beam: 3, depth: 2, slip: 0.1, bonus: 0, bonusFrom: 0, extraCard: 0, snaps: true },
@@ -427,7 +428,8 @@
     var rng = mulberry32(seed);
     var lanes = Math.max(3, Math.min(5, opts.lanes || 3));
     var seat = opts.seat === "host" || opts.seat === "guest" ? opts.seat : null;
-    var level = AI_LEVELS[opts.aiLevel] || AI_LEVELS[4];
+    var aiLevel = AI_LEVELS[opts.aiLevel] ? opts.aiLevel : 4;
+    var level = AI_LEVELS[aiLevel];
     var house = opts.house && BY_HOUSE[opts.house] ? opts.house : null;
     var rivalHouse = opts.rivalHouse && BY_HOUSE[opts.rivalHouse] ? opts.rivalHouse : null;
     if (house && !rivalHouse && !seat) {
@@ -446,7 +448,7 @@
       mode: seat ? "pvp" : opts.mode || "solo",
       seat: seat,
       seats: seat ? (seat === "host" ? { you: "h", rival: "g" } : { you: "g", rival: "h" }) : null,
-      aiLevel: opts.aiLevel || 4,
+      aiLevel: aiLevel,
       aiCfg: level,
       turn: 0,
       phase: "plan",

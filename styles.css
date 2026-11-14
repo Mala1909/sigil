@@ -2078,3 +2078,51 @@ html:is([data-menu="b"], [data-menu="c"]) .menu-bg { background: #08070a url("ar
 /* Ciò che è nascosto resta nascosto, qualunque sia la versione della soglia
    (le regole di b e c mettono display:block sulla soglia e vincerebbero su [hidden]). */
 html .menu-sheet[hidden], .review-bar[hidden], .sheet[hidden], .modal[hidden] { display: none !important; }
+/* Il dipinto della valle sotto l'atlante */
+.atlas-map {
+  position: absolute;
+  inset: -2%;
+  background: center / 100% 100% no-repeat;
+  filter: saturate(0.9) brightness(0.82);
+  -webkit-mask-image: radial-gradient(ellipse 52% 52% at 50% 50%, #000 70%, transparent 100%);
+  mask-image: radial-gradient(ellipse 52% 52% at 50% 50%, #000 70%, transparent 100%);
+  pointer-events: none;
+}
+/* con il dipinto, le regioni diventano solo cerchi di luce: il paesaggio è già sotto */
+.atlas-world.has-map .region-art { opacity: 0; }
+.atlas-world.has-map .region-fog { background: radial-gradient(circle, transparent 35%, rgba(7, 6, 10, 0.25) 62%, transparent 72%); }
+.atlas-world.has-map .region.current .region-ring { box-shadow: 0 0 80px rgba(244, 182, 60, 0.22), inset 0 0 90px rgba(244, 182, 60, 0.16); }
+.atlas-world.has-map .region.locked .region-fog {
+  background:
+    radial-gradient(circle at 35% 40%, rgba(150, 140, 170, 0.3), transparent 45%),
+    radial-gradient(circle at 65% 62%, rgba(150, 140, 170, 0.25), transparent 50%),
+    radial-gradient(circle, rgba(7, 6, 10, 0.72) 30%, rgba(7, 6, 10, 0.5) 62%, transparent 74%);
+}
+.atlas-world.has-map .seal-turn { opacity: 0.55; }
+.atlas-pick { position: absolute; left: 12px; top: 10px; z-index: 3; font-size: 12px; color: var(--muted); background: rgba(16, 13, 22, 0.8); border-radius: 999px; padding: 2px 8px; }
+.atlas-pick .text-button { padding: 5px 6px; color: var(--muted); }
+.atlas-pick .text-button.on { color: var(--gold-2); text-decoration: underline; text-underline-offset: 4px; }
+/* ───────── Classificata del Duello: i ranghi ───────── */
+.duel-record { display: grid; gap: 6px; }
+.rank-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.rank-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px 5px 8px; border-radius: 999px;
+  font-family: var(--display); font-size: 15px; letter-spacing: 0.06em; white-space: nowrap;
+  color: var(--rank, var(--parch)); border: 1px solid color-mix(in srgb, var(--rank, #888) 60%, transparent);
+  background: radial-gradient(circle at 20% 50%, color-mix(in srgb, var(--rank, #888) 22%, transparent), rgba(8, 7, 10, 0.6) 70%);
+}
+.rank-badge svg { width: 18px; height: 18px; color: var(--rank, var(--gold)); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--rank, #888) 60%, transparent)); }
+.rank-badge.small { padding: 2px 8px 2px 5px; font-size: 11.5px; gap: 4px; }
+.rank-badge.small svg { width: 13px; height: 13px; }
+.rank-0 { --rank: #8f8a86; }   /* Cenere */
+.rank-1 { --rank: #d9774a; }   /* Brace */
+.rank-2 { --rank: #f2d08a; }   /* Candela */
+.rank-3 { --rank: #f4b63c; }   /* Lanterna */
+.rank-4 { --rank: #a8d4f0; }   /* Faro */
+.rank-5 { --rank: #c9a6ff; }   /* Sigillo */
+.rank-5 svg { animation: flicker 3s ease-in-out infinite; }
+.rank-points { font-family: var(--display); color: var(--parch-2); font-size: 14px; }
+.rank-bar { display: block; height: 5px; border-radius: 3px; background: rgba(239, 228, 205, 0.1); overflow: hidden; max-width: 320px; }
+.rank-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--gold-deep), var(--gold-2)); }
+.rank-next, .rank-games { font-size: 13px; color: var(--muted); }

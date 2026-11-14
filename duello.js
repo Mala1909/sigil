@@ -81,11 +81,54 @@
     if (!s.pvp) s.pvp = { w: 0, l: 0, t: 0 };
     return s.pvp;
   }
+  /* ───────── la classificata: i ranghi del Duello ─────────
+   * Valgono solo tra Custodi (il Viaggio ha i suoi premi). Vengono dal punteggio
+   * che il registro calcola dopo ogni duello confermato da entrambi (Elo, si parte da 1000):
+   * si sale vincendo, si scende perdendo. Ogni rango ha tre divisioni (III → I). */
+  var TIERS = [
+    { min: -Infinity, max: 900, name: "Cenere" },
+    { min: 900, max: 1000, name: "Brace" },
+    { min: 1000, max: 1100, name: "Candela" },
+    { min: 1100, max: 1200, name: "Lanterna" },
+    { min: 1200, max: 1350, name: "Faro" },
+    { min: 1350, max: Infinity, name: "Sigillo" }
+  ];
+  function rank(rating) {
+    var p = rating == null ? 1000 : rating;
+    var i = 0;
+    while (i < TIERS.length - 1 && p >= TIERS[i + 1].min) i++;
+    var t = TIERS[i];
+    var r = { tier: i, name: t.name, label: t.name, div: 0, toNext: null, pct: 100, nextLabel: null };
+    if (isFinite(t.min) && isFinite(t.max)) {
+      var step = (t.max - t.min) / 3;
+      var k = Math.min(2, Math.floor((p - t.min) / step)); // 0 = III, 1 = II, 2 = I
+      r.div = 3 - k;
+      r.label = t.name + " " + ["III", "II", "I"][k];
+      var nextAt = t.min + step * (k + 1);
+      r.toNext = Math.ceil(nextAt - p);
+      r.pct = Math.round(((p - (t.min + step * k)) / step) * 100);
+      r.nextLabel = k < 2 ? t.name + " " + ["III", "II", "I"][k + 1] : TIERS[i + 1].name + (isFinite(TIERS[i + 1].max) ? " III" : "");
+    } else if (!isFinite(t.min)) {
+      r.toNext = Math.ceil(t.max - p);
+      r.pct = Math.max(0, Math.round(100 - (t.max - p)));
+      r.nextLabel = TIERS[1].name + " III";
+    }
+    return r;
+  }
+  function rankBadge(rating, small) {
+    var r = rank(rating);
+    return '<span class="rank-badge rank-' + r.tier + (small ? " small" : "") + '"><svg aria-hidden="true"><use href="#g-sigillo"/></svg>' + G.esc(r.label) + "</span>";
+  }
   function paintRecord() {
     var r = record();
-    var line = r.w + r.l + r.t ? "I tuoi duelli: " + r.w + " vinti · " + r.l + " persi · " + r.t + " pari" : "Nessun duello ancora.";
-    if (r.rating) line += " · punteggio " + r.rating;
-    $("duelRecord").textContent = line;
+    var played = r.w + r.l + r.t;
+    var rk = rank(r.rating);
+    $("duelRecord").innerHTML =
+      '<span class="rank-line">' + rankBadge(r.rating) +
+        (r.rating ? '<span class="rank-points">' + r.rating + " punti</span>" : "") + "</span>" +
+      '<span class="rank-bar"><i style="width:' + rk.pct + '%"></i></span>' +
+      '<span class="rank-next">' + (rk.nextLabel ? "Mancano " + rk.toNext + " punti a " + G.esc(rk.nextLabel) : "Il rango più alto: sei tra i guardiani del Sigillo.") + "</span>" +
+      '<span class="rank-games">' + (played ? "I tuoi duelli: " + r.w + " vinti · " + r.l + " persi · " + r.t + " pari" : "Nessun duello ancora: ogni Custode parte da Candela III.") + "</span>";
   }
   function paintBoard() {
     var box = $("duelBoard");
@@ -94,9 +137,9 @@
     box.innerHTML = '<p class="label">I Custodi più temuti</p><p class="end-note">Apro il registro…</p>';
     c.leaderboard().then(function (rows) {
       if (!rows || !rows.length) { box.innerHTML = '<p class="label">I Custodi più temuti</p><p class="end-note">Nessun duello annotato finora. Il primo nome sarà il tuo.</p>'; return; }
-      box.innerHTML = '<p class="label">I Custodi più temuti</p><table><thead><tr><th></th><th>Custode</th><th>Vinti</th><th>Persi</th><th style="text-align:right">Punti</th></tr></thead><tbody>' +
+      box.innerHTML = '<p class="label">La classificata dei Custodi</p><table><thead><tr><th></th><th>Custode</th><th>Rango</th><th>V</th><th>P</th><th style="text-align:right">Punti</th></tr></thead><tbody>' +
         rows.map(function (r, i) {
-          return '<tr class="' + (r.me ? "me" : "") + '"><td class="n">' + (i + 1) + '</td><td><span class="h" data-house="' + G.esc(r.house) + '">' + G.esc(r.name) + "</span></td><td>" + r.w + "</td><td>" + r.l + '</td><td class="r">' + r.rating + "</td></tr>";
+          return '<tr class="' + (r.me ? "me" : "") + '"><td class="n">' + (i + 1) + '</td><td><span class="h" data-house="' + G.esc(r.house) + '">' + G.esc(r.name) + "</span></td><td>" + rankBadge(r.rating, true) + "</td><td>" + r.w + "</td><td>" + r.l + '</td><td class="r">' + r.rating + "</td></tr>";
         }).join("") + "</tbody></table>";
     }).catch(function (e) { box.innerHTML = '<p class="end-note">Classifica non disponibile: ' + G.esc(e.message) + "</p>"; });
   }
@@ -561,7 +604,9 @@
       return c.levelUp().then(function (lv) {
         var after = record().rating || before;
         var d = after - before;
-        return { xp: gain, levels: lv.levels, cards: lv.cards, note: "Punteggio da duellante: " + after + " (" + (d >= 0 ? "+" : "") + d + ")" };
+        var rb = rank(before), ra = rank(after);
+        var moved = ra.label !== rb.label ? (after > before ? " Sali a " + ra.label + "!" : " Scendi a " + ra.label + ".") : "";
+        return { xp: gain, levels: lv.levels, cards: lv.cards, note: "Rango " + ra.label + " · " + after + " punti (" + (d >= 0 ? "+" : "") + d + ")." + moved };
       });
     }));
   }
@@ -671,6 +716,7 @@
   if (window.SigilCloud) window.SigilCloud.on(function () { if (!sheet.hidden && !busy && !searching) paintRecord(); });
 
   window.SigilDuello = {
+    rank: rank,
     open: open,
     // Per le prove: spezza il filo senza salutare, come una rete che cade.
     _drop: function () { try { if (conn) conn.close(); } catch (e) {} }
