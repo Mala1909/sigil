@@ -11,7 +11,8 @@
  */
 (function () {
   var q = new URLSearchParams(location.search);
-  var MENUS = ["a", "b", "c"];
+  // La "a" (la prima soglia) è stata tolta il 14 nov: chi l'aveva scelta passa alla b.
+  var MENUS = ["b", "c"];
   var pick = q.get("menu");
   try {
     if (pick && MENUS.indexOf(pick) >= 0) localStorage.setItem("sigil-menu", pick);
