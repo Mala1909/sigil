@@ -26,7 +26,7 @@
   var G = window.SigilGame;
   if (!E || !G) return;
 
-  var PROTO = 3; // 3: carte diversificate (15 nov) — telefoni con regole diverse non si siedono insieme
+  var PROTO = 4; // 4: carte diversificate e casate ribilanciate (15 nov) — telefoni con regole diverse non si siedono insieme
   var PREFIX = "sigil" + PROTO + "-";
   var SLOTS = 10;
   var TURN_SECONDS = 75;
