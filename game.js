@@ -7,7 +7,7 @@
 
   var KEY = "lume-v1";
   // Cambia questo numero quando sostituisci delle illustrazioni, così il browser non usa le vecchie.
-  var ART_VERSION = 4;
+  var ART_VERSION = 5;
   var KIND = { none: "", ongoing: "Sempre", reveal: "Scopri", anchor: "Fermo" };
   var MONTHS = ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"];
   var ORE = ["Prima", "Seconda", "Terza", "Quarta", "Quinta", "Sesta"];
