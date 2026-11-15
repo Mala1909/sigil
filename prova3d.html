@@ -6,90 +6,129 @@
 <title>SIGIL · prova delle evoluzioni 3D</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap">
 <style>
-  /* Pagina di prova: le evoluzioni di una carta, con il 3D che segue l'inclinazione del telefono. */
-  :root { --gold: #e7c66f; --parch: #efe4cd; --parch-2: #cbbd9f; --muted: #8f8577; --display: "Cinzel", Georgia, serif; --serif: "Cormorant Garamond", Georgia, serif; }
+  /* Pagina di prova (non collegata al gioco): le sei evoluzioni di una carta.
+     Dal livello 3 la carta è a strati veri: sfondo ridipinto e personaggio ritagliato,
+     ognuno con la sua profondità, mossi dall'inclinazione del telefono (o dal mouse). */
+  :root { --gold: #e7c66f; --parch: #efe4cd; --parch-2: #cbbd9f; --muted: #8f8577; --selva: #8bbf7a;
+    --display: "Cinzel", Georgia, serif; --serif: "Cormorant Garamond", Georgia, serif; }
   * { box-sizing: border-box; }
-  html, body { margin: 0; min-height: 100%; background: radial-gradient(ellipse at 50% 20%, #1d1726, #07060a 72%); color: var(--parch); font-family: system-ui, sans-serif; }
-  body { display: flex; flex-direction: column; align-items: center; padding: max(18px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)); overflow-x: hidden; }
-  h1 { margin: 6px 0 2px; font-family: var(--display); font-size: 20px; letter-spacing: .12em; color: var(--gold); text-align: center; }
-  .sub { margin: 0 0 6px; font-family: var(--serif); font-style: italic; font-size: 17px; color: var(--parch-2); text-align: center; }
+  html, body { margin: 0; min-height: 100%; background: radial-gradient(ellipse at 50% 26%, #221b2c, #07060a 70%); color: var(--parch); font-family: system-ui, sans-serif; }
+  body { display: flex; flex-direction: column; align-items: center; padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)); overflow-x: hidden; -webkit-user-select: none; user-select: none; }
+  h1 { margin: 6px 0 2px; font-family: var(--display); font-size: 19px; letter-spacing: .14em; color: var(--gold); text-align: center; }
+  .sub { margin: 0; font-family: var(--serif); font-style: italic; font-size: 17px; color: var(--parch-2); text-align: center; }
 
-  .scene { perspective: 900px; margin: 46px 0 18px; }
-  .card3d { --w: min(78vw, 300px); position: relative; width: var(--w); aspect-ratio: 5 / 7.2; border-radius: 16px; transform-style: preserve-3d;
-    transform: rotateY(calc(var(--tx, 0) * 16deg)) rotateX(calc(var(--ty, 0) * -16deg)); transition: transform .08s linear; }
-  .frame { position: absolute; inset: 0; border-radius: 16px; background: linear-gradient(170deg, #4a3d2a, #120e0b 72%); box-shadow: 0 22px 40px rgba(0,0,0,.65), inset 0 0 0 1px rgba(255,255,255,.08); }
-  .frame::before { content: ""; position: absolute; inset: 5px; border-radius: 12px; border: 1px solid rgba(120, 190, 120, .5); }
+  .scene { position: relative; perspective: 1100px; margin: 54px 0 26px; touch-action: none; }
+  .scene::after { /* ombra a terra, si sposta con la carta */
+    content: ""; position: absolute; left: 10%; right: 10%; bottom: -26px; height: 34px; border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(0,0,0,.6), transparent 70%);
+    transform: translateX(calc(var(--tx, 0) * -18px)) scaleX(calc(1 - var(--tl, 0) * .12)); filter: blur(4px); }
+  .card { --w: min(80vw, 320px); position: relative; width: var(--w); height: calc(var(--w) * 1.44); border-radius: calc(var(--w) * .055);
+    transform-style: preserve-3d; transform: rotateY(calc(var(--tx, 0) * 13deg)) rotateX(calc(var(--ty, 0) * -13deg)); will-change: transform; }
 
-  /* la finestra del dipinto: ritaglia l'arte; l'arte è più grande della finestra */
-  .window { position: absolute; left: 4%; right: 4%; top: 3.5%; height: 52%; border-radius: 10px 10px 4px 4px; overflow: hidden; background: #0d0b10; }
-  .art { position: absolute; left: calc(var(--w) * -0.04); width: var(--w); top: calc(var(--w) * -0.035 - var(--lift, 0px)); height: calc(var(--w) * 1.49); }
-  .art img, .art canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-  .art canvas { display: none; }
-  .breakout { position: absolute; left: 0; width: var(--w); top: calc(var(--w) * 0 - var(--lift, 0px)); height: calc(var(--w) * 1.49); pointer-events: none; display: none;
-    transform: translate(calc(var(--tx, 0) * var(--pop, 0px)), calc(var(--ty, 0) * var(--pop, 0px))) translateZ(6px); filter: drop-shadow(0 6px 10px rgba(0,0,0,.55));
-    -webkit-mask-image: linear-gradient(180deg, #000 calc(var(--w) * 0.66), transparent calc(var(--w) * 0.76)); mask-image: linear-gradient(180deg, #000 calc(var(--w) * 0.66), transparent calc(var(--w) * 0.76)); }
-  .embers { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; display: none; }
-  .glare { position: absolute; inset: 0; border-radius: 16px; pointer-events: none; opacity: 0; mix-blend-mode: soft-light;
-    background: radial-gradient(circle at calc(50% + var(--tx, 0) * 40%) calc(30% + var(--ty, 0) * 40%), rgba(255,255,255,.9), transparent 55%); }
-  .holo { position: absolute; inset: 0; border-radius: 16px; pointer-events: none; opacity: 0; mix-blend-mode: color-dodge;
-    background: linear-gradient(calc(110deg + var(--tx, 0) * 40deg), transparent 30%, rgba(255, 215, 140, .35) 42%, rgba(160, 220, 255, .25) 50%, rgba(255, 160, 220, .2) 58%, transparent 70%); }
+  /* cornice */
+  .frame { position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(170deg, #4a3d2a, #120e0b 72%);
+    box-shadow: 0 26px 46px rgba(0,0,0,.66), inset 0 0 0 1px rgba(255,255,255,.08); }
+  .frame::before { content: ""; position: absolute; inset: calc(var(--w) * .018); border-radius: calc(var(--w) * .042); border: 1px solid rgba(139, 191, 122, .45); }
 
-  .info { position: absolute; left: 0; right: 0; bottom: 0; top: 56%; padding: 0 7% 6%; display: flex; flex-direction: column; transform: translateZ(14px); }
-  .cost, .power { position: absolute; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; font-family: var(--display); font-weight: 700; font-size: 21px; z-index: 3; transform: translateZ(40px); }
-  .cost { top: 10px; left: 10px; color: #2a1a05; background: radial-gradient(circle at 35% 30%, #fff1c2, #f4b63c 55%, #9b5f12); box-shadow: 0 3px 10px rgba(0,0,0,.6); }
-  .power { bottom: 10px; right: 10px; color: var(--parch); background: radial-gradient(circle at 35% 30%, #5a4a6e, #241b33 70%); border: 2px solid #8bbf7a; box-shadow: 0 3px 10px rgba(0,0,0,.6); }
-  .name { margin: 8px 0 0; font-family: var(--display); font-weight: 700; font-size: 22px; letter-spacing: .03em; text-shadow: 0 2px 6px #000; }
-  .kind { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #9fd08c; font-weight: 600; }
-  .text { margin-top: 8px; flex: 1; padding: 8px 46px 8px 10px; border-radius: 8px; background: linear-gradient(180deg, #f4ead6, #e4d5b6); color: #3a2c1c; font-family: var(--serif); font-style: italic; font-size: 16px; line-height: 1.15; }
+  /* finestra del dipinto: sfondo (strato A) e braci dietro */
+  .window { position: absolute; left: calc(var(--w) * .04); width: calc(var(--w) * .92); top: var(--win-top); height: var(--win-h);
+    border-radius: calc(var(--w) * .035) calc(var(--w) * .035) calc(var(--w) * .012) calc(var(--w) * .012); overflow: hidden; background: #0d0b10;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.6); transform: translateZ(1px); }
+  .layer { position: absolute; display: block; }
+  .window .layer { left: calc(var(--w) * -.08); top: calc(var(--art-top) - var(--win-top)); width: calc(var(--w) * 1.08); height: calc(var(--w) * 1.08 * 1.49); }
+  .flat { object-fit: cover; }
+  /* il personaggio (strato B): fuori dalla finestra, ritagliato a seconda del livello */
+  .fg { left: calc(var(--w) * -.04); top: var(--art-top); width: calc(var(--w) * 1.08); height: calc(var(--w) * 1.08 * 1.49); pointer-events: none; transform: translateZ(18px); display: none; }
+  .front { position: absolute; left: calc(var(--w) * .04); width: calc(var(--w) * .92); top: var(--win-top); height: var(--win-h); pointer-events: none; transform: translateZ(22px); display: none; }
 
-  /* ── livelli ── */
-  .lv2 .frame, .lv3 .frame, .lv4 .frame, .lv5 .frame { background: linear-gradient(165deg, #6e4a26, #2a1a0c 72%); box-shadow: 0 22px 40px rgba(0,0,0,.65), inset 0 0 0 2px #b9814a, inset 0 0 0 4px #3a2410, inset 0 0 0 5px #e0aa68; }
+  .info { position: absolute; left: calc(var(--w) * .06); right: calc(var(--w) * .06); top: var(--info-top); bottom: calc(var(--w) * .05); display: flex; flex-direction: column; transform: translateZ(26px); }
+  .name { font-family: var(--display); font-weight: 700; font-size: calc(var(--w) * .074); letter-spacing: .03em; line-height: 1.05; text-shadow: 0 2px 6px #000; }
+  .kind { margin-top: 2px; font-size: calc(var(--w) * .036); letter-spacing: .18em; text-transform: uppercase; color: var(--selva); font-weight: 600; }
+  .text { margin-top: calc(var(--w) * .025); flex: 1; padding: calc(var(--w) * .03) calc(var(--w) * .15) calc(var(--w) * .03) calc(var(--w) * .035); border-radius: calc(var(--w) * .025);
+    background: linear-gradient(180deg, #f4ead6, #e4d5b6); color: #3a2c1c; font-family: var(--serif); font-style: italic; font-size: calc(var(--w) * .052); line-height: 1.15; }
+  .orb { position: absolute; display: grid; place-items: center; width: calc(var(--w) * .145); height: calc(var(--w) * .145); border-radius: 50%; font-family: var(--display); font-weight: 700; font-size: calc(var(--w) * .07); transform: translateZ(40px); }
+  .cost { top: calc(var(--w) * .035); left: calc(var(--w) * .035); color: #2a1a05; background: radial-gradient(circle at 35% 30%, #fff1c2, #f4b63c 55%, #9b5f12); box-shadow: 0 3px 10px rgba(0,0,0,.6), 0 0 12px rgba(244,182,60,.35); }
+  .power { bottom: calc(var(--w) * .035); right: calc(var(--w) * .035); color: var(--parch); background: radial-gradient(circle at 35% 30%, #5a4a6e, #241b33 70%); border: 2px solid var(--selva); box-shadow: 0 3px 10px rgba(0,0,0,.6); }
+
+  .sheen { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; transform: translateZ(44px); opacity: 0; mix-blend-mode: soft-light;
+    background:
+      radial-gradient(circle at calc(50% + var(--tx, 0) * 55%) calc(28% + var(--ty, 0) * 55%), rgba(255,255,255,.95), transparent 46%),
+      linear-gradient(calc(115deg + var(--tx, 0) * 25deg), transparent calc(38% + var(--tx, 0) * 30%), rgba(255,255,255,.55) calc(46% + var(--tx, 0) * 30%), transparent calc(54% + var(--tx, 0) * 30%)); }
+  .ring { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; display: none; transform: translateZ(2px);
+    padding: calc(var(--w) * .035);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+
+  /* ── geometria per livello ── */
+  .card { --win-top: calc(var(--w) * .05); --win-h: calc(var(--w) * .76); --art-top: calc(var(--w) * -.03); --info-top: calc(var(--w) * .84); }
+  .lv4 { --win-top: calc(var(--w) * .2); --win-h: calc(var(--w) * .6); --art-top: calc(var(--w) * -.06); }
+  .lv5, .lv6 { --win-top: calc(var(--w) * .05); --win-h: calc(var(--w) * 1.34); --art-top: calc(var(--w) * -.06); --info-top: calc(var(--w) * .9); }
+
+  /* 2 · cornice di bronzo (resta dal 2 al 5) */
+  .lv2 .frame, .lv3 .frame, .lv4 .frame, .lv5 .frame { background: linear-gradient(165deg, #6e4a26, #2a1a0c 72%);
+    box-shadow: 0 26px 46px rgba(0,0,0,.66), inset 0 0 0 2px #b9814a, inset 0 0 0 4px #3a2410, inset 0 0 0 5px #e0aa68; }
   .lv2 .frame::before, .lv3 .frame::before, .lv4 .frame::before, .lv5 .frame::before { border-color: rgba(224,170,104,.55); }
-  .lv3 .glare, .lv4 .glare, .lv5 .glare, .lv6 .glare { opacity: .45; }
-  .gl .art img { display: none; }
-  .gl .art #gl { display: block; }
-  /* fuori cornice: la finestra si abbassa e il drago ne esce */
-  .lv4, .lv5, .lv6 { --lift: calc(var(--w) * 0.12); --pop: 12px; }
-  .lv4 .window, .lv5 .window, .lv6 .window { top: 15%; height: 41%; }
-  .lv4 .breakout, .lv5 .breakout, .lv6 .breakout { display: block; top: calc(15% - var(--w) * 0.035 - var(--lift)); }
-  /* vivo: braci che salgono, il dipinto arriva fino in fondo */
-  .lv5 .embers, .lv6 .embers { display: block; }
-  .lv5 .window, .lv6 .window { height: 81%; border-radius: 10px; }
-  .lv5 .text, .lv6 .text { background: rgba(12, 10, 8, .62); color: var(--parch); border: 1px solid rgba(231,198,111,.3); backdrop-filter: blur(2px); }
-  .lv5 .info, .lv6 .info { top: 60%; }
-  /* sigillo d'oro */
-  .lv6 .frame { background: linear-gradient(160deg, #6a4c16, #1b1306 70%); box-shadow: 0 22px 40px rgba(0,0,0,.65), inset 0 0 0 2px #f0cf78, inset 0 0 0 4px #6a4b12, inset 0 0 0 6px #fbe3a2; }
-  .lv6 .frame::before { border-color: rgba(246,220,158,.7); }
-  .lv6 .holo { opacity: .5; }
-  .lv6 .name { background: linear-gradient(180deg, #fff5cf, #e7b54d 58%, #a26f17); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; filter: drop-shadow(0 2px 3px #000); }
-  .lv6 .power { border-color: #f0cf78; }
+  /* 3 · rilievo: strati veri */
+  .gl .flat { display: none; }
+  .lv3 .sheen, .lv4 .sheen, .lv5 .sheen, .lv6 .sheen { opacity: calc(.25 + var(--tl, 0) * .4); }
+  .gl.lv3 .fg, .gl.lv4 .fg, .gl.lv5 .fg, .gl.lv6 .fg { display: block; }
+  .lv3 .fg { clip-path: inset(calc(var(--win-top) - var(--art-top)) calc(var(--w) * .08) calc(var(--w) * 1.08 * 1.49 - var(--win-top) - var(--win-h) + var(--art-top)) calc(var(--w) * .08) round calc(var(--w) * .035)); }
+  /* 4 · fuori cornice: il personaggio esce dalla finestra, ma non copre nome e testo */
+  .lv4 .fg { -webkit-mask-image: linear-gradient(180deg, #000 calc(var(--w) * .8 - var(--art-top)), transparent calc(var(--w) * .86 - var(--art-top)));
+    mask-image: linear-gradient(180deg, #000 calc(var(--w) * .8 - var(--art-top)), transparent calc(var(--w) * .86 - var(--art-top))); }
+  /* 5 · vivo: il dipinto riempie la carta, braci su più piani */
+  .lv5 .front, .lv6 .front { display: block; }
+  .lv5 .fg, .lv6 .fg { clip-path: polygon(0 0, 100% 0, 100% calc(var(--w) * .6 - var(--art-top)), calc(var(--w) * 1.0) calc(var(--w) * .6 - var(--art-top)), calc(var(--w) * 1.0) 100%, calc(var(--w) * .08) 100%, calc(var(--w) * .08) calc(var(--w) * .6 - var(--art-top)), 0 calc(var(--w) * .6 - var(--art-top))); }
+  /* sotto il nome, un velo scuro che lo rende leggibile sopra il dipinto */
+  .lv5 .info::before, .lv6 .info::before { content: ""; position: absolute; left: calc(var(--w) * -.02); right: calc(var(--w) * -.02); top: calc(var(--w) * -.12); height: calc(var(--w) * .3);
+    background: linear-gradient(180deg, transparent, rgba(8, 6, 4, .72) 55%, rgba(8, 6, 4, .5)); border-radius: 8px; z-index: -1; filter: blur(4px); }
+  .lv5 .text, .lv6 .text { background: linear-gradient(180deg, rgba(14,11,9,.55), rgba(10,8,6,.78)); color: var(--parch); border: 1px solid rgba(231,198,111,.28); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+  .lv5 .window, .lv6 .window { border-radius: calc(var(--w) * .035); }
+  /* 6 · sigillo d'oro: lamina in rilievo e riflesso */
+  .lv6 .frame { background:
+      linear-gradient(calc(120deg + var(--tx, 0) * 30deg), transparent 35%, rgba(255, 250, 225, .55) 48%, transparent 60%) 0 0 / 100% 100%,
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22'%3E%3Cpath d='M11 1l3 7 7 3-7 3-3 7-3-7-7-3 7-3z' fill='none' stroke='%23fff3c4' stroke-opacity='.28' stroke-width='.8'/%3E%3C/svg%3E"),
+      linear-gradient(160deg, #f7dc8f, #b8862c 30%, #6a4a12 55%, #e9c36a 78%, #8a6418);
+    box-shadow: 0 26px 46px rgba(0,0,0,.66), 0 0 22px rgba(240, 200, 110, .25), inset 0 0 0 1px #fff2bf, inset 0 0 0 3px #8a6418, inset 0 0 0 4px #f6dc9e; }
+  .lv6 .frame::before { border-color: rgba(255, 244, 205, .75); box-shadow: inset 0 0 6px rgba(0,0,0,.4); }
+  .lv6 .ring { display: block; mix-blend-mode: color-dodge; opacity: .55;
+    background: linear-gradient(calc(100deg + var(--tx, 0) * 70deg + var(--ty, 0) * 30deg), rgba(255,120,120,.0) 10%, rgba(255,190,110,.6) 28%, rgba(170,255,190,.5) 44%, rgba(120,190,255,.6) 60%, rgba(230,140,255,.5) 76%, rgba(255,120,120,0) 92%); }
+  .lv6 .name { background: linear-gradient(180deg, #fff7d6, #e9bb55 55%, #9c6a14); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; filter: drop-shadow(0 1px 0 rgba(60,40,5,.9)) drop-shadow(0 3px 4px rgba(0,0,0,.8)); }
+  .lv6 .kind { color: #f2d48a; }
+  .lv6 .power { border-color: #f0cf78; box-shadow: 0 3px 10px rgba(0,0,0,.6), 0 0 12px rgba(240,207,120,.45); }
+  .lv6 .text { border-color: rgba(246, 220, 158, .55); }
 
-  .levels { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 520px; margin-top: 8px; }
-  .levels button { min-width: 46px; padding: 9px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.04); color: var(--parch-2); font-family: var(--display); font-size: 15px; cursor: pointer; }
+  .levels { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 520px; }
+  .levels button { min-width: 48px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.04); color: var(--parch-2); font-family: var(--display); font-size: 15px; cursor: pointer; }
   .levels button.on { border-color: var(--gold); color: var(--gold); background: rgba(231,198,111,.12); }
-  .what { max-width: 440px; margin: 12px 0 0; min-height: 3.2em; text-align: center; font-family: var(--serif); font-size: 18px; color: var(--parch-2); }
+  .what { max-width: 440px; margin: 12px 0 0; min-height: 3.3em; text-align: center; font-family: var(--serif); font-size: 18px; color: var(--parch-2); }
   .what b { display: block; font-family: var(--display); font-size: 15px; letter-spacing: .1em; color: var(--parch); font-style: normal; }
-  .motion { margin-top: 12px; padding: 10px 16px; border-radius: 999px; border: 1px solid var(--gold); background: rgba(231,198,111,.1); color: var(--gold); font: 600 14px system-ui; cursor: pointer; }
+  .motion { margin-top: 10px; padding: 11px 18px; border-radius: 999px; border: 1px solid var(--gold); background: rgba(231,198,111,.1); color: var(--gold); font: 600 14px system-ui; cursor: pointer; }
   .hint { margin-top: 8px; font-size: 13px; color: var(--muted); text-align: center; }
 </style>
 </head>
 <body>
 <h1>Le evoluzioni della carta</h1>
-<p class="sub">Prova: inclina il telefono (o muovi il mouse sulla carta)</p>
+<p class="sub">Inclina il telefono, o muovi il mouse sulla carta</p>
 
-<div class="scene">
-  <div class="card3d lv1" id="card">
+<div class="scene" id="scene">
+  <div class="card lv6" id="card">
     <div class="frame"></div>
-    <div class="window"><div class="art" id="art"><img src="art/cards/prof/camion-art.jpg" alt=""><canvas id="gl"></canvas><canvas class="embers" id="embers"></canvas></div></div>
-    <img class="breakout" src="art/cards/fuori/camion.webp" alt="">
-    <div class="holo"></div>
-    <div class="glare"></div>
-    <span class="cost">6</span>
+    <div class="ring"></div>
+    <div class="window">
+      <img class="layer flat" src="art/cards/3d/camion/bg.webp" alt="" id="flat">
+      <canvas class="layer" id="glA"></canvas>
+      <canvas class="layer" id="back"></canvas>
+    </div>
+    <canvas class="layer fg" id="glB"></canvas>
+    <canvas class="front" id="front"></canvas>
+    <span class="orb cost">6</span>
     <div class="info">
       <div class="name">Drago</div><div class="kind">Selva</div>
       <div class="text">Dormiva sotto la piana. Qualcuno ha contato fino a sei.</div>
     </div>
-    <span class="power">10</span>
+    <span class="orb power">10</span>
+    <div class="sheen"></div>
   </div>
 </div>
 
@@ -100,114 +139,181 @@
 
 <script>
 (function () {
+  "use strict";
+  var BASE = "art/cards/3d/camion/";
   var card = document.getElementById("card");
   var LEVELS = [
     ["Pergamena", "La carta com'è oggi."],
-    ["Cornice", "Una cornice di bronzo battuto."],
-    ["Rilievo", "La carta diventa 3D: si muove con il telefono e il dipinto ha profondità."],
-    ["Fuori cornice", "Il drago esce dal riquadro e sporge sopra la cornice."],
-    ["Vivo", "Il dipinto riempie la carta e salgono braci lente."],
-    ["Sigillo d'oro", "Cornice e nome d'oro, con un riflesso che cambia inclinando."]
+    ["Cornice di bronzo", "Una cornice di metallo battuto."],
+    ["Rilievo", "La carta è a strati: il drago si stacca dal paesaggio e proietta la sua ombra."],
+    ["Fuori cornice", "Il drago esce dal riquadro e sporge oltre il bordo della carta."],
+    ["Vivo", "Il dipinto riempie la carta; braci e polvere salgono su piani diversi."],
+    ["Sigillo d'oro", "Lamina d'oro in rilievo, con un riflesso iridescente che segue la luce."]
   ];
-  var level = 6;
-  var levelsBox = document.getElementById("levels");
-  levelsBox.innerHTML = LEVELS.map(function (l, i) { return '<button type="button" data-lv="' + (i + 1) + '">' + (i + 1) + "</button>"; }).join("");
+  var level = 6, glOk = false;
+  var box = document.getElementById("levels");
+  box.innerHTML = LEVELS.map(function (l, i) { return '<button type="button" data-lv="' + (i + 1) + '">' + (i + 1) + "</button>"; }).join("");
   function setLevel(n) {
     level = n;
-    card.className = "card3d lv" + n + (n >= 3 && gl ? " gl" : "");
-    Array.prototype.forEach.call(levelsBox.children, function (b) { b.classList.toggle("on", Number(b.dataset.lv) === n); });
+    card.className = "card lv" + n + (n >= 3 && glOk ? " gl" : "");
+    Array.prototype.forEach.call(box.children, function (b) { b.classList.toggle("on", Number(b.dataset.lv) === n); });
     document.getElementById("what").innerHTML = "<b>" + n + " · " + LEVELS[n - 1][0] + "</b>" + LEVELS[n - 1][1];
+    document.getElementById("flat").src = n >= 3 ? BASE + "bg.webp" : "art/cards/prof/camion-art.jpg";
   }
-  levelsBox.addEventListener("click", function (e) { var b = e.target.closest("[data-lv]"); if (b) setLevel(Number(b.dataset.lv)); });
+  box.addEventListener("click", function (e) { var b = e.target.closest("[data-lv]"); if (b) setLevel(Number(b.dataset.lv)); });
 
-  /* ── WebGL: il dipinto con la sua mappa di profondità ── */
-  var canvas = document.getElementById("gl");
-  var gl = canvas.getContext("webgl", { premultipliedAlpha: false });
-  var uTilt, uStrength, ready = 0;
-  if (gl) {
-    var vs = "attribute vec2 p; varying vec2 v; void main(){ v = p * 0.5 + 0.5; v.y = 1.0 - v.y; gl_Position = vec4(p, 0.0, 1.0); }";
-    var fs = "precision mediump float; uniform sampler2D art; uniform sampler2D dep; uniform vec2 tilt; uniform float strength; varying vec2 v;" +
-      "void main(){ vec2 uv = (v - 0.5) * 0.93 + 0.5; float d = texture2D(dep, uv).r; vec2 o = tilt * (d - 0.35) * strength;" +
-      " d = texture2D(dep, uv + o).r; o = tilt * (d - 0.35) * strength; d = texture2D(dep, uv + o).r; o = tilt * (d - 0.35) * strength;" +
-      " gl_FragColor = texture2D(art, uv + o); }";
-    var sh = function (t, src) { var s = gl.createShader(t); gl.shaderSource(s, src); gl.compileShader(s); return s; };
-    var prog = gl.createProgram();
-    gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(prog); gl.useProgram(prog);
-    var buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
-    var loc = gl.getAttribLocation(prog, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-    uTilt = gl.getUniformLocation(prog, "tilt"); uStrength = gl.getUniformLocation(prog, "strength");
-    var tex = function (unit, src, name) {
-      var t = gl.createTexture(); var img = new Image();
+  /* ───────── WebGL ───────── */
+  var VS = "attribute vec2 p; varying vec2 v; void main(){ v = p * .5 + .5; v.y = 1. - v.y; gl_Position = vec4(p, 0., 1.); }";
+  // Strato A: lo sfondo ridipinto, con la sua profondità e l'ombra morbida del personaggio.
+  var FS_A = [
+    "precision mediump float;",
+    "uniform sampler2D bg, bgd, fg; uniform vec2 tilt, light; uniform float k, shadowK; varying vec2 v;",
+    "void main(){",
+    "  vec2 uv = (v - .5) * .94 + .5;",
+    "  vec2 o = vec2(0.);",
+    "  for (int i = 0; i < 4; i++) { float d = texture2D(bgd, uv + o).r; o = tilt * (d - .45) * k; }",
+    "  vec3 c = texture2D(bg, uv + o).rgb;",
+    "  vec2 so = (light * .035 + tilt * .028);",
+    "  vec2 fu = (v - .5) * .94 + .5 - so - tilt * .03;",
+    "  float s = 0.;",
+    "  for (int i = -2; i <= 2; i++) for (int j = -2; j <= 2; j++) s += texture2D(fg, fu + vec2(float(i), float(j)) * .006).a;",
+    "  s /= 25.;",
+    "  c *= 1. - s * shadowK;",
+    "  float vg = smoothstep(.95, .35, length((v - .5) * vec2(1., .8)));",
+    "  gl_FragColor = vec4(c * (.82 + .18 * vg), 1.);",
+    "}"].join("\n");
+  // Strato B: il personaggio, con il suo rilievo interno e una luce di bordo dal lato della luce.
+  var FS_B = [
+    "precision mediump float;",
+    "uniform sampler2D fg, fgd; uniform vec2 tilt, light, shift; uniform float k; varying vec2 v;",
+    "void main(){",
+    "  vec2 uv = (v - .5) * .94 + .5 - shift;",
+    "  float d = texture2D(fgd, uv).r;",
+    "  uv += tilt * (d - .6) * k;",
+    "  vec4 c = texture2D(fg, uv);",
+    "  float a2 = texture2D(fg, uv + light * .0022).a;",
+    "  float rim = smoothstep(.25, .9, clamp(c.a - a2, 0., 1.));",
+    "  c.rgb = mix(c.rgb, c.rgb * 1.35 + vec3(.10, .07, .03), rim * (.25 + .3 * length(tilt)));",
+    "  gl_FragColor = vec4(c.rgb * c.a, c.a);",
+    "}"].join("\n");
+
+  function mkGL(canvas, fs, texs, cb) {
+    var gl = canvas.getContext("webgl", { premultipliedAlpha: true, alpha: true, antialias: true });
+    if (!gl) return null;
+    function sh(t, s) { var o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) console.warn(gl.getShaderInfoLog(o)); return o; }
+    var pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr); gl.useProgram(pr);
+    var b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    var l = gl.getAttribLocation(pr, "p"); gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, 2, gl.FLOAT, false, 0, 0);
+    gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+    var left = texs.length, ctx = { gl: gl, pr: pr, u: {} };
+    ["tilt", "light", "k", "shadowK", "shift"].forEach(function (n) { ctx.u[n] = gl.getUniformLocation(pr, n); });
+    texs.forEach(function (t, unit) {
+      var img = new Image();
       img.onload = function () {
-        gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t);
+        var tx = gl.createTexture(); gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, tx);
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.uniform1i(gl.getUniformLocation(prog, name), unit); ready++; if (ready === 2) setLevel(level);
+        gl.uniform1i(gl.getUniformLocation(pr, t[1]), unit);
+        if (--left === 0) cb();
       };
-      img.src = src;
-    };
-    tex(0, "art/cards/prof/camion-art.jpg", "art");
-    tex(1, "art/cards/prof/camion.png", "dep");
+      img.src = BASE + t[0];
+    });
+    return ctx;
+  }
+  var cA = document.getElementById("glA"), cB = document.getElementById("glB"), loaded = 0;
+  function ready() { if (++loaded === 2) { glOk = true; setLevel(level); } }
+  var A = mkGL(cA, FS_A, [["bg.webp", "bg"], ["bg-d.png", "bgd"], ["fg.webp", "fg"]], ready);
+  var B = A && mkGL(cB, FS_B, [["fg.webp", "fg"], ["fg-d.png", "fgd"]], ready);
+
+  function fit(c, ctx) {
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    var w = Math.round(c.offsetWidth * dpr), h = Math.round(c.offsetHeight * dpr);
+    if (w && h && (c.width !== w || c.height !== h)) { c.width = w; c.height = h; if (ctx) ctx.gl.viewport(0, 0, w, h); }
   }
 
-  /* ── braci (livello 5 e 6) ── */
-  var ec = document.getElementById("embers"), ex = ec.getContext("2d"), sparks = [];
-  for (var i = 0; i < 26; i++) sparks.push({ x: Math.random(), y: Math.random(), s: 0.6 + Math.random() * 1.6, v: 0.0006 + Math.random() * 0.0012, a: Math.random() * 6.28 });
+  /* ───────── braci e polvere su più piani (livelli 5 e 6) ───────── */
+  var back = document.getElementById("back"), front = document.getElementById("front");
+  var bx = back.getContext("2d"), fx = front.getContext("2d");
+  var motes = [];
+  for (var i = 0; i < 46; i++) motes.push({ x: Math.random(), y: Math.random(), z: Math.random(), v: .00045 + Math.random() * .0011, a: Math.random() * 6.28, ember: Math.random() < .55 });
+  var st = { x: 0, y: 0, vx: 0, vy: 0 };
+  function drawMotes(t) {
+    [[bx, back, false], [fx, front, true]].forEach(function (L) {
+      var ctx = L[0], c = L[1];
+      fit(c);
+      ctx.clearRect(0, 0, c.width, c.height);
+      var dpr = c.width / (c.offsetWidth || 1);
+      motes.forEach(function (m) {
+        if ((m.z >= .55) !== L[2]) return;
+        if (L[2] === false) { m.y -= m.v; m.a += .015 + m.z * .01; } else { m.y -= m.v; m.a += .015 + m.z * .01; }
+        if (m.y < -.05) { m.y = 1.05; m.x = Math.random(); }
+        var par = (m.z - .4) * 34 * dpr;
+        var x = (m.x + Math.sin(m.a) * .012) * c.width + st.x * par, y = m.y * c.height + st.y * par;
+        var r = (m.ember ? 1.4 + m.z * 2.6 : .8 + m.z * 1.6) * dpr;
+        var flick = .65 + .35 * Math.sin(t * .004 + m.a * 3);
+        var g = ctx.createRadialGradient(x, y, 0, x, y, r * 3);
+        if (m.ember) { g.addColorStop(0, "rgba(255, 214, 140," + (.95 * flick) + ")"); g.addColorStop(.35, "rgba(255, 120, 40," + (.5 * flick) + ")"); g.addColorStop(1, "rgba(255, 80, 20, 0)"); }
+        else { g.addColorStop(0, "rgba(235, 225, 205, .45)"); g.addColorStop(1, "rgba(235, 225, 205, 0)"); }
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r * 3, 0, 6.283); ctx.fill();
+      });
+    });
+  }
 
-  /* ── inclinazione: telefono o mouse ── */
-  var tx = 0, ty = 0, gx = 0, gy = 0, base = null;
+  /* ───────── movimento: telefono, mouse, respiro a riposo ───────── */
+  var target = { x: 0, y: 0 }, base = null, lastInput = 0, gyro = false;
   function onOrient(e) {
-    if (e.gamma == null) return;
-    if (!base) base = { g: e.gamma, b: e.beta };
-    gx = Math.max(-1, Math.min(1, (e.gamma - base.g) / 22));
-    gy = Math.max(-1, Math.min(1, (e.beta - base.b) / 22));
+    if (e.gamma == null || e.beta == null) return;
+    var g = e.gamma, b = e.beta;
+    if (!base) base = { g: g, b: b };
+    // la posizione "dritta" segue piano quella del telefono: tenuto fermo, la carta torna al centro
+    base.g += (g - base.g) * .006; base.b += (b - base.b) * .006;
+    target.x = Math.max(-1, Math.min(1, (g - base.g) / 20));
+    target.y = Math.max(-1, Math.min(1, (b - base.b) / 20));
+    lastInput = performance.now(); gyro = true;
   }
-  function startMotion() {
-    window.addEventListener("deviceorientation", onOrient);
-    document.getElementById("hint").textContent = "Inclina il telefono. Tocca due volte la carta per ricentrare.";
-  }
+  function startMotion() { window.addEventListener("deviceorientation", onOrient); document.getElementById("hint").textContent = "Inclina il telefono. Tienilo fermo e la carta torna dritta."; }
   if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
     var mb = document.getElementById("motion"); mb.hidden = false;
-    mb.addEventListener("click", function () { DeviceOrientationEvent.requestPermission().then(function (r) { if (r === "granted") { mb.hidden = true; startMotion(); } }); });
+    mb.addEventListener("click", function () { DeviceOrientationEvent.requestPermission().then(function (r) { if (r === "granted") { mb.hidden = true; startMotion(); } }).catch(function () {}); });
   } else if ("ondeviceorientation" in window && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) startMotion();
   else document.getElementById("hint").textContent = "Sul computer: muovi il mouse sopra la carta.";
-  card.addEventListener("dblclick", function () { base = null; });
-  document.querySelector(".scene").addEventListener("pointermove", function (e) {
-    if (e.pointerType !== "mouse") return;
+  var scene = document.getElementById("scene");
+  scene.addEventListener("pointermove", function (e) {
+    if (gyro && e.pointerType !== "mouse") return;
     var r = card.getBoundingClientRect();
-    gx = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width - 0.5) * 2));
-    gy = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height - 0.5) * 2));
+    target.x = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width - .5) * 2.2));
+    target.y = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height - .5) * 2.2));
+    lastInput = performance.now();
   });
-  document.querySelector(".scene").addEventListener("pointerleave", function () { gx = 0; gy = 0; });
+  scene.addEventListener("pointerleave", function () { if (!gyro) { target.x = 0; target.y = 0; } });
 
+  var prev = performance.now();
   function frame(t) {
-    var moving = level >= 3;
-    tx += ((moving ? gx : 0) - tx) * 0.12;
-    ty += ((moving ? gy : 0) - ty) * 0.12;
-    card.style.setProperty("--tx", tx.toFixed(3));
-    card.style.setProperty("--ty", ty.toFixed(3));
-    if (gl && ready === 2 && level >= 3) {
-      var r = canvas.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);
-      var W = Math.round(r.width * dpr), H = Math.round(r.height * dpr);
-      if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; gl.viewport(0, 0, W, H); }
-      gl.uniform2f(uTilt, -tx, -ty);
-      gl.uniform1f(uStrength, level >= 5 ? 0.075 : 0.055);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    var dt = Math.min(3, (t - prev) / 16.67); prev = t;
+    var live = level >= 3;
+    var tx = live ? target.x : 0, ty = live ? target.y : 0;
+    if (live && t - lastInput > 1800) { tx = Math.sin(t * .00055) * .16; ty = Math.cos(t * .0004) * .1; } // respiro a riposo
+    // molla smorzata: arriva morbida, con un filo di rimbalzo
+    st.vx += ((tx - st.x) * .075 - st.vx * .26) * dt; st.vy += ((ty - st.y) * .075 - st.vy * .26) * dt;
+    st.x += st.vx * dt; st.y += st.vy * dt;
+    card.style.setProperty("--tx", st.x.toFixed(4)); card.style.setProperty("--ty", st.y.toFixed(4));
+    var tl = Math.min(1, Math.hypot(st.x, st.y));
+    card.style.setProperty("--tl", tl.toFixed(3));
+    scene.style.setProperty("--tx", st.x.toFixed(4)); scene.style.setProperty("--tl", tl.toFixed(3));
+    if (glOk && live) {
+      var light = [-.55 - st.x * .4, -.75 - st.y * .4];
+      fit(cA, A); var g = A.gl;
+      g.useProgram(A.pr); g.uniform2f(A.u.tilt, -st.x, -st.y); g.uniform2f(A.u.light, light[0], light[1]);
+      g.uniform1f(A.u.k, level >= 5 ? .05 : .04); g.uniform1f(A.u.shadowK, .55);
+      g.clearColor(0, 0, 0, 1); g.clear(g.COLOR_BUFFER_BIT); g.drawArrays(g.TRIANGLE_STRIP, 0, 4);
+      fit(cB, B); g = B.gl;
+      g.useProgram(B.pr); g.uniform2f(B.u.tilt, -st.x, -st.y); g.uniform2f(B.u.light, light[0], light[1]);
+      g.uniform1f(B.u.k, .025); g.uniform2f(B.u.shift, -st.x * .028, -st.y * .028);
+      g.clearColor(0, 0, 0, 0); g.clear(g.COLOR_BUFFER_BIT); g.drawArrays(g.TRIANGLE_STRIP, 0, 4);
     }
-    if (level >= 5) {
-      var r2 = ec.getBoundingClientRect();
-      if (ec.width !== Math.round(r2.width)) { ec.width = Math.round(r2.width); ec.height = Math.round(r2.height); }
-      ex.clearRect(0, 0, ec.width, ec.height);
-      sparks.forEach(function (p) {
-        p.y -= p.v; p.a += 0.02; if (p.y < -0.05) { p.y = 1.05; p.x = Math.random(); }
-        var x = (p.x + Math.sin(p.a) * 0.01 + tx * 0.02 * p.s) * ec.width, y = p.y * ec.height;
-        var g = ex.createRadialGradient(x, y, 0, x, y, 4 * p.s);
-        g.addColorStop(0, "rgba(255, 200, 120, .9)"); g.addColorStop(1, "rgba(255, 90, 20, 0)");
-        ex.fillStyle = g; ex.beginPath(); ex.arc(x, y, 4 * p.s, 0, 6.28); ex.fill();
-      });
-    }
+    if (level >= 5) drawMotes(t); else { bx.clearRect(0, 0, back.width, back.height); fx.clearRect(0, 0, front.width, front.height); }
     requestAnimationFrame(frame);
   }
   setLevel(level);
