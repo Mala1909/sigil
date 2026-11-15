@@ -109,7 +109,10 @@
         snap: [[196, 0.3, "triangle"], [294, 0.3, "triangle"]],
         win: [[392, 0.25, "sine"], [523, 0.35, "sine"], [659, 0.5, "sine"]],
         lose: [[220, 0.35, "sine"], [185, 0.5, "sine"]],
-        no: [[140, 0.12, "square"]]
+        no: [[140, 0.12, "square"]],
+        tick: [[1180, 0.035, "triangle"]],
+        tock: [[700, 0.05, "triangle"]],
+        time: [[392, 0.12, "sawtooth"], [262, 0.3, "triangle"]]
       }[kind] || [[360, 0.1, "sine"]];
       tones.forEach(function (t, i) {
         var osc = audioCtx.createOscillator();
@@ -118,7 +121,7 @@
         osc.type = t[2];
         osc.frequency.value = t[0];
         gain.gain.setValueAtTime(0.0001, at);
-        gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, (kind === "no" ? 0.025 : 0.07) * sfxVolume()), at + 0.02);
+        gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, (kind === "no" || kind === "time" ? 0.025 : kind === "tick" || kind === "tock" ? 0.035 : 0.07) * sfxVolume()), at + 0.02);
         gain.gain.exponentialRampToValueAtTime(0.0001, at + t[1]);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
@@ -286,6 +289,7 @@
   function clearMatch() {
     if (timer) clearTimeout(timer);
     timer = null;
+    clockStop();
     var h = hooks;
     hooks = {};
     if (h.leave) h.leave();
@@ -550,6 +554,7 @@
       $("retreatButton").disabled = true;
     }
     if (st && st.whisper) $("whisper").textContent = st.whisper;
+    clockSync(view);
   }
 
   function fillEnd(view) {
@@ -580,6 +585,123 @@
     if (hooks.fillEnd) hooks.fillEnd(view, parts);
     if (window.SigilCollezione) window.SigilCollezione.fillEnd(view, parts);
   }
+
+  /* ───────── l'orologio dell'ora (16 nov) ─────────
+   * Ogni ora si decide in TURN_SECONDS secondi. Il tempo si vede in due punti, su tutti gli schermi:
+   * una candela che si consuma accanto al lume (in alto) e una miccia accesa sul tasto «Rivela».
+   * Negli ultimi 10 secondi tutto si fa rosso e ticchetta; allo scadere l'ora si rivela da sola con
+   * le carte già posate. Nel Duello vale sempre; contro l'Ombra si può spegnere nelle impostazioni,
+   * e si ferma se la finestra non è in vista. */
+  var TURN_SECONDS = 35;
+  var clock = { key: "", until: 0, left: 0, raf: 0, iv: 0, shown: -1, paused: false };
+  var clockEl = null;
+  var clockBig = null;
+  function clockOn() {
+    if (!match) return false;
+    if (match.mode === "pvp") return true;
+    return !save.noClock;
+  }
+  function clockBuild() {
+    if (clockEl) return clockEl;
+    var side = document.querySelector(".top-side");
+    if (!side) return null;
+    clockEl = document.createElement("div");
+    clockEl.className = "turn-clock";
+    clockEl.id = "turnClock";
+    clockEl.hidden = true;
+    clockEl.setAttribute("role", "timer");
+    clockEl.setAttribute("aria-label", "Tempo per quest'ora");
+    clockEl.innerHTML =
+      '<svg class="tc-ring" viewBox="0 0 44 44" aria-hidden="true">' +
+        '<circle class="tc-track" cx="22" cy="22" r="19"/>' +
+        '<circle class="tc-glow" cx="22" cy="22" r="13"/>' +
+        (function () { var t = ""; for (var k = 0; k < 12; k++) { var an = k * Math.PI / 6; t += '<line class="tc-tick' + (k % 3 ? "" : " big") + '" x1="' + (22 + Math.sin(an) * 14.2).toFixed(2) + '" y1="' + (22 - Math.cos(an) * 14.2).toFixed(2) + '" x2="' + (22 + Math.sin(an) * (k % 3 ? 15.6 : 16.4)).toFixed(2) + '" y2="' + (22 - Math.cos(an) * (k % 3 ? 15.6 : 16.4)).toFixed(2) + '"/>'; } return t; })() +
+        '<circle class="tc-burn" cx="22" cy="22" r="19" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"/>' +
+        '<circle class="tc-spark" cx="22" cy="3" r="2.6"/>' +
+      "</svg>" +
+      '<b class="tc-num">35</b>';
+    side.insertBefore(clockEl, side.firstChild);
+    // Il conto alla rovescia grande, al centro del tavolo, negli ultimi 5 secondi (non si tocca).
+    var wrap = document.querySelector(".board-wrap");
+    if (wrap) {
+      clockBig = document.createElement("div");
+      clockBig.className = "clock-big";
+      clockBig.setAttribute("aria-hidden", "true");
+      wrap.appendChild(clockBig);
+    }
+    return clockEl;
+  }
+  function clockStop() {
+    clock.key = "";
+    if (clock.raf) cancelAnimationFrame(clock.raf);
+    if (clock.iv) clearInterval(clock.iv);
+    clock.raf = 0;
+    clock.iv = 0;
+    clock.shown = -1;
+    app.classList.remove("clock-on", "clock-low", "clock-last");
+    if (clockEl) clockEl.hidden = true;
+    if (clockBig) clockBig.classList.remove("go");
+  }
+  function clockSync(view) {
+    var active = clockOn() && view.phase === "plan" && !view.over && !locked();
+    if (!active) { if (clock.key) clockStop(); return; }
+    var key = match.seed + ":" + view.turn;
+    if (clock.key === key) return;
+    clockStop();
+    clock.key = key;
+    clock.until = Date.now() + TURN_SECONDS * 1000;
+    clock.paused = false;
+    var el = clockBuild();
+    if (el) el.hidden = false;
+    app.classList.add("clock-on");
+    clockFrame();
+    clock.iv = setInterval(clockCheck, 200); // anche con la finestra in secondo piano
+  }
+  function clockLeft() { return clock.paused ? clock.left : Math.max(0, clock.until - Date.now()); }
+  function clockFrame() {
+    if (!clock.key) return;
+    var ms = clockLeft();
+    var frac = ms / (TURN_SECONDS * 1000);
+    app.style.setProperty("--clock", frac.toFixed(4));
+    if (clockEl) {
+      // l'anello si consuma in senso orario; la scintilla sta sulla punta che brucia
+      clockEl.querySelector(".tc-burn").setAttribute("stroke-dashoffset", (100 - frac * 100).toFixed(2));
+      var a = frac * Math.PI * 2;
+      var spark = clockEl.querySelector(".tc-spark");
+      spark.setAttribute("cx", (22 + Math.sin(a) * 19).toFixed(2));
+      spark.setAttribute("cy", (22 - Math.cos(a) * 19).toFixed(2));
+    }
+    var sec = Math.ceil(ms / 1000);
+    if (sec !== clock.shown) {
+      clock.shown = sec;
+      if (clockEl) clockEl.querySelector(".tc-num").textContent = sec;
+      app.classList.toggle("clock-low", sec <= 10);
+      app.classList.toggle("clock-last", sec <= 5);
+      if (sec <= 5 && sec > 0) blip(sec % 2 ? "tick" : "tock");
+      if (clockEl && sec <= 10 && sec > 0) { clockEl.classList.remove("beat"); void clockEl.offsetWidth; clockEl.classList.add("beat"); }
+      if (clockBig && sec <= 5 && sec > 0) { clockBig.textContent = sec; clockBig.classList.remove("go"); void clockBig.offsetWidth; clockBig.classList.add("go"); }
+    }
+    clock.raf = requestAnimationFrame(clockFrame);
+  }
+  function clockCheck() {
+    if (!clock.key || clock.paused) return;
+    if (Date.now() < clock.until) return;
+    // Tempo scaduto: le carte posate restano, quelle in mano restano in mano.
+    clockStop();
+    if (!match || match.phase !== "plan" || locked()) return;
+    show(peek, false);
+    selected = null;
+    say("Il tempo è finito: l'ora si rivela da sola.");
+    blip("time");
+    app.classList.add("clock-out");
+    setTimeout(function () { app.classList.remove("clock-out"); }, 900);
+    commit();
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (!clock.key || !match || match.mode === "pvp") return;
+    if (document.hidden && !clock.paused) { clock.left = clockLeft(); clock.paused = true; }
+    else if (!document.hidden && clock.paused) { clock.until = Date.now() + clock.left; clock.paused = false; }
+  });
 
   /* ───────── flusso dell'ora ───────── */
   function pump() {
