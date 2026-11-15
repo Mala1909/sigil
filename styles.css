@@ -2094,8 +2094,10 @@ html .menu-sheet[hidden], .review-bar[hidden], .sheet[hidden], .modal[hidden] { 
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse 56% 56% at 50% 50%, rgba(7, 6, 10, 0) 74%, rgba(7, 6, 10, 0.7) 90%, #07060a 100%),
-    linear-gradient(rgba(7, 6, 10, 0.16), rgba(7, 6, 10, 0.16));
+    linear-gradient(90deg, rgba(7, 6, 10, 0.85), rgba(7, 6, 10, 0) 4%, rgba(7, 6, 10, 0) 96%, rgba(7, 6, 10, 0.85)),
+    linear-gradient(180deg, rgba(7, 6, 10, 0.85), rgba(7, 6, 10, 0) 4%, rgba(7, 6, 10, 0) 96%, rgba(7, 6, 10, 0.85)),
+    radial-gradient(ellipse 75% 75% at 50% 50%, rgba(7, 6, 10, 0) 60%, rgba(7, 6, 10, 0.35) 100%),
+    linear-gradient(rgba(7, 6, 10, 0.12), rgba(7, 6, 10, 0.12));
 }
 /* con il dipinto, le regioni diventano solo cerchi di luce: il paesaggio è già sotto */
 .atlas-world.has-map .region-art { display: none; }

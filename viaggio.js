@@ -314,13 +314,21 @@
   var view = { s: 0.6, x: 0, y: 0 };
   var placed = false;
 
-  function minScale() { return Math.min(atlas.clientWidth / W, atlas.clientHeight / H) * 0.92; }
+  // Quanto ci si può allontanare: il dipinto riempie sempre tutto lo schermo (computer,
+  // tablet, Fold, telefono), e il resto si raggiunge trascinando.
+  function minScale() {
+    var vw = atlas.clientWidth, vh = atlas.clientHeight;
+    if (!vw || !vh) return 0.3;
+    return Math.max(vw / W, vh / H);
+  }
   function clampView() {
     var vw = atlas.clientWidth, vh = atlas.clientHeight;
     view.s = Math.max(minScale(), Math.min(1.5, view.s));
-    // il centro dello schermo resta sempre dentro l'atlante
-    view.x = Math.min(vw / 2, Math.max(vw / 2 - W * view.s, view.x));
-    view.y = Math.min(vh / 2, Math.max(vh / 2 - H * view.s, view.y));
+    // Non si esce dal dipinto: se è più grande dello schermo resta attaccato ai bordi,
+    // se è più piccolo (solo il telefono in verticale, da lontano) sta al centro.
+    var w = W * view.s, h = H * view.s;
+    view.x = w >= vw ? Math.min(0, Math.max(vw - w, view.x)) : (vw - w) / 2;
+    view.y = h >= vh ? Math.min(0, Math.max(vh - h, view.y)) : (vh - h) / 2;
   }
   function apply() {
     // Se un gesto strano (due dita nello stesso punto) desse valori non validi, si riparte
