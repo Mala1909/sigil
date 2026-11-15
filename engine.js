@@ -392,8 +392,13 @@
    * scegliere una mossa a caso invece della migliore. bonus: lumi in più
    * all'Ombra dall'ora indicata. extraCard: carte in più all'inizio.
    * awakened: l'Ombra pesca anche dalle carte del Risveglio (livelli avanzati).
+   * Livelli sotto lo zero (16 nov, solo per le prime tappe del Viaggio): malus = lumi in
+   * meno all'Ombra a ogni ora (ne tiene almeno 1), maxPlays = carte che posa al massimo per ora.
    */
   var AI_LEVELS = {
+    "-3": { beam: 1, depth: 1, slip: 1, malus: 1, maxPlays: 1, bonus: 0, bonusFrom: 0, extraCard: 0, snaps: false }, // l'Ombra in sogno
+    "-2": { beam: 1, depth: 1, slip: 0.9, malus: 1, maxPlays: 2, bonus: 0, bonusFrom: 0, extraCard: 0, snaps: false }, // l'Ombra dormiente
+    "-1": { beam: 1, depth: 1, slip: 0.8, malus: 0, maxPlays: 2, bonus: 0, bonusFrom: 0, extraCard: 0, snaps: false }, // l'Ombra sonnolenta
     0: { beam: 1, depth: 1, slip: 0.7, bonus: 0, bonusFrom: 0, extraCard: 0, snaps: false }, // l'Ombra assopita: solo le prime tappe
     1: { beam: 1, depth: 1, slip: 0.45, bonus: 0, bonusFrom: 0, extraCard: 0, snaps: false },
     2: { beam: 2, depth: 2, slip: 0.25, bonus: 0, bonusFrom: 0, extraCard: 0, snaps: false },
@@ -546,6 +551,7 @@
     state.rival.energyLeft = Math.max(0, state.turn + (state.rival.nextEnergy || 0));
     var cfg = state.aiCfg;
     if (state.ai && cfg && cfg.bonus && cfg.bonusFrom && state.turn >= cfg.bonusFrom) state.rival.energyLeft += cfg.bonus;
+    if (state.ai && cfg && cfg.malus) state.rival.energyLeft = Math.max(Math.min(1, state.rival.energyLeft), state.rival.energyLeft - cfg.malus);
     state.you.nextEnergy = 0;
     state.rival.nextEnergy = 0;
     if (state.locations.some(function (l) { return l.extraDrawTurn === state.turn; })) {
@@ -1403,10 +1409,12 @@
     if (cfg.slip && luck() < cfg.slip) {
       // Un'Ombra giovane sbaglia: posa a caso quello che può.
       var hand0 = shuffle(state.rival.hand.slice(), luck);
+      var posed = 0;
       for (var h = 0; h < hand0.length; h++) {
+        if (cfg.maxPlays && posed >= cfg.maxPlays) break;
         var lanes0 = shuffle(lanesOf(state), luck);
         for (var l = 0; l < lanes0.length; l++) {
-          if (canPlay(state, "rival", hand0[h].uid, lanes0[l])) { stage(state, "rival", hand0[h].uid, lanes0[l]); break; }
+          if (canPlay(state, "rival", hand0[h].uid, lanes0[l])) { stage(state, "rival", hand0[h].uid, lanes0[l]); posed++; break; }
         }
       }
       return;
@@ -1440,7 +1448,7 @@
     var best = beam[0];
     if (!best || !best.plays.length) return;
     if (best.score < evaluate(state, "rival")) return;
-    for (var p = 0; p < best.plays.length; p++) {
+    for (var p = 0; p < best.plays.length && (!cfg.maxPlays || p < cfg.maxPlays); p++) {
       stage(state, "rival", best.plays[p].uid, best.plays[p].location);
     }
   }

@@ -15,37 +15,37 @@
   if (!E || !G) return;
 
   var CHAPTERS = [
-    { id: "valle", name: "Valle delle tre rovine", arena: "valle", poster: "art/copertina.jpg", lanes: 3, ai: [0, 0, 1, 1, 1, 2], sign: "fontana",
+    { id: "valle", name: "Valle delle tre rovine", arena: "valle", poster: "art/copertina.jpg", lanes: 3, ai: [-3, -3, -3, -3, -2, -2], sign: "fontana",
       boss: "Il Guardiano della Valle", tale: "Dove tutto comincia: tre torri, tre fiamme, e un'Ombra che ancora non conosce le tue mani." },
-    { id: "cripta", name: "Cripta del Silenzio", arena: "cripta", poster: "art/places/vicolo.jpg", lanes: 3, ai: [1, 2, 2, 2, 3, 3], sign: "vicolo",
+    { id: "cripta", name: "Cripta del Silenzio", arena: "cripta", poster: "art/places/vicolo.jpg", lanes: 3, ai: [-2, -2, -2, -2, -1, -1], sign: "vicolo",
       boss: "La Badessa muta", tale: "Sotto la valle le candele non si spengono mai. Qui le preghiere non fanno eco, e le abilità Sempre tacciono spesso." },
-    { id: "palude", name: "Palude dei Rovi", arena: "palude", poster: "art/arene/palude.jpg", lanes: 4, ai: [3, 4, 4, 4, 5, 5], sign: "cantiere",
+    { id: "palude", name: "Palude dei Rovi", arena: "palude", poster: "art/arene/palude.jpg", lanes: 4, ai: [-1, -2, -1, 0, 0, 0], sign: "cantiere",
       boss: "La Strega dei Rovi", tale: "La terra cede. Quattro rovine affiorano dal fango, e l'Ombra ha imparato ad aspettare." },
-    { id: "porto", name: "Porto del Leviatano", arena: "porto", poster: "art/arene/porto.jpg", lanes: 4, ai: [4, 5, 5, 5, 6, 6], sign: "osteria",
+    { id: "porto", name: "Porto del Leviatano", arena: "porto", poster: "art/arene/porto.jpg", lanes: 4, ai: [0, 0, 0, 1, 1, 1], sign: "osteria",
       boss: "Il Pescatore d'ossa", tale: "Il faro è spento da cent'anni. Al largo, qualcosa che sembra un'isola respira." },
-    { id: "piana", name: "Piana del drago", arena: "piana", poster: "art/arene/piana.jpg", lanes: 5, ai: [5, 6, 6, 6, 7, 7], sign: "piazza",
+    { id: "piana", name: "Piana del drago", arena: "piana", poster: "art/arene/piana.jpg", lanes: 5, ai: [1, 1, 1, 2, 2, 3], sign: "piazza",
       boss: "Il Dormiente", tale: "L'ultima piana. Cinque rovine sulla terra che brucia. Sotto di te, il Dormiente apre un occhio." },
     // Secondo atlante (15 nov): le Terre dell'Ombra, oltre le montagne. Si riparte da tre rovine.
-    { id: "passo", book: 1, name: "Passo dei Menhir", arena: "valle", lanes: 3, ai: [3, 3, 4, 4, 4, 5], sign: "mercato",
+    { id: "passo", book: 1, name: "Passo dei Menhir", arena: "valle", lanes: 3, ai: [1, 1, 1, 1, 1, 2], sign: "mercato",
       boss: "Il Guardiano del Passo", tale: "Oltre le montagne la neve copre le ossa. Tre pietre accese segnano l'unico ponte, e qualcuno lo sorveglia ancora." },
-    { id: "monastero", book: 1, name: "Monastero della Rupe", arena: "cripta", lanes: 3, ai: [4, 4, 5, 5, 5, 6], sign: "semaforo",
+    { id: "monastero", book: 1, name: "Monastero della Rupe", arena: "cripta", lanes: 3, ai: [1, 2, 2, 2, 2, 3], sign: "semaforo",
       boss: "L'Abate senza volto", tale: "Le candele sono accese, ma nessuno canta. Il campanile suona solo per chi ha già perso." },
-    { id: "lago", book: 1, name: "Lago dei Sommersi", arena: "porto", lanes: 4, ai: [4, 5, 5, 5, 6, 6], sign: "orto",
+    { id: "lago", book: 1, name: "Lago dei Sommersi", arena: "porto", lanes: 4, ai: [2, 2, 2, 3, 3, 3], sign: "orto",
       boss: "La Dama del Ghiaccio", tale: "Sotto il ghiaccio ci sono torri intere, e finestre. Qualcuno, dietro le finestre, guarda in su." },
-    { id: "foresta", book: 1, name: "Foresta dei Lumi", arena: "palude", lanes: 4, ai: [5, 5, 6, 6, 6, 7], sign: "balcone",
+    { id: "foresta", book: 1, name: "Foresta dei Lumi", arena: "palude", lanes: 4, ai: [3, 3, 3, 3, 4, 4], sign: "balcone",
       boss: "Il Boscaiolo cieco", tale: "Gli alberi sono morti da secoli, eppure nelle case tra le radici le lanterne restano accese." },
-    { id: "castello", book: 1, name: "Castello della Crepa", arena: "piana", lanes: 5, ai: [5, 6, 6, 7, 7, 7], sign: "bar",
+    { id: "castello", book: 1, name: "Castello della Crepa", arena: "piana", lanes: 5, ai: [3, 3, 4, 4, 4, 5], sign: "bar",
       boss: "Il Re d'Ombra", tale: "Una crepa di luce viola scende dalla porta del castello. È da lì che l'Ombra è venuta al mondo." },
     // Terzo atlante (15 nov): le Terre del Fuoco, ai piedi del vulcano. Di nuovo tre rovine.
-    { id: "borgo", book: 2, name: "Borgo delle Fornaci", arena: "valle", lanes: 3, ai: [5, 5, 5, 6, 6, 6], sign: "forno",
+    { id: "borgo", book: 2, name: "Borgo delle Fornaci", arena: "valle", lanes: 3, ai: [2, 3, 3, 3, 3, 4], sign: "forno",
       boss: "Il Mastro fonditore", tale: "Le fornaci non si spengono mai, neanche la notte. Si dice che il borgo fonda anche quello che non è metallo." },
-    { id: "eremo", book: 2, name: "Eremo dello Zolfo", arena: "cripta", lanes: 3, ai: [5, 6, 6, 6, 7, 7], sign: "fontana",
+    { id: "eremo", book: 2, name: "Eremo dello Zolfo", arena: "cripta", lanes: 3, ai: [3, 3, 4, 4, 4, 4], sign: "fontana",
       boss: "L'Eremita dello zolfo", tale: "Sulla rupe l'acqua esce gialla e bollente. L'eremita ci si bagna ogni mattina, e non invecchia." },
-    { id: "ponte", book: 2, name: "Ponte sulla Lava", arena: "piana", lanes: 4, ai: [6, 6, 6, 7, 7, 7], sign: "panchina",
+    { id: "ponte", book: 2, name: "Ponte sulla Lava", arena: "piana", lanes: 4, ai: [4, 4, 4, 4, 5, 5], sign: "panchina",
       boss: "Il Pontiere di brace", tale: "Un solo ponte di pietra sopra il fiume di fuoco. Chi lo attraversa paga, in un modo o nell'altro." },
-    { id: "anfiteatro", book: 2, name: "Anfiteatro del Cratere", arena: "piana", lanes: 4, ai: [6, 7, 7, 7, 7, 7], sign: "piazza",
+    { id: "anfiteatro", book: 2, name: "Anfiteatro del Cratere", arena: "piana", lanes: 4, ai: [4, 5, 5, 5, 5, 6], sign: "piazza",
       boss: "La Sibilla del cratere", tale: "Gli antichi giocavano qui, sotto la montagna. Le gradinate sono vuote, ma l'altare è ancora caldo." },
-    { id: "fortezza", book: 2, name: "Fortezza Nera", arena: "piana", lanes: 5, ai: [7, 7, 7, 7, 7, 7], sign: "terrazza",
+    { id: "fortezza", book: 2, name: "Fortezza Nera", arena: "piana", lanes: 5, ai: [5, 5, 6, 6, 7, 7], sign: "terrazza",
       boss: "Il Signore della Fortezza", tale: "Un'isola di roccia in mezzo alla lava, e una sola strada. In cima, chi ha acceso il vulcano." }
   ];
   // I tre atlanti: ognuno ha il suo dipinto e trenta tappe.
@@ -58,7 +58,9 @@
 
   var HOUSE_IDS = E.HOUSES.map(function (h) { return h.id; });
   var LOC_IDS = E.LOCATIONS.map(function (l) { return l.id; });
-  var DIFF = ["Ombra assopita", "Ombra acerba", "Ombra incerta", "Ombra attenta", "Ombra scaltra", "Ombra antica", "Ombra feroce", "Ombra senza nome"];
+  // I nomi dei livelli dell'Ombra (i livelli sotto lo zero sono solo per le prime tappe).
+  var DIFF = { "-3": "Ombra in sogno", "-2": "Ombra dormiente", "-1": "Ombra sonnolenta", 0: "Ombra assopita", 1: "Ombra acerba", 2: "Ombra incerta",
+    3: "Ombra attenta", 4: "Ombra scaltra", 5: "Ombra antica", 6: "Ombra feroce", 7: "Ombra senza nome" };
 
   function hash(text) {
     var h = 2166136261;
@@ -536,6 +538,7 @@
       '<ul class="level-facts"><li><b>' + l.lanes + " rovine</b>" + G.esc(locNames.join(" · ")) + "</li>" +
       (E.AI_LEVELS[l.aiLevel].bonus ? '<li><b>Attenzione</b>L\'Ombra riceve un lume in più dalla ' + ["", "prima", "seconda", "terza", "quarta", "quinta", "sesta"][E.AI_LEVELS[l.aiLevel].bonusFrom] + " ora.</li>" : "") +
       (E.AI_LEVELS[l.aiLevel].extraCard ? "<li><b>Attenzione</b>L'Ombra comincia con una carta in più.</li>" : "") +
+      (E.AI_LEVELS[l.aiLevel].malus ? "<li><b>Ombra debole</b>Ha un lume in meno a ogni ora" + (E.AI_LEVELS[l.aiLevel].maxPlays ? " e posa al massimo " + (E.AI_LEVELS[l.aiLevel].maxPlays === 1 ? "una carta" : E.AI_LEVELS[l.aiLevel].maxPlays + " carte") + " per ora" : "") + ".</li>" : "") +
       (E.AI_LEVELS[l.aiLevel].awakened ? "<li><b>Il Risveglio</b>L'Ombra conosce anche le carte dell'espansione.</li>" : "") +
       "</ul>" +
       '<div class="level-stars">' + starRow(st) + "</div>" +
@@ -544,12 +547,15 @@
     levelBox.hidden = false;
   }
 
+  // Bilanciamento del 16 nov (su richiesta: prime 15 tappe molto più facili, il resto in proporzione).
+  // Simulazione con i mazzi iniziali di ogni casata, 80 partite per tappa: tappe 1-15 tra 75% e 98%
+  // di vittorie, poi la curva scende piano in ogni atlante. Fino alla tappa 18 l'Ombra gioca il mazzo iniziale.
   // Bilanciamento del 14 nov (simulazione con i mazzi iniziali di ogni casata):
   // - fino alla tappa 9 l'Ombra gioca un mazzo iniziale come il tuo (le 12 carte più economiche
   //   della sua casata), non un mazzo pescato tra tutti i costi;
   // - ogni tentativo pesca in un ordine diverso: riprovare una tappa non ripete la stessa partita
   //   (rovine e casata dell'Ombra restano quelle della tappa).
-  var EASY_UNTIL = 9;
+  var EASY_UNTIL = 18;
   function starterDeck(house) {
     return E.CARDS.filter(function (c) { return c.house === house; })
       .sort(function (a, b) { return a.cost - b.cost || (a.id < b.id ? -1 : 1); }).slice(0, E.DECK_SIZE || 12)
