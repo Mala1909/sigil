@@ -2413,3 +2413,26 @@ html.drag-on, html.drag-on * { cursor: grabbing !important; }
 .deck-slot .ds-ok { width: 8px; height: 8px; margin-top: 3px; border-radius: 50%; background: var(--good); box-shadow: 0 0 8px rgba(120, 200, 140, 0.7); }
 .deck-slot .ds-empty { opacity: 0.7; }
 .deck-slot.add b { font-size: 13px; }
+
+/* ═════════ Soglia B: bordi a pennellata di misura fissa (15 nov) ═════════
+ * La cornice a pennello si stirava con il riquadro: sui riquadri larghi (il Viaggio) o
+ * alti (testo ingrandito dal telefono) la frangia mangiava l'inizio delle scritte e la
+ * fascia trasparente in basso "barrava" le descrizioni. Ora la cornice è a nove pezzi:
+ * i bordi hanno sempre la stessa misura in pixel e il centro si allarga. (Chrome e Safari;
+ * gli altri browser tengono la maschera di prima.) */
+@supports (-webkit-mask-box-image: none) {
+  html[data-menu="b"] .mode {
+    -webkit-mask: none;
+    mask: none;
+    -webkit-mask-box-image: url("art/ui/cornice.png") 62 50 62 50 / 15px 16px 15px 16px stretch;
+  }
+}
+/* Il testo resta sempre lontano dalla frangia, qualsiasi sia la larghezza del riquadro. */
+html[data-menu="b"] .mode { padding-left: max(26px, calc(6% + 12px)); padding-right: max(22px, calc(6% + 10px)); padding-bottom: 26px; }
+@media (max-width: 400px) { html[data-menu="b"] .mode { padding-left: max(24px, calc(6% + 10px)); padding-right: max(20px, calc(6% + 8px)); padding-bottom: 24px; } }
+@media (max-height: 420px) and (max-width: 480px) { html[data-menu="b"] .mode { padding-bottom: 20px; } }
+/* Il Viaggio, il riquadro principale, si allunga un po' oltre la colonna a destra e a sinistra. */
+html[data-menu="b"] .mode-journey { margin-inline: -10px; }
+@media (min-width: 700px) { html[data-menu="b"] .mode-journey { margin-inline: -16px; } }
+/* Con il testo del telefono ingrandito, le parole lunghe vanno a capo invece di uscire dal riquadro. */
+html[data-menu="b"] .mode .mode-name, html[data-menu="b"] .mode .mode-desc { hyphens: auto; -webkit-hyphens: auto; overflow-wrap: break-word; }
