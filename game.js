@@ -592,7 +592,7 @@
    * Negli ultimi 10 secondi tutto si fa rosso e ticchetta; allo scadere l'ora si rivela da sola con
    * le carte già posate. Nel Duello vale sempre; contro l'Ombra si può spegnere nelle impostazioni,
    * e si ferma se la finestra non è in vista. */
-  var TURN_SECONDS = 35;
+  var TURN_SECONDS = 40;
   var clock = { key: "", until: 0, left: 0, raf: 0, iv: 0, shown: -1, paused: false };
   var clockEl = null;
   var clockBig = null;
@@ -619,7 +619,7 @@
         '<circle class="tc-burn" cx="22" cy="22" r="19" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"/>' +
         '<circle class="tc-spark" cx="22" cy="3" r="2.6"/>' +
       "</svg>" +
-      '<b class="tc-num">35</b>';
+      '<b class="tc-num">40</b>';
     side.insertBefore(clockEl, side.firstChild);
     // Il conto alla rovescia grande, al centro del tavolo, negli ultimi 5 secondi (non si tocca).
     var wrap = document.querySelector(".board-wrap");

@@ -77,7 +77,7 @@
       '<div class="set-row"><label for="setMusic">Musica</label><input type="range" id="setMusic" min="0" max="100" step="5" value="' + pct(s.musicVol, 0.6) + '"><output id="setMusicOut">' + pct(s.musicVol, 0.6) + "</output></div>" +
       '<div class="set-row"><label for="setSfx">Effetti</label><input type="range" id="setSfx" min="0" max="100" step="5" value="' + pct(s.sfxVol, 1) + '"><output id="setSfxOut">' + pct(s.sfxVol, 1) + "</output></div>" +
       '<label class="set-switch"><input type="checkbox" id="setMute"' + (s.muted ? " checked" : "") + "><span>Silenzio totale</span></label>" +
-      '<label class="set-switch"><input type="checkbox" id="setClock"' + (s.noClock ? "" : " checked") + "><span>Tempo per ogni ora contro l'Ombra (35 secondi; nel Duello c'è sempre)</span></label>" +
+      '<label class="set-switch"><input type="checkbox" id="setClock"' + (s.noClock ? "" : " checked") + "><span>Tempo per ogni ora contro l'Ombra (40 secondi; nel Duello c'è sempre)</span></label>" +
       '<p class="set-now">' + (s.muted ? "Tutto in silenzio." : now ? "In sottofondo: <b>" + esc(now.title) + "</b> · " + esc(now.author) : "La musica parte al primo tocco.") + "</p>" +
       '<div class="modal-actions"><button type="button" class="button ghost" data-act="credits">Crediti</button>' +
       '<button type="button" class="button primary" data-act="close">Chiudi</button></div>';
