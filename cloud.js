@@ -79,6 +79,9 @@
     s.level = p.level;
     s.gettoni = p.gold;
     s.ambra = p.ambra;
+    // Evoluzioni (15 nov): l'inchiostro e il livello estetico di ogni carta.
+    s.inchiostro = p.inchiostro || 0;
+    s.evo = p.evo || {};
     s.journey = { unlocked: (p.journey && p.journey.unlocked) || 1, stars: (p.journey && p.journey.stars) || {}, finished: !!(p.journey && p.journey.finished), tries: (s.journey && s.journey.tries) || {} };
     s.pass = { season: p.pass_season, xp: p.pass_xp, days: p.pass_days || 0, day: p.pass_day || null, premium: p.pass_premium, claimed: p.pass_claimed || {} };
     s.pvp = { w: p.pvp_w, l: p.pvp_l, t: p.pvp_t, rating: p.rating };
@@ -252,6 +255,7 @@
     },
     shop: function () { return need().then(function () { return call("sigil_shop"); }); },
     buy: function (item) { return act("sigil_buy", { p_item: item }); },
+    evolve: function (id) { return act("sigil_evolve", { p_card: id }); },
     claim: function (tier, track) { return act("sigil_claim", { p_tier: tier, p_track: track }); },
     levelUp: function () { return act("sigil_level_up"); },
     pvpReport: function (key, opponent, result, stake) {

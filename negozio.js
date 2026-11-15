@@ -33,7 +33,7 @@
     '<header class="journey-head">' +
       '<button type="button" class="icon-button" id="shopBack" aria-label="Torna alla soglia">←</button>' +
       '<div><p class="eyebrow" id="shopEyebrow">La Bottega del Sigillo</p><h2 id="shopTitle">Cosa porta la notte</h2></div>' +
-      '<div class="wallet"><span title="Pegni: si vincono giocando">Pegni <b id="walletGold">0</b></span><span class="amber" title="Ambra">◆ <b id="walletAmbra">0</b></span></div>' +
+      '<div class="wallet"><span title="Pegni: si vincono giocando">Pegni <b id="walletGold">0</b></span><span class="amber" title="Ambra">◆ <b id="walletAmbra">0</b></span><span class="deck-ink" title="Inchiostro: fa evolvere le carte"><svg class="ink-ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.2C6 4.6 3.4 7.3 3.4 10a4.6 4.6 0 0 0 9.2 0C12.6 7.3 10 4.6 8 1.2z" fill="currentColor"/></svg><b id="walletInk">0</b></span></div>' +
     "</header>" +
     '<nav class="shop-tabs" role="tablist">' +
       '<button type="button" role="tab" data-tab="bottega">Bottega</button>' +
@@ -53,6 +53,7 @@
     var s = S();
     $("walletGold").textContent = String(s.gettoni || 0);
     $("walletAmbra").textContent = String(s.ambra || 0);
+    if ($("walletInk")) $("walletInk").textContent = String(s.inchiostro || 0);
   }
 
   function offline(msg) {
@@ -173,6 +174,8 @@
       buyButton("pass", d.pass.price, "ambra", s.pass && s.pass.premium, "Prendi") + "</div>" +
       (d.slot ? '<div class="shop-offer"><svg class="offer-sigil"><use href="#g-sigillo"/></svg><div><b>Posto per un altro mazzo</b><p>Ne hai ' + (s.deckSlots || 4) + " su " + d.slot.max + ". Tieni pronti più mazzi e scegli quello giusto per la notte.</p></div>" +
         ((s.deckSlots || 4) >= d.slot.max ? '<button type="button" class="button ghost tiny" disabled>Hai tutti i posti</button>' : buyButton("slot", d.slot.price, "ambra", false, "Prendi")) + "</div>" : "") +
+      (d.ink ? '<div class="shop-offer"><svg class="offer-sigil"><use href="#g-sigillo"/></svg><div><b>Boccetta d’inchiostro</b><p>' + d.ink.amount + " gocce per far evolvere le tue carte: cornici, rilievo 3D, fino al Sigillo d’oro.</p></div>" +
+        buyButton("inchiostro", d.ink.price, "ambra", false, "Prendi") + "</div>" : "") +
     "</section>" +
     '<p class="shop-note">I pegni si vincono giocando: la posta di ogni veglia vinta, le stelle del Viaggio, i premi del pass. L\'ambra per ora non si compra: ne ricevi 300 al giuramento e altra dal pass premium.</p>';
     $("shopBody").innerHTML = html;
@@ -187,6 +190,7 @@
       wallet();
       if (res.cards && res.cards.length) reveal(res.cards, item === "pacco" ? "Il pacco si apre" : "È tua");
       else if (item === "pass") reveal([], "Il Pass premium è tuo", "Torna al Pass della veglia: la seconda fila di premi ora si può riscattare.");
+      else if (item === "inchiostro") reveal([], "Una boccetta d’inchiostro", "Ora ne hai " + (S().inchiostro || 0) + " gocce. Tocca una carta in Mazzo e collezione per farla evolvere.");
       else if (item === "slot") reveal([], "Un posto in più", "Ora puoi tenere " + (S().deckSlots || 4) + " mazzi: li trovi in Mazzo e collezione.");
       return Cloud().shop().then(function (d) { shopData = d; paintShop(); });
     }).catch(function (e) {

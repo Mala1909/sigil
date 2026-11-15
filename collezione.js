@@ -109,6 +109,7 @@
       if (res.note) rewardNote = res.note;
       if (res.queued) rewardNote = res.queued;
       if (res.xp) rewards.push({ type: "xp", amount: res.xp });
+      if (res.ink) rewards.push({ type: "ink", amount: res.ink });
       var lv = S().level || 1;
       for (var i = (res.levels || 0) - 1; i >= 0; i--) rewards.push({ type: "level", level: lv - i });
       (res.objectives || []).forEach(function (label) { rewards.push({ type: "objective", label: label }); });
@@ -163,13 +164,16 @@
     if (view.reason === "ritiro" && view.retreated === "you") gain = 3;
     s.xp = (s.xp || 0) + gain;
     s.level = s.level || 1;
+    var ink = view.reason === "ritiro" && view.retreated === "you" ? 1 : view.winner === "you" ? 6 : view.winner === "tie" ? 4 : 3;
+    s.inchiostro = (s.inchiostro || 0) + ink;
+    rewards.unshift({ type: "ink", amount: ink });
     rewards.unshift({ type: "xp", amount: gain });
     while (s.xp >= xpNeed(s.level)) {
       s.xp -= xpNeed(s.level);
       s.level += 1;
       rewards.push({ type: "level", level: s.level });
       if (levelGivesCard(s.level)) grant(1, "livello " + s.level);
-      else s.gettoni = (s.gettoni || 0) + 25;
+      else { s.gettoni = (s.gettoni || 0) + 25; s.inchiostro = (s.inchiostro || 0) + 20; }
     }
     G.persist();
   }
@@ -185,6 +189,7 @@
     var html = rewardNote ? '<p class="end-note">' + G.esc(rewardNote) + "</p>" : "";
     rewards.forEach(function (r) {
       if (r.type === "xp") html += '<p class="xp-line">+' + r.amount + " esperienza · livello " + S().level + " <span class=\"xp-bar\"><i style=\"width:" + Math.round((S().xp / xpNeed(S().level)) * 100) + '%"></i></span></p>';
+      if (r.type === "ink") html += '<p class="xp-line end-ink">+' + r.amount + " " + inkSvg() + " inchiostro <small>· fa evolvere le carte</small></p>";
       if (r.type === "level") html += '<p class="level-up">Sali al livello ' + r.level + "!</p>";
       if (r.type === "pegni") html += '<p class="end-note">Hai già ogni carta: ricevi ' + r.amount + " pegni.</p>";
       if (r.type === "objective") html += '<p class="objective-done">Obiettivo compiuto: ' + G.esc(r.label) + ' <small>· riscatta il premio in Obiettivi</small></p>';
@@ -405,7 +410,7 @@
     var deck = (s.deck || []).filter(owns);
     s.deck = deck;
     var owned = ownedIds();
-    $("deckOwned").textContent = owned.length + " / " + ALL.length + " carte";
+    $("deckOwned").innerHTML = owned.length + " / " + ALL.length + ' carte<span class="deck-ink" title="Inchiostro: fa evolvere le carte">' + inkSvg() + (s.inchiostro || 0) + "</span>";
     $("deckCount").textContent = deck.length + " / " + SIZE;
     $("deckCount").className = deck.length === SIZE ? "ok" : "";
     // Curva dei costi
@@ -446,10 +451,23 @@
       var have = owns(c.id);
       var cls = (have ? "" : "locked") + (inDeck[c.id] ? " in-deck" : "") + (fresh[c.id] ? " is-new" : "");
       return '<div class="codex-item">' + G.cardHTML(c, { tag: "button", cls: cls.trim(), attrs: ' data-pick="' + c.id + '"' }) +
+        (have ? evoButton(c.id) : "") +
         (have ? (inDeck[c.id] ? '<p class="in-deck-label">Nel mazzo</p>' : "<p>" + G.esc(c.lore) + "</p>") : '<p class="locked-label">Da scoprire giocando</p>') + "</div>";
     }).join("");
     G.bindArt(deckSheet);
   }
+
+  // Evoluzioni (carta3d.js): il livello della carta; toccandolo la carta si apre, in 3D dal livello 3.
+  function inkSvg() { return '<svg class="ink-ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.2C6 4.6 3.4 7.3 3.4 10a4.6 4.6 0 0 0 9.2 0C12.6 7.3 10 4.6 8 1.2z" fill="currentColor"/></svg>'; }
+  function evoButton(id) {
+    var V = window.SigilEvo;
+    if (!V) return "";
+    var lv = V.level(id), next = V.cost(lv + 1), can = next && (S().inchiostro || 0) >= next;
+    var pips = "";
+    for (var i = 1; i <= 6; i++) pips += '<i class="' + (i <= lv ? "got" : "") + '"></i>';
+    return '<button type="button" class="evo-open-btn' + (can ? " can" : "") + '" data-evo-open="' + id + '" title="Guarda la carta e falla evolvere"><span class="pips">' + pips + "</span>" + (lv >= 6 ? "Oro" : can ? "Evolvi" : "Liv. " + lv) + "</button>";
+  }
+  window.addEventListener("sigil:evo", function () { if (!deckSheet.hidden) paintDeck(); });
 
   function openDeck(first) {
     if (needOath()) return;

@@ -169,6 +169,9 @@
     o = o || {};
     var tag = o.tag || "div";
     var cls = "card" + (o.cls ? " " + o.cls : "");
+    // Evoluzioni (carta3d.js): le tue carte mostrano la cornice del loro livello.
+    var evo = o.evo === false || card.owner === "rival" || !window.SigilEvo ? 1 : window.SigilEvo.level(card.id);
+    if (evo > 1) cls += " evo-" + evo;
     var kind = KIND[card.kind] || "";
     var power = o.power != null ? o.power : card.power;
     var body = card.text
@@ -178,6 +181,7 @@
     if (tag === "button") attrs += ' type="button"';
     return "<" + tag + ' class="' + cls + '" data-house="' + esc(card.house || "misto") + '"' + attrs + ">" +
       '<span class="art">' + artImg(card.id, "card") + "</span>" +
+      (evo > 1 ? '<span class="c-evo" title="Livello ' + evo + '">' + new Array(evo).join("<i></i>") + "</span>" : "") +
       '<span class="c-cost" title="Lumi da spendere">' + card.cost + "</span>" +
       '<span class="c-house" title="' + esc(houseName(card.house)) + '">' + glyph(card.house) + "</span>" +
       '<span class="c-name">' + esc(card.name) + "</span>" +
@@ -200,7 +204,8 @@
     var base = card.power;
     var now = card.current;
     var trend = card.revealed ? (now > base ? " up" : now < base ? " down" : "") : "";
-    var cls = "piece " + (card.owner === "rival" ? "rival" : "you") + (ghost ? " ghost" : "") + (!ghost && !card.revealed ? " covered" : "");
+    var evo = card.owner !== "rival" && window.SigilEvo ? window.SigilEvo.level(card.id) : 1;
+    var cls = "piece " + (card.owner === "rival" ? "rival" : "you") + (evo > 1 ? " evo-" + evo : "") + (ghost ? " ghost" : "") + (!ghost && !card.revealed ? " covered" : "");
     var key = card.uid || (lane + "-" + index);
     return '<button type="button" class="' + cls + freshKey(key, card.fresh) + '" data-house="' + esc(card.house) + '" data-uid="' + esc(card.uid) +
       '" data-act="' + (ghost ? "unstage" : "detail") + '"' + (ghost ? ' data-order="' + card.order + '" title="Tocca per riprenderla in mano"' : ' title="' + esc(card.name) + '"') + ">" +
@@ -738,7 +743,7 @@
       .slice().sort(function (a, b) { return a.cost - b.cost || a.name.localeCompare(b.name); });
     $("codexGrid").innerHTML = cards.map(function (card) {
       var mine = !window.SigilCollezione || !window.SigilCollezione.ready() || window.SigilCollezione.owns(card.id);
-      return '<div class="codex-item">' + cardHTML(card, { cls: mine ? "" : "locked" }) + (mine ? (card.text ? "<p>" + esc(card.lore) + "</p>" : "") : '<p class="locked-label">Non ancora tua</p>') + "</div>";
+      return '<div class="codex-item" data-evo-open="' + esc(card.id) + '">' + cardHTML(card, { cls: mine ? "" : "locked" }) + (mine ? (card.text ? "<p>" + esc(card.lore) + "</p>" : "") : '<p class="locked-label">Non ancora tua</p>') + "</div>";
     }).join("");
     box.removeAttribute("hidden");
     bindArt(box);
@@ -783,6 +788,7 @@
     peek.dataset.uid = uid;
     show(peek, true);
     bindArt(peek);
+    if (window.SigilEvo) window.SigilEvo.upgrade(peek.querySelector(".play-card"), card, { power: card.current });
   }
 
   /* ───────── eventi ───────── */
@@ -1000,7 +1006,10 @@
       laneInfo = null;
       if (narrow.matches) {
         var shown = findShown(E.view(match), detailId);
-        if (shown) openPeek(inspectHTML(shown));
+        if (shown) {
+          openPeek(inspectHTML(shown));
+          if (shown.owner === "you" && window.SigilEvo) window.SigilEvo.upgrade(peek.querySelector(".peek-body .card"), shown, { power: shown.revealed && shown.current != null ? shown.current : shown.power });
+        }
       }
       render();
       return;

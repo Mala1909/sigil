@@ -588,7 +588,7 @@
     var c = Cloud();
     if (!C || !c || !game.key || !opp.uid) return;
     var result = view.winner === "you" ? "win" : view.winner === "rival" ? "loss" : "tie";
-    var gain = result === "win" ? 60 : result === "tie" ? 30 : 20;
+    var gain = result === "win" ? 45 : result === "tie" ? 22 : 15; // come sigil_pvp_report
     var key = game.key;
     var before = record().rating || 1000;
     var tries = 0;
@@ -601,12 +601,13 @@
     C.fromServer(ask().then(function (res) {
       if (res.status === "conteso") return { note: "I due resoconti non coincidono: il registro non annota questo duello." };
       if (res.status === "in attesa") return { note: "Il registro annoterà il duello quando anche " + oppName() + " lo confermerà." };
+      var ink = res.ink || 0;
       return c.levelUp().then(function (lv) {
         var after = record().rating || before;
         var d = after - before;
         var rb = rank(before), ra = rank(after);
         var moved = ra.label !== rb.label ? (after > before ? " Sali a " + ra.label + "!" : " Scendi a " + ra.label + ".") : "";
-        return { xp: gain, levels: lv.levels, cards: lv.cards, note: "Rango " + ra.label + " · " + after + " punti (" + (d >= 0 ? "+" : "") + d + ")." + moved };
+        return { xp: gain, ink: ink + (lv.ink || 0), levels: lv.levels, cards: lv.cards, note: "Rango " + ra.label + " · " + after + " punti (" + (d >= 0 ? "+" : "") + d + ")." + moved };
       });
     }));
   }
