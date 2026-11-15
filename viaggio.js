@@ -104,20 +104,41 @@
    * muoversi e si usa la rotella (o due dita) per avvicinarsi. Le regioni
    * ancora chiuse restano nella nebbia. */
   var W = 2700, H = 2200, CX = 1350, CY = 1100;
+  // Le regioni stanno sui luoghi del dipinto della valle (art/arene/atlante-valle.jpg).
+  // "label": da che parte del cerchio va il nome (se manca, verso l'esterno).
   var REGIONS = [
-    { x: 1350, y: 1820, r: 290 },  // I · Valle, a sud: da qui comincia tutto
-    { x: 630, y: 1100, r: 290 },   // II · Cripta, a ovest
-    { x: 1350, y: 380, r: 290 },   // III · Palude, a nord
-    { x: 2070, y: 1100, r: 290 },  // IV · Porto, a est
-    { x: 1350, y: 1100, r: 330 }   // V · Piana del drago, al centro, sotto il Sigillo
+    { x: 1390, y: 1945, r: 290, label: [1, 0] },   // I · Valle, a sud: le tre torri
+    { x: 640, y: 1130, r: 300 },                   // II · Cripta, a ovest: la cappella e le tombe
+    { x: 1640, y: 560, r: 260 },                   // III · Palude, a nord: la riva della palude
+    { x: 2170, y: 960, r: 270, label: [0, 1] },    // IV · Porto, a est: i moli e il faro
+    { x: 1615, y: 1075, r: 300, label: [0, 1] }    // V · Piana del drago: il cerchio di rune, il Sigillo
   ];
   var ROMAN = ["I", "II", "III", "IV", "V"];
 
   function unit(ax, ay, bx, by) { var dx = bx - ax, dy = by - ay, l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l]; }
 
-  // Dove sta ogni tappa sull'atlante: un arco che attraversa la regione, dall'ingresso all'uscita.
-  var NODES = [];
-  REGIONS.forEach(function (R, ci) {
+  // Dove sta ogni tappa: sulle strade del dipinto (15 nov), una per una.
+  // Valle: il sentiero tra le torri fino alla porta della torre centrale. Cripta: la strada
+  // maestra fino ai gradini della cappella. Palude: la strada lungo la riva. Porto: la strada
+  // del mare, i moli, il faro. Piana: attorno al cerchio di rune, e il Dormiente al centro.
+  var PAINTED = [
+    [1235, 2150], [1330, 2090], [1372, 2010], [1335, 1925], [1415, 1866], [1385, 1755],
+    [905, 1165], [795, 1172], [690, 1180], [575, 1172], [465, 1135], [360, 1068],
+    [1415, 565], [1500, 622], [1600, 662], [1700, 688], [1800, 690], [1885, 605],
+    [1945, 1005], [2045, 993], [2140, 965], [2120, 880], [2250, 885], [2400, 955],
+    [1870, 1075], [1720, 935], [1470, 975], [1400, 1110], [1600, 1215], [1615, 1078]
+  ];
+  // Le strade lunghe tra due regioni passano per questi punti (chiave = tappa d'arrivo).
+  var ROUTES = {
+    7: [[1230, 1720], [1180, 1560], [1100, 1400], [985, 1270]],
+    13: [[470, 1140], [700, 1180], [950, 1165], [1000, 1060], [910, 900], [1000, 780], [1200, 700], [1330, 600]],
+    19: [[1860, 700], [1810, 800], [1750, 880], [1790, 975], [1870, 1005]],
+    25: [[2310, 1060], [2150, 1130], [1980, 1115]]
+  };
+  var ON_PAINTING = LEVELS.length === PAINTED.length;
+  var NODES = ON_PAINTING ? PAINTED.map(function (p) { return { x: p[0], y: p[1] }; }) : [];
+  // Riserva (se un giorno le tappe fossero di più): un arco che attraversa ogni regione.
+  if (!ON_PAINTING) REGIONS.forEach(function (R, ci) {
     var prev = REGIONS[ci - 1], next = REGIONS[ci + 1];
     var din = prev ? unit(R.x, R.y, prev.x, prev.y) : [0, 1];
     var count = LEVELS.filter(function (l) { return l.chapter === ci; }).length;
@@ -165,7 +186,6 @@
         '<button type="button" class="icon-button" data-zoom="all" aria-label="Tutto l\'atlante" title="Tutto l\'atlante">⤢</button>' +
       "</div>" +
       '<p class="atlas-hint">Trascina per muoverti · rotella o due dita per avvicinarti</p>' +
-      '<div class="atlas-pick" id="atlasPick"></div>' +
     "</div>" +
     '<div class="modal" id="levelBox" hidden><div class="modal-card level-card" id="levelCard"></div></div>';
   document.body.appendChild(sheet);
@@ -177,31 +197,24 @@
   map.style.width = W + "px";
   map.style.height = H + "px";
 
-  // Le versioni del dipinto della valle; il selettore è provvisorio, finché non se ne sceglie una.
-  var MAPS = { "1": "art/arene/atlante-1.jpg", "2": "art/arene/atlante-2.jpg", "3": "art/arene/atlante-3.jpg", "0": null };
-  function atlasPickId() {
-    var v = null;
-    try { v = localStorage.getItem("sigil-atlante"); } catch (e) { /* ignora */ }
-    return MAPS.hasOwnProperty(v) ? v : "1";
-  }
-  function atlasMap() { return MAPS[atlasPickId()]; }
-  var pickBox = sheet.querySelector("#atlasPick");
-  function paintPick() {
-    var cur = atlasPickId();
-    pickBox.innerHTML = "Mappa: " + ["1", "2", "3", "0"].map(function (k) {
-      return '<button type="button" class="text-button' + (k === cur ? " on" : "") + '" data-map="' + k + '">' + (k === "0" ? "nessuna" : k) + "</button>";
-    }).join("");
-  }
-  pickBox.addEventListener("click", function (e) {
-    var b = e.target.closest("[data-map]");
-    if (!b) return;
-    try { localStorage.setItem("sigil-atlante", b.dataset.map); } catch (x) { /* ignora */ }
-    paintMap();
-  });
+  // Il dipinto della valle sotto l'atlante (Gemini, versione 1 scelta il 15 nov, 2400×1792).
+  var ATLAS_MAP = "art/arene/atlante-valle.jpg";
 
   function stateOf(l, j) {
     var st = j.stars[l.n] || 0;
     return l.n < j.unlocked || st ? "done" : l.n === j.unlocked ? "current" : "locked";
+  }
+
+  // Una strada morbida che passa per tutti i punti (Catmull-Rom in curve di Bézier).
+  function roadThrough(pts, cls) {
+    var d = "M" + pts[0][0].toFixed(1) + " " + pts[0][1].toFixed(1);
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+      var c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+      var c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+      d += " C" + c1[0].toFixed(1) + " " + c1[1].toFixed(1) + " " + c2[0].toFixed(1) + " " + c2[1].toFixed(1) + " " + p2[0].toFixed(1) + " " + p2[1].toFixed(1);
+    }
+    return '<path class="' + cls + '" d="' + d + '"/>';
   }
 
   function road(p, q, bend, cls) {
@@ -215,10 +228,9 @@
     sheet.querySelector("#journeyTotal").innerHTML = "★ " + totalStars() + " / " + LEVELS.length * 3;
     var html = "";
     var currentChapter = (LEVELS[Math.min(j.unlocked, LEVELS.length) - 1] || LEVELS[0]).chapter;
-    // Il dipinto della valle sotto tutto (Gemini, 14 nov). Si sceglie tra le versioni in prova.
-    var mapPick = atlasMap();
-    map.classList.toggle("has-map", !!mapPick);
-    if (mapPick) html += '<div class="atlas-map" style="background-image:url(\'' + mapPick + '\')"></div>';
+    // Il dipinto della valle sotto tutto.
+    map.classList.add("has-map");
+    html += '<div class="atlas-map" style="background-image:url(&quot;' + ATLAS_MAP + '&quot;)"></div>';
 
     // Il Sigillo: anelli che girano piano dietro a tutto, e i raggi verso le regioni.
     var seal = '<svg class="atlas-seal" viewBox="0 0 ' + W + " " + H + '" aria-hidden="true"><g class="seal-turn">' +
@@ -243,7 +255,7 @@
       var levels = LEVELS.filter(function (l) { return l.chapter === ci; });
       var locked = levels[0].n > j.unlocked;
       var got = levels.reduce(function (a, l) { return a + (j.stars[l.n] || 0); }, 0);
-      var away = ci === 4 ? [0, -1] : unit(CX, CY, R.x, R.y);
+      var away = R.label || (ci === 4 ? [0, -1] : unit(CX, CY, R.x, R.y));
       var lx = R.x + away[0] * (R.r + 34), ly = R.y + away[1] * (R.r + 34);
       var ax = -50 + away[0] * 50, ay = -50 + away[1] * 50;
       html += '<div class="region' + (locked ? " locked" : "") + (ci === currentChapter && !locked ? " current" : "") + '" style="left:' + (R.x - R.r) + "px;top:" + (R.y - R.r) + "px;width:" + R.r * 2 + "px;height:" + R.r * 2 + 'px">' +
@@ -264,6 +276,10 @@
       var prev = LEVELS[i - 1];
       var cls = stateOf(l, j) === "done" ? "road done" : stateOf(l, j) === "current" ? "road open" : "road";
       var bend;
+      if (ON_PAINTING && ROUTES[l.n]) {
+        roads += roadThrough([[p.x, p.y]].concat(ROUTES[l.n], [[q.x, q.y]]), cls + " long");
+        return;
+      }
       if (prev.chapter !== l.chapter) {
         // Tra due regioni: la strada piega verso l'esterno, lontano dal Sigillo.
         var m = unit(CX, CY, (p.x + q.x) / 2, (p.y + q.y) / 2);
@@ -271,7 +287,7 @@
         cls += " long";
       } else {
         var d = unit(p.x, p.y, q.x, q.y);
-        var s = i % 2 ? 14 : -14;
+        var s = ON_PAINTING ? 0 : i % 2 ? 14 : -14; // sul dipinto: dritte, lungo la strada
         bend = [-d[1] * s, d[0] * s];
       }
       roads += road(p, q, bend, cls);
@@ -291,7 +307,6 @@
         "</button>";
     });
     map.innerHTML = html;
-    paintPick();
     apply();
   }
 
@@ -308,6 +323,9 @@
     view.y = Math.min(vh / 2, Math.max(vh / 2 - H * view.s, view.y));
   }
   function apply() {
+    // Se un gesto strano (due dita nello stesso punto) desse valori non validi, si riparte
+    // dalla vista intera invece di far sparire l'atlante.
+    if (!isFinite(view.s) || !isFinite(view.x) || !isFinite(view.y) || view.s <= 0) { view.s = minScale(); view.x = 0; view.y = 0; }
     clampView();
     map.style.transform = "translate(" + view.x.toFixed(1) + "px," + view.y.toFixed(1) + "px) scale(" + view.s.toFixed(4) + ")";
     // Da lontano tappe e nomi restano leggibili.
@@ -346,14 +364,14 @@
   var drag = null;
   var moved = false;
   atlas.addEventListener("pointerdown", function (e) {
-    if (e.target.closest(".atlas-tools, .atlas-pick")) return;
+    if (e.target.closest(".atlas-tools")) return;
     atlas.classList.add("used");
     pts[e.pointerId] = { x: e.clientX, y: e.clientY };
     var ids = Object.keys(pts);
     if (ids.length === 1) { drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y }; moved = false; }
     else if (ids.length === 2) {
       var a = pts[ids[0]], b = pts[ids[1]];
-      drag = { pinch: Math.hypot(a.x - b.x, a.y - b.y), s: view.s };
+      drag = { pinch: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), s: view.s };
     }
   });
   window.addEventListener("pointermove", function (e) {
@@ -368,7 +386,7 @@
       var a = pts[ids[0]], b = pts[ids[1]];
       var r = atlas.getBoundingClientRect();
       moved = true;
-      zoomAt((a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top, (Math.hypot(a.x - b.x, a.y - b.y) / drag.pinch) * drag.s / view.s);
+      zoomAt((a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top, (Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)) / drag.pinch) * drag.s / view.s);
     }
   });
   function lift(e) {

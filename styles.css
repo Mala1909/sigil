@@ -2079,17 +2079,26 @@ html:is([data-menu="b"], [data-menu="c"]) .menu-bg { background: #08070a url("ar
    (le regole di b e c mettono display:block sulla soglia e vincerebbero su [hidden]). */
 html .menu-sheet[hidden], .review-bar[hidden], .sheet[hidden], .modal[hidden] { display: none !important; }
 /* Il dipinto della valle sotto l'atlante */
+/* Niente maschere né filtri sul dipinto: su Android (Chrome) un elemento così grande
+   con maschera o filtro diventa un'unica superficie che, ingrandita, supera il limite
+   della scheda grafica e sparisce (Z Fold, 15 nov). Bordi sfumati e velatura sono
+   quindi disegnati sopra, come normali sfumature. */
 .atlas-map {
   position: absolute;
   inset: -2%;
   background: center / 100% 100% no-repeat;
-  filter: saturate(0.9) brightness(0.82);
-  -webkit-mask-image: radial-gradient(ellipse 52% 52% at 50% 50%, #000 70%, transparent 100%);
-  mask-image: radial-gradient(ellipse 52% 52% at 50% 50%, #000 70%, transparent 100%);
   pointer-events: none;
 }
+.atlas-map::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 56% 56% at 50% 50%, rgba(7, 6, 10, 0) 74%, rgba(7, 6, 10, 0.7) 90%, #07060a 100%),
+    linear-gradient(rgba(7, 6, 10, 0.16), rgba(7, 6, 10, 0.16));
+}
 /* con il dipinto, le regioni diventano solo cerchi di luce: il paesaggio è già sotto */
-.atlas-world.has-map .region-art { opacity: 0; }
+.atlas-world.has-map .region-art { display: none; }
 .atlas-world.has-map .region-fog { background: radial-gradient(circle, transparent 35%, rgba(7, 6, 10, 0.25) 62%, transparent 72%); }
 .atlas-world.has-map .region.current .region-ring { box-shadow: 0 0 80px rgba(244, 182, 60, 0.22), inset 0 0 90px rgba(244, 182, 60, 0.16); }
 .atlas-world.has-map .region.locked .region-fog {
@@ -2099,9 +2108,6 @@ html .menu-sheet[hidden], .review-bar[hidden], .sheet[hidden], .modal[hidden] { 
     radial-gradient(circle, rgba(7, 6, 10, 0.72) 30%, rgba(7, 6, 10, 0.5) 62%, transparent 74%);
 }
 .atlas-world.has-map .seal-turn { opacity: 0.55; }
-.atlas-pick { position: absolute; left: 12px; top: 10px; z-index: 3; font-size: 12px; color: var(--muted); background: rgba(16, 13, 22, 0.8); border-radius: 999px; padding: 2px 8px; }
-.atlas-pick .text-button { padding: 5px 6px; color: var(--muted); }
-.atlas-pick .text-button.on { color: var(--gold-2); text-decoration: underline; text-underline-offset: 4px; }
 /* ───────── Classificata del Duello: i ranghi ───────── */
 .duel-record { display: grid; gap: 6px; }
 .rank-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
@@ -2330,3 +2336,27 @@ html.drag-on, html.drag-on * { cursor: grabbing !important; }
 #board .lane.drag-no { opacity: 0.45; }
 #board .lane.drop-target.drag-ok { box-shadow: 0 0 0 2px var(--gold-2), 0 0 34px rgba(242, 208, 138, 0.45); background: linear-gradient(180deg, transparent 45%, rgba(242, 208, 138, 0.14)), var(--bg-2); }
 .hand.drag-layer { position: fixed; inset: 0; z-index: 40; display: block; padding: 0; margin: 0; overflow: visible; pointer-events: none; }
+
+/* Atlante sugli schermi touch: niente animazioni continue nel mondo grande (anelli che
+   girano, sentieri che scorrono, nebbia che respira), che costringono a ridisegnarlo a ogni
+   fotogramma; niente ombre-filtro sui sentieri. Resta tutto uguale, solo fermo. */
+@media (pointer: coarse) {
+  .atlas .seal-turn, .atlas .road.open, .atlas .region.locked .region-fog { animation: none; }
+  .atlas .road.done { filter: none; stroke: rgba(244, 199, 102, 0.85); }
+}
+
+/* Zone sicure (isola e notch dell'iPhone, barra in basso) anche nelle altre schermate. */
+.journey-head {
+  padding-top: max(14px, env(safe-area-inset-top));
+  padding-left: max(18px, env(safe-area-inset-left));
+  padding-right: max(18px, env(safe-area-inset-right));
+}
+.rules-sheet { padding-top: max(32px, env(safe-area-inset-top)); padding-bottom: max(32px, env(safe-area-inset-bottom)); }
+.codex-inner { padding-top: max(26px, env(safe-area-inset-top)); padding-bottom: max(40px, env(safe-area-inset-bottom)); }
+.oath-inner { padding-top: max(30px, env(safe-area-inset-top)); padding-bottom: max(40px, env(safe-area-inset-bottom)); }
+.atlas-tools { bottom: max(14px, env(safe-area-inset-bottom)); right: max(14px, env(safe-area-inset-right)); }
+.peek { padding: max(20px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom)); }
+.journey-total { white-space: nowrap; }
+@media (max-width: 400px) { .journey-head h2 { font-size: 19px; } .journey-total { font-size: 16px; } }
+.duel-inner { padding-top: max(18px, env(safe-area-inset-top)); padding-bottom: max(40px, env(safe-area-inset-bottom)); }
+.duel-inner .journey-head { padding: 0 0 10px; }
