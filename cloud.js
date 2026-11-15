@@ -65,6 +65,16 @@
     s.house = p.house;
     s.name = p.name;
     if (p.deck && p.deck.length) s.deck = p.deck.slice();
+    // Più mazzi (15 nov): i posti comprati e i mazzi salvati sul server.
+    s.deckSlots = p.deck_slots || 4;
+    if (Array.isArray(p.decks) && p.decks.length) {
+      s.decks = p.decks.slice(0, s.deckSlots).map(function (d) { return { name: d.name || "", cards: (d.cards || []).slice() }; });
+      s.activeDeck = Math.max(0, Math.min(p.deck_active || 0, s.decks.length - 1));
+      s.deck = s.decks[s.activeDeck].cards.slice();
+    } else if (s.decks && s.decks.length) {
+      // Il server non ha ancora i mazzi (profilo di prima del 15 nov): glieli mando.
+      setTimeout(function () { setDecks(s.decks, s.activeDeck || 0); }, 0);
+    }
     s.xp = p.xp;
     s.level = p.level;
     s.gettoni = p.gold;
@@ -205,6 +215,17 @@
   }
 
   var deckTimer = null;
+  // Tutti i mazzi insieme, con quello scelto: il server controlla carte e posti.
+  var decksTimer = null;
+  function setDecks(decks, active) {
+    if (state !== "online" || !Array.isArray(decks) || !decks.length) return;
+    clearTimeout(decksTimer);
+    var copy = decks.map(function (d) { return { name: d.name || "", cards: (d.cards || []).slice(0, 12) }; });
+    decksTimer = setTimeout(function () {
+      call("sigil_set_decks", { p_decks: copy, p_active: active || 0 }).catch(function (e) { console.warn("SIGIL: mazzi non salvati", e); });
+    }, 900);
+  }
+
   function setDeck(deck) {
     if (state !== "online" || !deck || deck.length !== 12) return;
     clearTimeout(deckTimer);
@@ -225,6 +246,7 @@
     init: function (house, name) { return act("sigil_init", { p_house: house, p_name: name || "Custode" }); },
     setName: function (name) { return act("sigil_set_name", { p_name: name }); },
     setDeck: setDeck,
+    setDecks: setDecks,
     report: function (o) {
       return act("sigil_report", { p_mode: o.mode, p_result: o.result, p_stake: o.stake, p_seconds: o.seconds, p_level: o.level || null, p_stars: o.stars || 0 });
     },

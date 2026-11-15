@@ -169,6 +169,8 @@
       buyButton("pacco", d.pack.price, "ambra", false, "Apri") + "</div>" +
       '<div class="shop-offer premium"><svg class="offer-sigil"><use href="#g-sigillo"/></svg><div><b>Pass premium della veglia</b><p>Sblocca la seconda fila di premi: più carte, pegni e ambra a ogni livello del pass.</p></div>' +
       buyButton("pass", d.pass.price, "ambra", s.pass && s.pass.premium, "Prendi") + "</div>" +
+      (d.slot ? '<div class="shop-offer"><svg class="offer-sigil"><use href="#g-sigillo"/></svg><div><b>Posto per un altro mazzo</b><p>Ne hai ' + (s.deckSlots || 4) + " su " + d.slot.max + ". Tieni pronti più mazzi e scegli quello giusto per la notte.</p></div>" +
+        ((s.deckSlots || 4) >= d.slot.max ? '<button type="button" class="button ghost tiny" disabled>Hai tutti i posti</button>' : buyButton("slot", d.slot.price, "ambra", false, "Prendi")) + "</div>" : "") +
     "</section>" +
     '<p class="shop-note">I pegni si vincono giocando: la posta di ogni veglia vinta, le stelle del Viaggio, i premi del pass. L\'ambra per ora non si compra: ne ricevi 300 al giuramento e altra dal pass premium.</p>';
     $("shopBody").innerHTML = html;
@@ -183,6 +185,7 @@
       wallet();
       if (res.cards && res.cards.length) reveal(res.cards, item === "pacco" ? "Il pacco si apre" : "È tua");
       else if (item === "pass") reveal([], "Il Pass premium è tuo", "Torna al Pass della veglia: la seconda fila di premi ora si può riscattare.");
+      else if (item === "slot") reveal([], "Un posto in più", "Ora puoi tenere " + (S().deckSlots || 4) + " mazzi: li trovi in Mazzo e collezione.");
       return Cloud().shop().then(function (d) { shopData = d; paintShop(); });
     }).catch(function (e) {
       G.blip("no");

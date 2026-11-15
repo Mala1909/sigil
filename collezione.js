@@ -267,7 +267,9 @@
     "</header>" +
     '<div class="deck-body">' +
       '<aside class="deck-panel">' +
-        '<div class="deck-top"><p class="label">Il tuo mazzo</p><b id="deckCount"></b></div>' +
+        '<div class="deck-slots" id="deckSlots" role="tablist" aria-label="I tuoi mazzi"></div>' +
+        '<div class="deck-top"><input class="deck-name" id="deckName" maxlength="24" autocomplete="off" aria-label="Nome del mazzo"><b id="deckCount"></b></div>' +
+        '<div class="deck-buy" id="deckBuy" hidden></div>' +
         '<div class="deck-build" id="deckBuild"></div>' +
         '<div class="deck-curve" id="deckCurve"></div>' +
         '<ol class="deck-list" id="deckList"></ol>' +
@@ -284,6 +286,79 @@
   // Mazzo da una carta: "idle" → "choose" (tocca una carta) → "done" (un'altra idea, annulla, tienilo).
   var build = { mode: "idle", seed: null, variant: 0, prev: null };
   var $ = function (id) { return document.getElementById(id); };
+
+  /* ───────── più mazzi (15 nov) ─────────
+   * s.decks: fino a s.deckSlots mazzi { name, cards }; s.activeDeck è quello con cui si gioca.
+   * s.deck resta sempre la copia del mazzo scelto (lo usano partite, Viaggio, Duello e server). */
+  var SLOT_PRICE = 150, SLOT_MAX = 10;
+  var buying = false;
+  function slots() { return Math.max(4, Math.min(SLOT_MAX, S().deckSlots || 4)); }
+  function ensureDecks() {
+    var s = S();
+    if (!Array.isArray(s.decks) || !s.decks.length) s.decks = [{ name: "", cards: (s.deck || []).slice() }];
+    if (s.decks.length > slots()) s.decks = s.decks.slice(0, slots());
+    if (!(s.activeDeck >= 0 && s.activeDeck < s.decks.length)) s.activeDeck = 0;
+    return s;
+  }
+  // Riporta nel mazzo scelto le modifiche fatte su s.deck.
+  function keepDeck() {
+    var s = ensureDecks();
+    s.decks[s.activeDeck].cards = (s.deck || []).slice();
+  }
+  function deckLabel(i) {
+    var d = S().decks[i];
+    return d && d.name ? d.name : "Mazzo " + (i + 1);
+  }
+  function pickSlot(i) {
+    keepDeck();
+    var s = S();
+    while (s.decks.length <= i) s.decks.push({ name: "", cards: [] });
+    s.activeDeck = i;
+    s.deck = s.decks[i].cards.slice();
+    build = { mode: "idle", seed: null, variant: 0, prev: null };
+    G.persist(); paintDeck(); syncDeck();
+    var n = s.deck.length;
+    $("deckHint").textContent = n ? "Ora giochi con «" + deckLabel(i) + "»." : "Mazzo vuoto: aggiungi carte toccandole, oppure usa «Mazzo da una carta».";
+  }
+  function paintSlots() {
+    var s = ensureDecks();
+    var html = "";
+    for (var i = 0; i < slots(); i++) {
+      var d = s.decks[i];
+      var n = d ? d.cards.length : 0;
+      html += '<button type="button" role="tab" class="deck-slot' + (i === s.activeDeck ? " on" : "") + (n ? "" : " empty") + '" data-slot="' + i + '" aria-selected="' + (i === s.activeDeck) + '" title="' + G.esc(deckLabel(i)) + '">' +
+        "<b>Mazzo " + (i + 1) + "</b>" + (n === SIZE ? '<i class="ds-ok" aria-label="completo"></i>' : n ? "<small>" + n + "/" + SIZE + "</small>" : '<small class="ds-empty">vuoto</small>') + "</button>";
+    }
+    if (slots() < SLOT_MAX) html += '<button type="button" class="deck-slot add" data-slot-buy="1" title="Un posto in più per un mazzo"><b>+ Mazzo</b><small>◆ ' + SLOT_PRICE + "</small></button>";
+    $("deckSlots").innerHTML = html;
+    var name = $("deckName");
+    if (document.activeElement !== name) name.value = s.decks[s.activeDeck].name || "";
+    name.placeholder = "Mazzo " + (s.activeDeck + 1);
+    var buy = $("deckBuy");
+    if (buying) {
+      var c = Cloud();
+      var amber = s.ambra || 0;
+      buy.hidden = false;
+      buy.innerHTML = !c ? '<p>Per comprare un posto in più serve la connessione al registro dei Custodi.</p><div class="db-row"><button type="button" class="text-button" data-slot-cancel="1">Chiudi</button></div>'
+        : '<p>Un posto in più per un mazzo: <b>◆ ' + SLOT_PRICE + " ambra</b>. Ne hai " + amber + ".</p>" +
+          '<div class="db-row">' + (amber >= SLOT_PRICE ? '<button type="button" class="button primary tiny" data-slot-confirm="1">Compra il posto</button>' : '<button type="button" class="button ghost tiny" disabled>Ambra non sufficiente</button>') +
+          '<button type="button" class="text-button" data-slot-cancel="1">No</button></div>';
+    } else { buy.hidden = true; buy.innerHTML = ""; }
+  }
+  function buySlot() {
+    var c = Cloud();
+    if (!c) return;
+    var btn = deckSheet.querySelector("[data-slot-confirm]");
+    if (btn) { btn.disabled = true; btn.textContent = "Un momento…"; }
+    c.buy("slot").then(function () {
+      buying = false;
+      paintDeck();
+      $("deckHint").textContent = "Hai un posto in più: ora puoi tenere " + slots() + " mazzi.";
+    }).catch(function (e) {
+      G.blip("no");
+      if (btn) { btn.disabled = false; btn.textContent = e.message; }
+    });
+  }
 
   function paintBuild() {
     var box = $("deckBuild");
@@ -318,7 +393,10 @@
   }
 
   function paintDeck() {
+    keepDeck();
+    G.persist();
     var s = S();
+    paintSlots();
     paintBuild();
     var deck = (s.deck || []).filter(owns);
     s.deck = deck;
@@ -375,7 +453,13 @@
     paintDeck();
     if (first) $("deckHint").textContent = "Ecco il tuo primo mazzo. Puoi cambiarlo quando vuoi: le carte nuove arriveranno giocando.";
   }
-  function syncDeck() { var c = Cloud(); if (c) c.setDeck(S().deck); }
+  function syncDeck() {
+    keepDeck();
+    var c = Cloud();
+    if (!c) return;
+    var s = S();
+    if (c.setDecks) c.setDecks(s.decks, s.activeDeck); else c.setDeck(s.deck);
+  }
   function closeDeck() {
     var s = S();
     s.fresh = {};
@@ -383,6 +467,7 @@
     syncDeck();
     deckSheet.hidden = true;
     build = { mode: "idle", seed: null, variant: 0, prev: null };
+    buying = false;
     G.showMenu(true);
   }
   deckSheet.addEventListener("click", function (e) {
@@ -395,6 +480,10 @@
       s.deck = s.deck.filter(function (id) { return id !== t.dataset.remove; });
       G.persist(); paintDeck(); return;
     }
+    if ((t = e.target.closest("[data-slot]"))) { pickSlot(Number(t.dataset.slot)); return; }
+    if ((t = e.target.closest("[data-slot-buy]"))) { buying = true; paintSlots(); return; }
+    if ((t = e.target.closest("[data-slot-cancel]"))) { buying = false; paintSlots(); return; }
+    if ((t = e.target.closest("[data-slot-confirm]"))) { buySlot(); return; }
     if ((t = e.target.closest("[data-build]"))) {
       var act = t.dataset.build;
       if (act === "start") {
@@ -425,6 +514,15 @@
       else s.deck.push(id);
       G.persist(); paintDeck(); syncDeck();
     }
+  });
+
+  deckSheet.addEventListener("input", function (e) {
+    if (e.target.id !== "deckName") return;
+    var s = ensureDecks();
+    s.decks[s.activeDeck].name = e.target.value.slice(0, 24);
+    G.persist();
+    clearTimeout(deckSheet.nameTimer);
+    deckSheet.nameTimer = setTimeout(function () { paintSlots(); syncDeck(); }, 600);
   });
 
   /* ───────── menu ───────── */

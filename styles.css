@@ -2380,3 +2380,36 @@ html.drag-on, html.drag-on * { cursor: grabbing !important; }
 .deck-sheet.choosing .deck-grid .card.locked { opacity: 0.25; }
 @keyframes dbPulse { 50% { box-shadow: 0 0 0 2px var(--gold-2), 0 0 8px rgba(242, 208, 138, 0.15); } }
 @media (prefers-reduced-motion: reduce) { .deck-sheet.choosing .deck-grid .card:not(.locked) { animation: none; } }
+
+/* ───────── Più mazzi (collezione.js) ───────── */
+.deck-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 6px; margin: 0 0 12px; }
+.deck-slot {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  min-height: 46px; padding: 4px 2px; border-radius: 10px; cursor: pointer;
+  border: 1px solid var(--line-2); background: rgba(255, 255, 255, 0.03); color: var(--parch-2); font: inherit;
+}
+.deck-slot b { font-family: var(--display); font-size: 15px; line-height: 1; color: var(--parch); }
+.deck-slot small { font-size: 10px; letter-spacing: 0.04em; color: var(--muted); white-space: nowrap; }
+.deck-slot.on { border-color: var(--gold-2); background: linear-gradient(180deg, rgba(242, 208, 138, 0.18), rgba(242, 208, 138, 0.04)); box-shadow: 0 0 14px rgba(242, 208, 138, 0.2); }
+.deck-slot.on b { color: var(--gold-2); }
+.deck-slot.empty b { color: var(--muted); }
+.deck-slot.add { border-style: dashed; border-color: rgba(242, 166, 74, 0.5); }
+.deck-slot.add b { color: #f2a64a; font-size: 18px; }
+.deck-slot.add small { color: #f2a64a; }
+.deck-top { align-items: center; gap: 10px; }
+.deck-name {
+  flex: 1; min-width: 0; padding: 4px 0; border: 0; border-bottom: 1px dashed transparent; background: none;
+  color: var(--gold); font-family: var(--display); font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; outline: none;
+}
+.deck-name::placeholder { color: var(--gold); opacity: 1; }
+.deck-name:hover, .deck-name:focus { border-bottom-color: var(--line-2); }
+.deck-name:focus { text-transform: none; letter-spacing: 0.04em; font-size: 14px; }
+.deck-buy { margin: 8px 0 4px; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(242, 166, 74, 0.4); background: rgba(242, 166, 74, 0.07); font-size: 13px; color: var(--parch-2); }
+.deck-buy p { margin: 0 0 8px; line-height: 1.4; }
+.deck-buy b { color: #f2a64a; }
+.deck-buy .db-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.deck-slots { grid-template-columns: repeat(auto-fill, minmax(78px, 1fr)); }
+.deck-slot b { font-size: 13px; letter-spacing: 0.02em; white-space: nowrap; }
+.deck-slot .ds-ok { width: 8px; height: 8px; margin-top: 3px; border-radius: 50%; background: var(--good); box-shadow: 0 0 8px rgba(120, 200, 140, 0.7); }
+.deck-slot .ds-empty { opacity: 0.7; }
+.deck-slot.add b { font-size: 13px; }
