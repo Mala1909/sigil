@@ -2743,3 +2743,141 @@ html.evo-open, html.evo-open body { overflow: hidden; }
 .tc-tick { stroke: rgba(242, 208, 138, 0.35); stroke-width: 0.9; stroke-linecap: round; }
 .tc-tick.big { stroke: rgba(242, 208, 138, 0.6); stroke-width: 1.3; }
 .app.clock-low .tc-tick { stroke: rgba(255, 150, 90, 0.45); }
+
+/* ───────── Il tavolo vivo (16 nov) ─────────
+ * Le rovine come tessere dipinte (stile location di Snap), un tavolo di pietra sotto le corsie,
+ * l'arena dietro sfocata, le corsie che si accendono per chi vince. Cambia solo l'aspetto:
+ * misure di corsie, carte e targhe restano quelle provate su tutti i formati. Effetti: tavolo.js. */
+body[data-mode] .arena-media { filter: blur(3px) brightness(.62) saturate(.9); transform: scale(1.04); }
+.app.playing .board {
+  --stone: #1b1813;
+  padding: 8px;
+  border-radius: 22px;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 50%, rgba(214, 178, 110, .06), transparent 70%),
+    var(--table-img, none) center / cover no-repeat,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5  0 0 0 0 .45  0 0 0 0 .38  0 0 0 .35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    linear-gradient(160deg, #2a251d, var(--stone) 45%, #120f0c);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, .65), inset 0 0 0 1px rgba(214, 178, 110, .22), inset 0 0 0 4px rgba(0, 0, 0, .35), inset 0 0 0 5px rgba(214, 178, 110, .1), inset 0 0 70px rgba(0, 0, 0, .6);
+}
+/* le corsie: lastre incavate nella pietra */
+.app.playing .lane {
+  background:
+    linear-gradient(180deg, rgba(120, 104, 190, .07), transparent 32%, transparent 68%, rgba(214, 178, 110, .07)),
+    rgba(9, 8, 11, .52);
+  border: 1px solid rgba(214, 178, 110, .13);
+  box-shadow: inset 0 3px 16px rgba(0, 0, 0, .7), inset 0 -1px 0 rgba(255, 240, 210, .04);
+  backdrop-filter: none;
+  transition: box-shadow .35s ease, border-color .35s ease, opacity .2s;
+}
+.app.playing .lane[data-lead="you"] {
+  border-color: rgba(235, 197, 118, .42);
+  box-shadow: inset 0 3px 16px rgba(0, 0, 0, .7), inset 0 -70px 60px -50px rgba(235, 197, 118, .26), 0 0 22px rgba(235, 197, 118, .13);
+}
+.app.playing .lane[data-lead="rival"] {
+  border-color: rgba(165, 147, 255, .42);
+  box-shadow: inset 0 3px 16px rgba(0, 0, 0, .7), inset 0 70px 60px -50px rgba(165, 147, 255, .26), 0 0 22px rgba(165, 147, 255, .13);
+}
+.app.playing .lane.legal { border-color: var(--gold-2); box-shadow: inset 0 3px 16px rgba(0, 0, 0, .6), 0 0 0 1px var(--gold-2), 0 0 30px rgba(242, 208, 138, .25); }
+.app.playing .lane.legal:hover { background: linear-gradient(180deg, transparent 50%, rgba(242, 208, 138, .12)), rgba(9, 8, 11, .45); }
+/* gli spazi delle carte: incavi */
+.app.playing .slot {
+  border: 0;
+  background: radial-gradient(ellipse 80% 70% at 50% 40%, rgba(0, 0, 0, .18), rgba(0, 0, 0, .42));
+  box-shadow: inset 0 2px 7px rgba(0, 0, 0, .75), inset 0 -1px 0 rgba(255, 240, 210, .05);
+}
+/* la tessera della rovina */
+.app.playing .plaque {
+  border: 0;
+  border-radius: 12px;
+  isolation: isolate;
+  box-shadow:
+    0 0 0 1.5px #9a7741, 0 0 0 3px rgba(18, 12, 6, .95), 0 0 0 4px rgba(214, 178, 110, .4),
+    0 14px 28px rgba(0, 0, 0, .65);
+  transform-style: preserve-3d;
+}
+.app.playing .plaque .place-art {
+  filter: saturate(1.05) contrast(1.04);
+  animation: placeBreath 26s ease-in-out infinite alternate;
+  transform-origin: 50% 60%;
+}
+@keyframes placeBreath { from { transform: scale(1.02) translate(0, 0); } to { transform: scale(1.1) translate(-1.5%, -1%); } }
+.app.playing .plaque::before {
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(8, 6, 10, .35) 0%, transparent 26%, transparent 42%, rgba(8, 6, 10, .55) 72%, rgba(8, 6, 10, .9) 100%),
+    radial-gradient(ellipse 90% 80% at 50% 45%, transparent 55%, rgba(8, 6, 10, .55) 100%);
+}
+.place-fx { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; display: block; }
+.app.playing .plaque.gl-on .place-art { visibility: hidden; }
+.app.playing .plaque-text { align-self: end; }
+.app.playing .plaque h3 {
+  color: #f5e3b5;
+  letter-spacing: .08em;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, .9), 0 2px 10px #000, 0 0 18px rgba(0, 0, 0, .8);
+}
+.app.playing .plaque p { color: #e6dcc6; text-shadow: 0 1px 4px #000; }
+/* i medaglioni della forza */
+.app.playing .score {
+  background: radial-gradient(circle at 35% 30%, #3c3346, #15111b 72%);
+  border-width: 2px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+.app.playing .score.you { border-color: #d9ad5c; }
+.app.playing .score.rival { border-color: #9b88f0; }
+.app.playing .score.ahead { box-shadow: 0 0 16px currentColor, 0 3px 10px rgba(0, 0, 0, .7), inset 0 0 10px rgba(255, 255, 255, .08); }
+/* a inizio partita le rovine si girano una dopo l'altra */
+.board.deal .plaque { animation: placeDeal .75s cubic-bezier(.2, .7, .2, 1) both; }
+@keyframes placeDeal {
+  0% { transform: perspective(700px) rotateY(-90deg) scale(.9); filter: brightness(2.2); opacity: 0; }
+  55% { opacity: 1; }
+  100% { transform: none; filter: none; opacity: 1; }
+}
+@media (max-width: 699px) {
+  .app.playing .board { padding: 5px; border-radius: 16px; }
+  .app.playing .plaque { border-radius: 9px; box-shadow: 0 0 0 1px #9a7741, 0 0 0 2px rgba(18, 12, 6, .95), 0 0 0 3px rgba(214, 178, 110, .35), 0 8px 18px rgba(0, 0, 0, .6); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app.playing .plaque .place-art, .board.deal .plaque { animation: none; }
+}
+/* tessere un po' più alte, perché il dipinto della rovina si veda (computer e tablet) */
+.lane { --plaque-h: 150px; }
+@media (max-height: 760px) and (min-width: 981px) { .lane { --plaque-h: 124px; } }
+@media (min-width: 700px) and (max-width: 980px) { .lane { --plaque-h: 128px; } }
+/* il tavolo di pietra dipinto (Gemini), un po' scurito perché le rovine restino protagoniste */
+.app.playing .board { --table-img: linear-gradient(rgba(10, 8, 6, .42), rgba(10, 8, 6, .42)), url("art/arene/tavolo.jpg"); }
+.app.playing .board { background:
+    radial-gradient(ellipse 60% 50% at 50% 50%, rgba(214, 178, 110, .06), transparent 70%),
+    linear-gradient(rgba(10, 8, 6, .42), rgba(10, 8, 6, .42)),
+    url("art/arene/tavolo.jpg") center / cover no-repeat,
+    linear-gradient(160deg, #2a251d, #1b1813 45%, #120f0c); }
+
+/* ───────── Effetti tra le carte (effetti.js) ───────── */
+.fx-layer { position: fixed; inset: 0; z-index: 14; pointer-events: none; }
+.fx-layer canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.fx-num {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 30px;
+  letter-spacing: .02em;
+  pointer-events: none;
+  animation: fxNum 1.25s cubic-bezier(.2, .8, .2, 1) forwards;
+}
+.fx-num.up { color: #ffe3a0; text-shadow: 0 0 12px rgba(255, 190, 80, .9), 0 0 28px rgba(255, 160, 40, .6), 0 2px 2px #000; }
+.fx-num.down { color: #e2ccff; text-shadow: 0 0 12px rgba(160, 100, 255, .95), 0 0 28px rgba(120, 60, 220, .6), 0 2px 2px #000; }
+@keyframes fxNum {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.4); }
+  18% { opacity: 1; transform: translate(-50%, -70%) scale(1.25); }
+  35% { transform: translate(-50%, -80%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -190%) scale(.9); }
+}
+.piece.fx-boost { animation: fxBoost .6s ease-out; }
+@keyframes fxBoost { 30% { transform: scale(1.12); filter: brightness(1.5) drop-shadow(0 0 10px rgba(255, 200, 90, .9)); } }
+.piece.fx-hurt { animation: fxHurt .5s ease-out; }
+@keyframes fxHurt { 20% { transform: translateX(-4px) rotate(-2deg); filter: brightness(.7) saturate(.5) hue-rotate(40deg); } 45% { transform: translateX(4px) rotate(2deg); } 70% { transform: translateX(-2px); } }
+.app.fx-quake { animation: fxQuake .4s ease-out; }
+@keyframes fxQuake { 15% { transform: translate(3px, -2px); } 35% { transform: translate(-3px, 2px); } 55% { transform: translate(2px, 1px); } 75% { transform: translate(-1px, -1px); } }
+@media (max-width: 699px) { .fx-num { font-size: 24px; } }
+@media (prefers-reduced-motion: reduce) { .fx-layer { display: none; } .piece.fx-boost, .piece.fx-hurt, .app.fx-quake { animation: none; } }
