@@ -2367,3 +2367,16 @@ html.drag-on, html.drag-on * { cursor: grabbing !important; }
 .card.cheaper .c-cost { background: radial-gradient(circle at 35% 30%, #e9ffd9, #7fd36a 55%, #2f7a2a); color: #0d2a0a; }
 .card.buffed .c-power { border-color: var(--good); color: #c9f5c0; box-shadow: 0 0 10px rgba(120, 200, 140, 0.55); }
 .card.nerfed .c-power { border-color: var(--bad); color: #ffc9c0; box-shadow: 0 0 10px rgba(220, 90, 80, 0.55); }
+
+/* ───────── Mazzo da una carta (collezione.js) ───────── */
+.deck-build { margin: 10px 0 4px; }
+.deck-build .db-start { width: 100%; padding: 10px 12px; font-size: 14px; border-color: rgba(242, 208, 138, 0.45); }
+.deck-build .db-note { margin: 0 0 8px; font-size: 13px; line-height: 1.4; color: var(--parch-2); }
+.deck-build .db-note b { color: var(--gold-2); font-family: var(--display); letter-spacing: 0.03em; }
+.deck-build .db-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.deck-build .db-row .button.tiny { padding: 8px 12px; font-size: 13px; }
+/* Mentre si sceglie la carta: le proprie carte brillano, le altre si spengono. */
+.deck-sheet.choosing .deck-grid .card:not(.locked) { box-shadow: 0 0 0 2px var(--gold-2), 0 0 22px rgba(242, 208, 138, 0.35); animation: dbPulse 1.8s ease-in-out infinite; }
+.deck-sheet.choosing .deck-grid .card.locked { opacity: 0.25; }
+@keyframes dbPulse { 50% { box-shadow: 0 0 0 2px var(--gold-2), 0 0 8px rgba(242, 208, 138, 0.15); } }
+@media (prefers-reduced-motion: reduce) { .deck-sheet.choosing .deck-grid .card:not(.locked) { animation: none; } }

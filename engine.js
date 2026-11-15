@@ -1614,6 +1614,150 @@
     return card;
   }
 
+  /* ───────── Mazzo da una carta ─────────
+   * Costruisce un mazzo da 12 attorno a una carta scelta, con le carte che si possiedono.
+   * Ogni carta riceve delle "inclinazioni" lette dal suo effetto (non c'è nessun elenco
+   * scritto a mano, così vale anche per le carte future); poi si sceglie, una alla volta,
+   * la carta che va più d'accordo con quella di partenza e con il mazzo che cresce,
+   * tenendo una curva dei costi giocabile. "variant" dà un'altra idea con la stessa carta. */
+  function deckTags(c) {
+    var ab = c.ability || {};
+    var t = {};
+    var add = function () { for (var i = 0; i < arguments.length; i++) t[arguments[i]] = 1; };
+    if (c.kind === "reveal") add("scopri");
+    if (c.anchor) add("fermo");
+    if (!c.ability && c.kind === "none") add("forza");
+    switch (ab.op) {
+      case "self":
+        if (ab.cond === "per-ally" || ab.cond === "per-card" || ab.cond === "crowd") add("folla");
+        if (ab.cond === "alone") add("solo");
+        if (ab.cond === "per-enemy") add("nemici");
+        if (ab.cond === "per-hand") add("mano");
+        if (ab.cond === "per-destroyed") add("morte");
+        if (ab.cond === "from-turn") add("tardi");
+        if (ab.cond === "per-house") add("casata");
+        break;
+      case "aura":
+        if (ab.target === "enemy") add("maledizione"); else add("folla", "aura");
+        break;
+      case "buff":
+        if (/^ally/.test(ab.target || "") || ab.target === "self-per-card" || ab.target === "self-if-more-cards") add("folla");
+        if (ab.target === "self-if-alone") add("solo");
+        if (ab.target === "self-if-behind") add("rimonta");
+        if (ab.target === "self-if-turn") add("tardi");
+        if (ab.target === "self-if-stake") add("pegno");
+        if (/^enemy/.test(ab.target || "")) add("maledizione");
+        if (ab.target === "copy-strong") add("nemici");
+        break;
+      case "move": add(ab.target === "ally" ? "spostare" : "controllo"); break;
+      case "pull": add("controllo", "nemici"); break;
+      case "energy": case "steal-energy": case "discount": add("lumi"); break;
+      case "draw": case "draw-best": case "copy-enemy": add("carte"); break;
+      case "summon": add("carte", "folla"); break;
+      case "hand": add(ab.side === "enemy" ? "maledizione" : "mano"); break;
+      case "grow": add("tardi"); break;
+      case "promise": add("folla", "tardi"); break;
+      case "poison": add("maledizione"); break;
+      case "revive": case "destroy": add("morte"); break;
+      case "seal": add("controllo"); break;
+      case "bounce": add("ritorno"); break;
+    }
+    if (ab.protect) add("folla");
+    return t;
+  }
+
+  // Quanto una carta con l'inclinazione "a" gradisce una carta con l'inclinazione "b".
+  var LIKES = {
+    folla: { folla: 2, aura: 2, carte: 1 },
+    aura: { folla: 2, aura: 1 },
+    solo: { solo: 2, spostare: 2, forza: 1, controllo: 1 },
+    spostare: { solo: 2, spostare: 1 },
+    nemici: { controllo: 2, nemici: 1 },
+    controllo: { nemici: 1.5, maledizione: 1 },
+    maledizione: { maledizione: 2, morte: 1.5, controllo: 1 },
+    morte: { morte: 2, maledizione: 1.5 },
+    lumi: { forza: 2, tardi: 1, lumi: 0.5 },
+    carte: { mano: 2, carte: 1.5, lumi: 1 },
+    mano: { carte: 2, mano: 1.5 },
+    tardi: { lumi: 1.5, tardi: 1 },
+    ritorno: { scopri: 1.5 },
+    pegno: { forza: 1, rimonta: 1 },
+    forza: { lumi: 2 },
+    rimonta: { forza: 0.5 }
+  };
+  function liking(ta, tb) {
+    var sum = 0;
+    for (var a in ta) {
+      var row = LIKES[a];
+      if (!row) continue;
+      for (var b in tb) if (row[b]) sum += row[b];
+    }
+    return sum;
+  }
+
+  function buildDeckAround(seedId, owned, opts) {
+    opts = opts || {};
+    var size = opts.size || DECK_SIZE;
+    var variant = opts.variant || 0;
+    var seed = BY_CARD[seedId];
+    if (!seed) return null;
+    var pool = [];
+    var seen = {};
+    (owned || []).forEach(function (id) { if (BY_CARD[id] && !seen[id] && id !== seedId) { seen[id] = 1; pool.push(BY_CARD[id]); } });
+    var tags = {};
+    var all = pool.concat([seed]);
+    all.forEach(function (c) { tags[c.id] = deckTags(c); });
+    var seedTags = tags[seed.id];
+    // Curva da 12: due carte da 1, tre da 2, due da 3, due da 4, due da 5, una da 6.
+    // Chi fa lumi vuole più carte care; chi vuole folla, più carte piccole.
+    var curve = { 1: 2, 2: 3, 3: 2, 4: 2, 5: 2, 6: 1 };
+    if (seedTags.lumi || seedTags.forza) curve = { 1: 2, 2: 2, 3: 2, 4: 2, 5: 2, 6: 2 };
+    if (seedTags.folla || seedTags.solo === undefined && seedTags.casata) curve = { 1: 3, 2: 3, 3: 2, 4: 2, 5: 1, 6: 1 };
+    var slot = function (cost) { return Math.max(1, Math.min(6, cost)); };
+    var deck = [seed];
+    var used = {};
+    used[seed.id] = 1;
+    var count = {};
+    count[slot(seed.cost)] = 1;
+    var rnd = mulberry32(hashString("mazzo|" + seedId + "|" + variant));
+    var jitter = {};
+    pool.forEach(function (c) { jitter[c.id] = variant ? rnd() * 3 : rnd() * 0.01; });
+    // "Un'altra idea": le carte del mazzo appena proposto pesano meno, così la variante cambia davvero.
+    (opts.avoid || []).forEach(function (id) { if (jitter[id] != null) jitter[id] -= 3.5; });
+    while (deck.length < size) {
+      var best = null, bestScore = -1e9;
+      for (var i = 0; i < pool.length; i++) {
+        var c = pool[i];
+        if (used[c.id]) continue;
+        var tc = tags[c.id];
+        var score = 3 * liking(seedTags, tc) + 1.5 * liking(tc, seedTags);
+        for (var d = 1; d < deck.length; d++) score += 0.35 * (liking(tags[deck[d].id], tc) + liking(tc, tags[deck[d].id]));
+        if (c.house === seed.house) score += seedTags.casata ? 4 : 2;
+        var k = slot(c.cost);
+        var want = (curve[k] || 0) - (count[k] || 0);
+        score += want > 0 ? 1.5 + 0.5 * want : -2.5 * (1 - want);
+        score += 0.35 * (c.power - (c.cost * 1.5 + 0.5));
+        score += jitter[c.id];
+        if (score > bestScore || (score === bestScore && best && c.id < best.id)) { best = c; bestScore = score; }
+      }
+      if (!best) break;
+      deck.push(best);
+      used[best.id] = 1;
+      count[slot(best.cost)] = (count[slot(best.cost)] || 0) + 1;
+    }
+    // Almeno una carta da 1 lume, se se ne possiede una: la prima ora non si resta a guardare.
+    if (!deck.some(function (c) { return c.cost === 1; })) {
+      var cheap = pool.filter(function (c) { return c.cost === 1 && !used[c.id]; })
+        .sort(function (a, b) { return liking(seedTags, tags[b.id]) - liking(seedTags, tags[a.id]) || b.power - a.power || (a.id < b.id ? -1 : 1); })[0];
+      if (cheap && deck.length > 1) {
+        var worst = 1;
+        for (var w = 2; w < deck.length; w++) if (deck[w].cost >= deck[worst].cost) worst = w;
+        deck[worst] = cheap;
+      }
+    }
+    return deck.map(function (c) { return c.id; });
+  }
+
   return {
     CARDS: CARDS,
     HOUSES: HOUSES,
@@ -1621,6 +1765,8 @@
     ALL_CARDS: ALL_CARDS,
     AI_LEVELS: AI_LEVELS,
     DECK_SIZE: DECK_SIZE,
+    buildDeckAround: buildDeckAround,
+    deckTags: deckTags,
     deckList: deckList,
     myPlays: myPlays,
     submitRival: submitRival,

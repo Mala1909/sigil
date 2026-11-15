@@ -268,6 +268,7 @@
     '<div class="deck-body">' +
       '<aside class="deck-panel">' +
         '<div class="deck-top"><p class="label">Il tuo mazzo</p><b id="deckCount"></b></div>' +
+        '<div class="deck-build" id="deckBuild"></div>' +
         '<div class="deck-curve" id="deckCurve"></div>' +
         '<ol class="deck-list" id="deckList"></ol>' +
         '<p class="deck-hint" id="deckHint"></p>' +
@@ -280,10 +281,45 @@
     "</div>";
   document.body.appendChild(deckSheet);
   var filter = { show: "tutte", house: "tutte" };
+  // Mazzo da una carta: "idle" → "choose" (tocca una carta) → "done" (un'altra idea, annulla, tienilo).
+  var build = { mode: "idle", seed: null, variant: 0, prev: null };
   var $ = function (id) { return document.getElementById(id); };
+
+  function paintBuild() {
+    var box = $("deckBuild");
+    if (build.mode === "choose") {
+      box.innerHTML = '<p class="db-note">Tocca una delle tue carte: il mazzo nascerà attorno a lei.</p>' +
+        '<div class="db-row"><button type="button" class="text-button" data-build="cancel">Annulla</button></div>';
+    } else if (build.mode === "done") {
+      box.innerHTML = '<p class="db-note">Mazzo costruito attorno a <b>' + G.esc(BY_ID[build.seed].name) + "</b>.</p>" +
+        '<div class="db-row"><button type="button" class="button ghost tiny" data-build="again">Un’altra idea</button>' +
+        '<button type="button" class="button primary tiny" data-build="keep">Tienilo</button>' +
+        '<button type="button" class="text-button" data-build="undo">Annulla</button></div>';
+    } else {
+      box.innerHTML = '<button type="button" class="button ghost db-start" data-build="start">✦ Mazzo da una carta</button>';
+    }
+    deckSheet.classList.toggle("choosing", build.mode === "choose");
+  }
+  function restoreFilter() {
+    if (build.show) { filter.show = build.show; build.show = null; }
+  }
+  function buildFrom(id, variant, avoid) {
+    var s = S();
+    restoreFilter();
+    var deck = E.buildDeckAround(id, ownedIds(), { variant: variant, avoid: avoid });
+    if (!deck) return;
+    s.deck = deck;
+    build.mode = "done";
+    build.seed = id;
+    build.variant = variant;
+    G.persist();
+    paintDeck();
+    syncDeck();
+  }
 
   function paintDeck() {
     var s = S();
+    paintBuild();
     var deck = (s.deck || []).filter(owns);
     s.deck = deck;
     var owned = ownedIds();
@@ -346,6 +382,7 @@
     G.persist();
     syncDeck();
     deckSheet.hidden = true;
+    build = { mode: "idle", seed: null, variant: 0, prev: null };
     G.showMenu(true);
   }
   deckSheet.addEventListener("click", function (e) {
@@ -358,9 +395,31 @@
       s.deck = s.deck.filter(function (id) { return id !== t.dataset.remove; });
       G.persist(); paintDeck(); return;
     }
+    if ((t = e.target.closest("[data-build]"))) {
+      var act = t.dataset.build;
+      if (act === "start") {
+        // Mentre si sceglie, si vedono solo le proprie carte (poi il filtro torna com'era).
+        build = { mode: "choose", seed: null, variant: 0, prev: (s.deck || []).slice(), show: filter.show };
+        filter.show = "mie";
+        paintDeck();
+        var grid = deckSheet.querySelector(".deck-collection");
+        if (grid) grid.scrollTop = 0;
+      }
+      else if (act === "cancel") { build.mode = "idle"; restoreFilter(); paintDeck(); }
+      else if (act === "again") buildFrom(build.seed, build.variant + 1, (s.deck || []).slice());
+      else if (act === "keep") { build.mode = "idle"; paintBuild(); $("deckHint").textContent = "Mazzo tenuto. Puoi sempre ritoccarlo carta per carta."; }
+      else if (act === "undo") {
+        s.deck = build.prev || s.deck;
+        build.mode = "idle";
+        G.persist(); paintDeck(); syncDeck();
+        $("deckHint").textContent = "Tornato il mazzo di prima.";
+      }
+      return;
+    }
     if ((t = e.target.closest("[data-pick]"))) {
       var id = t.dataset.pick;
       if (!owns(id)) { $("deckHint").textContent = "Questa carta non è ancora tua: la scoprirai giocando, o la trovi in Bottega."; return; }
+      if (build.mode === "choose") { buildFrom(id, 0, null); return; }
       if (s.deck.indexOf(id) >= 0) s.deck = s.deck.filter(function (x) { return x !== id; });
       else if (s.deck.length >= SIZE) { $("deckHint").textContent = "Il mazzo è pieno: togli prima una carta (tocca il suo nome a sinistra)."; return; }
       else s.deck.push(id);
