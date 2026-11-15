@@ -6,7 +6,7 @@
  * Bottega: ogni giorno quattro carte che non hai, pagate in pegni (si vincono
  * giocando); un pacco di tre carte a sorpresa e il Pass premium, pagati in
  * ambra. Per ora l'ambra non si compra: 300 al giuramento, altra dal pass.
- * Pass: 30 livelli, 100 punti l'uno (ogni partita ne dà). Ogni livello ha un
+ * Pass: 30 livelli, uno per ogni giorno in cui si gioca (dal 15 nov). Ogni livello ha un
  * premio gratuito e uno premium.
  * Tutto passa dal server (cloud.js): qui si mostra e si chiede, mai si decide.
  */
@@ -18,7 +18,8 @@
   var BY_ID = {};
   (E.ALL_CARDS || E.CARDS).forEach(function (c) { BY_ID[c.id] = c; });
   var TIERS = 30;
-  var PER_TIER = 100;
+  function passTier(ps) { return Math.min(TIERS, (ps && ps.days) || 0); }
+  function romeDay() { try { return new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Rome" }); } catch (e) { return new Date().toISOString().slice(0, 10); } }
 
   function Cloud() { return window.SigilCloud; }
   function S() { return G.save(); }
@@ -104,7 +105,7 @@
     var bits = [];
     if (o.gold) bits.push(o.gold + " pegni");
     if (o.ambra) bits.push("◆ " + o.ambra);
-    if (o.pass) bits.push(o.pass + " punti del pass");
+    if (o.card) bits.push(o.card > 1 ? o.card + " carte" : "una carta");
     return bits.join(" · ");
   }
   function paintObjectives() {
@@ -135,6 +136,7 @@
       paintObjectives();
       badge();
       G.blip("win");
+      if (res.cards && res.cards.length) reveal(res.cards, "Un premio dell'obiettivo");
     }).catch(function (e) { G.blip("no"); if (btn) { btn.disabled = false; btn.textContent = e.message; } });
   }
 
@@ -220,8 +222,9 @@
   function paintPass() {
     var s = S();
     var ps = s.pass || { xp: 0, premium: false, claimed: {} };
-    var tier = Math.min(TIERS, Math.floor((ps.xp || 0) / PER_TIER));
-    var into = tier >= TIERS ? 100 : Math.round((((ps.xp || 0) % PER_TIER) / PER_TIER) * 100);
+    var tier = passTier(ps);
+    var into = Math.round((tier / TIERS) * 100);
+    var today = ps.day === romeDay();
     var at = {};
     (passData || []).forEach(function (r) { at[r.track + ":" + r.tier] = r; });
     var claimable = 0;
@@ -243,8 +246,8 @@
     $("shopBody").innerHTML =
       '<section class="pass-head">' +
         '<div><p class="label">Livello del pass</p><b class="pass-level">' + tier + " <small>/ " + TIERS + "</small></b></div>" +
-        '<div class="pass-progress"><span class="xp-bar wide"><i style="width:' + into + '%"></i></span><small>' + (tier >= TIERS ? "Pass completato" : (ps.xp % PER_TIER) + " / " + PER_TIER + " punti per il livello " + (tier + 1)) + "</small>" +
-        '<small>Ogni partita dà punti: 40 una vittoria, 20 un pareggio, 15 una sconfitta. I duelli ne danno di più.</small></div>' +
+        '<div class="pass-progress"><span class="xp-bar wide"><i style="width:' + into + '%"></i></span><small>' + (tier >= TIERS ? "Pass completato" : today ? "Il livello di oggi è tuo. Domani se ne sblocca un altro." : "Gioca una veglia oggi per sbloccare il livello " + (tier + 1) + ".") + "</small>" +
+        '<small>Un livello per ogni giorno in cui giochi almeno una partita: contro l\'Ombra, nel Viaggio o in un Duello.</small></div>' +
         (claimable ? '<button type="button" class="button primary tiny" data-act="claimAll">Riscatta tutto (' + claimable + ")</button>" : "") +
       "</section>" +
       '<div class="pass-legend"><span>Gratis</span><span class="prem">Premium' + (ps.premium ? " · tuo" : ' · <button type="button" class="text-button" data-act="toShop">sbloccalo in Bottega</button>') + "</span></div>" +
@@ -316,7 +319,7 @@
       var ps = S().pass;
       var n = 0;
       if (ps) {
-        var tier = Math.min(TIERS, Math.floor((ps.xp || 0) / PER_TIER));
+        var tier = passTier(ps);
         for (var t = 1; t <= tier; t++) {
           if (!ps.claimed[("free:" + t)]) n++;
           if (ps.premium && !ps.claimed[("premium:" + t)]) n++;

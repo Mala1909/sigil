@@ -6,7 +6,8 @@
  * Primo avvio: giuri fedeltà a una casata. Ricevi le sue 13 carte più 7 carte
  * base delle altre casate. Il mazzo iniziale sono 12 carte della tua casata.
  * Tutte le altre si scoprono giocando:
- *   - ogni partita dà esperienza; ogni livello (100 punti) regala una carta;
+ *   - ogni partita dà esperienza; ogni livello chiede un po' di più (100, 110… fino a 250);
+ *     fino al livello 11 ogni livello porta una carta, poi una ai livelli pari (ai dispari pegni);
  *   - ogni nemico finale del Viaggio, battuto la prima volta, regala una carta;
  *   - il Duello dà più esperienza.
  * Il mazzo si compone nella schermata "Mazzo e collezione": 12 carte diverse.
@@ -17,7 +18,9 @@
   if (!E || !G) return;
 
   var SIZE = E.DECK_SIZE || 12;
-  var XP_LEVEL = 100;
+  // Come sul server (sigil_xp_need e sigil_levels): livelli sempre un po' più lunghi.
+  function xpNeed(level) { return Math.min(250, 100 + 10 * (Math.max(1, level || 1) - 1)); }
+  function levelGivesCard(level) { return level <= 11 || level % 2 === 0; }
   // Carte base: semplici, una manciata da ogni casata. Ne ricevi 7 che non siano della tua.
   var BASE = ["corriere", "vigile", "barista", "giullare", "candela", "chiavi", "ladro", "corvo", "grifone", "lampione", "orso", "caduta"];
   // Tutte le carte che si possono avere (set base + «Il Risveglio»).
@@ -156,16 +159,17 @@
       return;
     }
     if (c || pvp) return; // il Duello annota da sé (serve il resoconto di entrambi)
-    var gain = view.winner === "you" ? (pvp ? 60 : 40) : view.winner === "tie" ? (pvp ? 30 : 20) : (pvp ? 20 : 15);
-    if (view.reason === "ritiro" && view.retreated === "you") gain = 5;
+    var gain = view.winner === "you" ? (pvp ? 45 : 30) : view.winner === "tie" ? (pvp ? 22 : 15) : (pvp ? 15 : 10);
+    if (view.reason === "ritiro" && view.retreated === "you") gain = 3;
     s.xp = (s.xp || 0) + gain;
     s.level = s.level || 1;
     rewards.unshift({ type: "xp", amount: gain });
-    while (s.xp >= XP_LEVEL) {
-      s.xp -= XP_LEVEL;
+    while (s.xp >= xpNeed(s.level)) {
+      s.xp -= xpNeed(s.level);
       s.level += 1;
       rewards.push({ type: "level", level: s.level });
-      grant(1, "livello " + s.level);
+      if (levelGivesCard(s.level)) grant(1, "livello " + s.level);
+      else s.gettoni = (s.gettoni || 0) + 25;
     }
     G.persist();
   }
@@ -180,7 +184,7 @@
     if (pending) { box.innerHTML = '<p class="end-note pending">Il registro dei Custodi annota la veglia…</p>'; return; }
     var html = rewardNote ? '<p class="end-note">' + G.esc(rewardNote) + "</p>" : "";
     rewards.forEach(function (r) {
-      if (r.type === "xp") html += '<p class="xp-line">+' + r.amount + " esperienza · livello " + S().level + " <span class=\"xp-bar\"><i style=\"width:" + Math.round((S().xp / XP_LEVEL) * 100) + '%"></i></span></p>';
+      if (r.type === "xp") html += '<p class="xp-line">+' + r.amount + " esperienza · livello " + S().level + " <span class=\"xp-bar\"><i style=\"width:" + Math.round((S().xp / xpNeed(S().level)) * 100) + '%"></i></span></p>';
       if (r.type === "level") html += '<p class="level-up">Sali al livello ' + r.level + "!</p>";
       if (r.type === "pegni") html += '<p class="end-note">Hai già ogni carta: ricevi ' + r.amount + " pegni.</p>";
       if (r.type === "objective") html += '<p class="objective-done">Obiettivo compiuto: ' + G.esc(r.label) + ' <small>· riscatta il premio in Obiettivi</small></p>';
@@ -419,7 +423,8 @@
     else if (!deck.some(function (id) { return BY_ID[id].cost === 1; })) hint = "Nessuna carta da 1 lume: la prima ora rischi di restare a guardare.";
     else hint = "Pronto. Tocca una carta del mazzo per toglierla, una della collezione per aggiungerla.";
     $("deckHint").textContent = hint;
-    $("deckLevel").innerHTML = "Livello " + (s.level || 1) + '<span class="xp-bar"><i style="width:' + Math.round(((s.xp || 0) / XP_LEVEL) * 100) + '%"></i></span><small>Ogni livello porta una carta nuova. Le vittorie valgono di più, i duelli ancora di più.</small>';
+    var nextCard = levelGivesCard((s.level || 1) + 1);
+    $("deckLevel").innerHTML = "Livello " + (s.level || 1) + '<span class="xp-bar"><i style="width:' + Math.round(((s.xp || 0) / xpNeed(s.level)) * 100) + '%"></i></span><small>' + (s.xp || 0) + " / " + xpNeed(s.level) + " esperienza. Il prossimo livello porta " + (nextCard ? "una carta nuova" : "25 pegni") + ". Fino al livello 11 ogni livello dà una carta, poi una ogni due.</small>";
 
     var chips = [{ id: "tutte", name: "Tutte" }, { id: "mie", name: "Le mie" }, { id: "nuove", name: "Da scoprire" }];
     $("deckFilters").innerHTML = chips.map(function (c) {
@@ -539,7 +544,7 @@
       : '<button type="button" class="cloud-dot off" id="cloudRetry" title="Il registro non risponde: le veglie restano in attesa qui e verranno contate al ritorno. Tocca per riprovare.">○</button>';
     if (waiting) dot += '<span class="sync-wait" title="Veglie giocate senza rete, in attesa del registro">' + waiting + " in attesa</span>";
     el.innerHTML = dot + G.glyph(s.sworn, "mini-sigil") + '<span data-house="' + s.sworn + '">' + G.esc(s.name || "Custode") + " · " + G.esc(HOUSE[s.sworn].name) + "</span> · livello " + (s.level || 1) +
-      '<span class="xp-bar"><i style="width:' + Math.round(((s.xp || 0) / XP_LEVEL) * 100) + '%"></i></span>' + ownedIds().length + "/" + ALL.length + " carte" +
+      '<span class="xp-bar"><i style="width:' + Math.round(((s.xp || 0) / xpNeed(s.level)) * 100) + '%"></i></span>' + ownedIds().length + "/" + ALL.length + " carte" +
       (s.ambra != null ? ' · <span class="ambra-count" title="Ambra">◆ ' + s.ambra + "</span>" : "");
     var retry = document.getElementById("cloudRetry");
     if (retry) retry.addEventListener("click", function () { window.SigilCloud.retry(); });
