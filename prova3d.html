@@ -73,7 +73,10 @@
   .gl .flat { display: none; }
   .lv3 .sheen, .lv4 .sheen, .lv5 .sheen, .lv6 .sheen { opacity: calc(.25 + var(--tl, 0) * .4); }
   .gl.lv3 .fg, .gl.lv4 .fg, .gl.lv5 .fg, .gl.lv6 .fg { display: block; }
-  .lv3 .fg { clip-path: inset(calc(var(--win-top) - var(--art-top)) calc(var(--w) * .08) calc(var(--w) * 1.08 * 1.49 - var(--win-top) - var(--win-h) + var(--art-top)) calc(var(--w) * .08) round calc(var(--w) * .035)); }
+  /* il personaggio sta sempre davanti alla cornice: inclinando non viene mai tagliato dal bordo;
+     sfuma solo sopra il nome, per non coprire le scritte */
+  .lv3 .fg { -webkit-mask-image: linear-gradient(180deg, #000 calc(var(--w) * .8 - var(--art-top)), transparent calc(var(--w) * .86 - var(--art-top)));
+    mask-image: linear-gradient(180deg, #000 calc(var(--w) * .8 - var(--art-top)), transparent calc(var(--w) * .86 - var(--art-top))); }
   /* 4 · fuori cornice: il personaggio esce dalla finestra, ma non copre nome e testo */
   .lv4 .fg { -webkit-mask-image: linear-gradient(180deg, #000 calc(var(--w) * .8 - var(--art-top)), transparent calc(var(--w) * .86 - var(--art-top)));
     mask-image: linear-gradient(180deg, #000 calc(var(--w) * .8 - var(--art-top)), transparent calc(var(--w) * .86 - var(--art-top))); }
