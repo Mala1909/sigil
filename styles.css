@@ -2463,7 +2463,7 @@ html[data-menu="b"] .mode .mode-name, html[data-menu="b"] .mode .mode-desc { hyp
 .c3d-layer { position: absolute; display: block; }
 .c3d-window .c3d-layer { left: calc(var(--w) * -.08); top: calc(var(--art-top) - var(--win-top)); width: calc(var(--w) * 1.08); height: calc(var(--w) * 1.08 * 1.49); }
 .c3d-flat { object-fit: cover; }
-.c3d-fg { left: calc(var(--w) * -.04); top: var(--art-top); width: calc(var(--w) * 1.08); height: calc(var(--w) * 1.08 * 1.49); pointer-events: none; transform: translateZ(18px); display: none; }
+.c3d-fg { left: calc(var(--w) * -.04); top: var(--art-top); width: calc(var(--w) * 1.08); height: calc(var(--w) * 1.08 * 1.49); pointer-events: none; transform: translateZ(3px); display: none; }
 .c3d-front { position: absolute; left: calc(var(--w) * .04); width: calc(var(--w) * .92); top: var(--win-top); height: var(--win-h); pointer-events: none; transform: translateZ(22px); display: none; }
 .c3d-info { position: absolute; left: calc(var(--w) * .06); right: calc(var(--w) * .06); top: var(--info-top); bottom: calc(var(--w) * .05); display: flex; flex-direction: column; transform: translateZ(26px); }
 .c3d-name { font-family: var(--display); font-weight: 700; font-size: calc(var(--w) * .074); letter-spacing: .03em; line-height: 1.05; text-shadow: 0 2px 6px #000; }
@@ -2506,7 +2506,7 @@ html[data-menu="b"] .mode .mode-name, html[data-menu="b"] .mode .mode-desc { hyp
   mask-image: linear-gradient(180deg, #000 calc(var(--w) * .8 - var(--art-top)), transparent calc(var(--w) * .86 - var(--art-top))); }
 /* 5 · viva: il dipinto riempie la carta, braci su più piani */
 .c3d.lv5 .c3d-front, .c3d.lv6 .c3d-front { display: block; }
-.c3d.lv5 .c3d-fg, .c3d.lv6 .c3d-fg { clip-path: polygon(0 0, 100% 0, 100% calc(var(--w) * .6 - var(--art-top)), calc(var(--w) * 1.0) calc(var(--w) * .6 - var(--art-top)), calc(var(--w) * 1.0) 100%, calc(var(--w) * .08) 100%, calc(var(--w) * .08) calc(var(--w) * .6 - var(--art-top)), 0 calc(var(--w) * .6 - var(--art-top))); }
+/* il ritaglio del soggetto per lato e livello lo decide carta3d.js (clipFor) */
 .c3d.lv5 .c3d-info::before, .c3d.lv6 .c3d-info::before { content: ""; position: absolute; left: calc(var(--w) * -.02); right: calc(var(--w) * -.02); top: calc(var(--w) * -.12); height: calc(var(--w) * .3);
   background: linear-gradient(180deg, transparent, rgba(8, 6, 4, .72) 55%, rgba(8, 6, 4, .5)); border-radius: 8px; z-index: -1; filter: blur(4px); }
 .c3d.lv5 .c3d-text, .c3d.lv6 .c3d-text { background: linear-gradient(180deg, rgba(14,11,9,.55), rgba(10,8,6,.8)); color: var(--parch); border: 1px solid rgba(231,198,111,.28); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }

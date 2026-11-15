@@ -31,8 +31,25 @@
     ["Viva", "Il dipinto riempie la carta; braci e polvere salgono su piani diversi."],
     ["Sigillo d'oro", "Lamina d'oro in rilievo, con un riflesso iridescente che segue la luce."]
   ];
-  var V = "?v=1";
+  var V = "?v=4"; // 16 nov: profondità coerenti e lati tagliati
   var TOPS = null; // altezza del soggetto per carta (art/cards/3d/alto.json): serve per farlo uscire dal bordo
+  var CUTS = null; // lati in cui il soggetto tocca il bordo del dipinto (art/cards/3d/bordi.json), es. "rb"
+  function loadCuts() {
+    if (CUTS) return Promise.resolve(CUTS);
+    return fetch("art/cards/3d/bordi.json" + V).then(function (r) { return r.json(); }).then(function (j) { CUTS = j; return j; }, function () { CUTS = {}; return CUTS; });
+  }
+  // Dove il soggetto può uscire dalla carta: solo dai lati in cui il dipinto non lo taglia.
+  // Sugli altri si ferma al bordo interno della cornice, così non si vede mai dove finisce il quadro.
+  function clipFor(n, cut) {
+    cut = cut || "";
+    var inL = "calc(var(--w) * .08)", inR = "calc(100% - var(--w) * .08)";
+    var l = cut.indexOf("l") >= 0 ? inL : "0px", r = cut.indexOf("r") >= 0 ? inR : "100%";
+    var t = cut.indexOf("t") >= 0 ? "calc(var(--win-top) - var(--art-top))" : "0px";
+    // dai lati il soggetto sporge solo nella metà alta; sotto resta nel riquadro, vicino al nome sembrerebbe un errore
+    var sp = "calc(var(--w) * .55 - var(--art-top))";
+    var bot = n >= 5 ? "calc(var(--win-top) + var(--win-h) - var(--art-top))" : "100%";
+    return "polygon(" + [l + " " + t, r + " " + t, r + " " + sp, inR + " " + sp, inR + " " + bot, inL + " " + bot, inL + " " + sp, l + " " + sp].join(",") + ")";
+  }
   function loadTops() {
     if (TOPS) return Promise.resolve(TOPS);
     return fetch("art/cards/3d/alto.json" + V).then(function (r) { return r.json(); }).then(function (j) { TOPS = j; return j; }, function () { TOPS = {}; return TOPS; });
@@ -50,32 +67,36 @@
 
   /* ───────── la carta a strati ───────── */
   var VS = "attribute vec2 p; varying vec2 v; void main(){ v = p * .5 + .5; v.y = 1. - v.y; gl_Position = vec4(p, 0., 1.); }";
-  // Strato A: lo sfondo ridipinto, con la sua profondità e l'ombra morbida del soggetto.
+  // I due strati si muovono con la stessa regola e la stessa profondità (16 nov): bgd è la profondità del
+  // dipinto intero, e solo dietro al soggetto quella dello sfondo ridipinto. Così le parti che il ritaglio
+  // non ha preso (una coda, un'ala di fiamme) restano attaccate al corpo invece di scivolare via.
+  // Strato A: lo sfondo ridipinto, con un'ombra leggera del soggetto.
   var FS_A = [
     "precision mediump float;",
     "uniform sampler2D bg, bgd, fg; uniform vec2 tilt, light; uniform float k, shadowK; varying vec2 v;",
     "void main(){",
     "  vec2 uv = (v - .5) * .94 + .5;",
     "  vec2 o = vec2(0.);",
-    "  for (int i = 0; i < 4; i++) { float d = texture2D(bgd, uv + o).r; o = tilt * (d - .45) * k; }",
+    "  for (int i = 0; i < 5; i++) { float d = texture2D(bgd, uv + o).r; o = tilt * (d - .55) * k; }",
     "  vec3 c = texture2D(bg, uv + o).rgb;",
-    "  vec2 so = (light * .035 + tilt * .028);",
-    "  vec2 fu = (v - .5) * .94 + .5 - so - tilt * .03;",
+    "  vec2 so = light * .012;",
+    "  vec2 fu = uv + o - so;",
     "  float s = 0.;",
-    "  for (int i = -2; i <= 2; i++) for (int j = -2; j <= 2; j++) s += texture2D(fg, fu + vec2(float(i), float(j)) * .006).a;",
+    "  for (int i = -2; i <= 2; i++) for (int j = -2; j <= 2; j++) s += texture2D(fg, fu + vec2(float(i), float(j)) * .008).a;",
     "  s /= 25.;",
     "  c *= 1. - s * shadowK;",
     "  float vg = smoothstep(.95, .35, length((v - .5) * vec2(1., .8)));",
     "  gl_FragColor = vec4(c * (.82 + .18 * vg), 1.);",
     "}"].join("\n");
-  // Strato B: il soggetto, con il suo rilievo interno e una luce di bordo dal lato della luce.
+  // Strato B: il soggetto, con la stessa regola dello sfondo e una luce di bordo dal lato della luce.
   var FS_B = [
     "precision mediump float;",
-    "uniform sampler2D fg, fgd; uniform vec2 tilt, light, shift; uniform float k; varying vec2 v;",
+    "uniform sampler2D fg, fgd; uniform vec2 tilt, light; uniform float k; varying vec2 v;",
     "void main(){",
-    "  vec2 uv = (v - .5) * .94 + .5 - shift;",
-    "  float d = texture2D(fgd, uv).r;",
-    "  uv += tilt * (d - .6) * k;",
+    "  vec2 uv = (v - .5) * .94 + .5;",
+    "  vec2 o = vec2(0.);",
+    "  for (int i = 0; i < 5; i++) { float d = texture2D(fgd, uv + o).r; o = tilt * (d - .55) * k; }",
+    "  uv += o;",
     "  vec4 c = texture2D(fg, uv);",
     "  float a2 = texture2D(fg, uv + light * .0022).a;",
     "  float rim = smoothstep(.25, .9, clamp(c.a - a2, 0., 1.));",
@@ -210,6 +231,7 @@
       el.className = "c3d lv" + n + (n >= 3 && h.glOk ? " gl" : "");
       flat.src = (n >= 3 ? base + "bg.webp" : "art/cards/" + card.id + ".jpg") + V;
       if (n >= 3) startGL();
+      loadCuts().then(function (c) { if (!h.dead && h.level === n) cB.style.clipPath = cB.style.webkitClipPath = clipFor(n, c[card.id]); });
       // Livello 4: quanto si alza il dipinto perché il soggetto esca dal bordo (dipende da dove sta nel quadro).
       loadTops().then(function (t) {
         var top = t[card.id];
@@ -294,11 +316,12 @@
         var A = h.A, B = h.B, g;
         fit(cA, A); g = A.gl;
         g.useProgram(A.pr); g.uniform2f(A.u.tilt, -st.x, -st.y); g.uniform2f(A.u.light, light[0], light[1]);
-        g.uniform1f(A.u.k, h.level >= 5 ? .05 : .04); g.uniform1f(A.u.shadowK, .55);
+        var K = h.level >= 5 ? .046 : .04; // stesso spostamento per i due strati
+        g.uniform1f(A.u.k, K); g.uniform1f(A.u.shadowK, .2);
         g.clearColor(0, 0, 0, 1); g.clear(g.COLOR_BUFFER_BIT); g.drawArrays(g.TRIANGLE_STRIP, 0, 4);
         fit(cB, B); g = B.gl;
         g.useProgram(B.pr); g.uniform2f(B.u.tilt, -st.x, -st.y); g.uniform2f(B.u.light, light[0], light[1]);
-        g.uniform1f(B.u.k, .025); g.uniform2f(B.u.shift, -st.x * .028, -st.y * .028);
+        g.uniform1f(B.u.k, K);
         g.clearColor(0, 0, 0, 0); g.clear(g.COLOR_BUFFER_BIT); g.drawArrays(g.TRIANGLE_STRIP, 0, 4);
       }
       if (h.level >= 5) { drawMotes(t); cleared = false; }
