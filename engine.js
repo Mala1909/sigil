@@ -44,9 +44,9 @@
     { id: "fabbro", house: "guardia", name: "Fabbro", cost: 3, power: 3, kind: "reveal", text: "La tua carta più forte qui: +3.", lore: "Ha forgiato la corona. Non l'ha mai voluta.", ability: { op: "buff", target: "ally-strong", amount: 3 } },
     { id: "idraulico", house: "guardia", name: "Gigante", cost: 4, power: 6, kind: "none", text: "", lore: "I cavalieri gli arrivano al ginocchio. Lui si inginocchia solo al Sigillo." },
     { id: "pizzaiolo", house: "guardia", name: "Banchetto", cost: 4, power: 3, kind: "reveal", text: "Le tue altre carte qui: +2.", lore: "Si mangia prima della battaglia. Chi torna, finisce il vino.", ability: { op: "buff", target: "ally-all", amount: 2 } },
-    { id: "capotreno", house: "guardia", name: "Cacciadraghi", cost: 4, power: 4, kind: "reveal", text: "Sposta via da qui la carta nemica più forte.", lore: "La lancia è un dente. Il dente ricorda.", ability: { op: "move", target: "enemy", amount: 0 } },
+    { id: "capotreno", house: "guardia", name: "Cacciadraghi", cost: 4, power: 5, kind: "reveal", text: "Attira qui la carta nemica più debole da un'altra rovina.", lore: "La lancia è un dente. Il dente ricorda.", ability: { op: "pull", pick: "low" } },
     { id: "orchestra", house: "guardia", name: "Coro di lame", cost: 5, power: 4, kind: "ongoing", text: "Le tue altre carte qui: +2.", lore: "Tre spade alzate valgono una preghiera.", ability: { op: "aura", target: "ally", amount: 2 } },
-    { id: "inviato", house: "guardia", name: "Araldo", cost: 5, power: 5, kind: "reveal", text: "Se qui stai perdendo: +3.", lore: "Arriva tardi. Porta comunque la guerra.", ability: { op: "buff", target: "self-if-behind", amount: 3 } },
+    { id: "inviato", house: "guardia", name: "Araldo", cost: 5, power: 6, kind: "reveal", text: "Se all'ora dopo giochi un'altra carta qui: +4.", lore: "Arriva tardi. Porta comunque la guerra.", ability: { op: "promise", amount: 4 } },
     { id: "sindaca", house: "guardia", name: "Regina", cost: 5, power: 8, kind: "none", text: "", lore: "Ha seppellito tre re. Il quarto dorme sotto il Sigillo." },
 
     // SELVA — chi non ha padrone
@@ -65,7 +65,7 @@
     { id: "camion", house: "selva", name: "Drago", cost: 6, power: 12, kind: "none", text: "", lore: "Dormiva sotto la piana. Qualcuno ha contato fino a sei." },
 
     // CONGREGA — chi lega con il sale
-    { id: "gatto", house: "congrega", name: "Famiglio", cost: 1, power: 1, kind: "ongoing", text: "Se è la tua unica carta qui: +3.", lore: "Nelle cripte conta più di un plotone.", ability: { op: "self", cond: "alone", amount: 3 } },
+    { id: "gatto", house: "congrega", name: "Famiglio", cost: 1, power: 1, kind: "none", text: "Se viene distrutto, torna nella tua mano con +2.", lore: "Nelle cripte conta più di un plotone.", ability: { op: "revive", amount: 2 } },
     { id: "folletto", house: "congrega", name: "Folletto", cost: 1, power: 1, kind: "reveal", text: "Ruba 1 alla carta nemica più forte qui.", lore: "Ride. Poi morde. Poi ride ancora.", ability: { op: "buff", target: "enemy-strong", amount: -1 } },
     { id: "spina", house: "congrega", name: "Spina", cost: 1, power: 0, kind: "ongoing", text: "I nemici qui: −1.", lore: "Cresce nella ferita, non nel giardino.", ability: { op: "aura", target: "enemy", amount: -1 } },
     { id: "nonna", house: "congrega", name: "Matriarca", cost: 2, power: 1, kind: "ongoing", text: "Le tue altre carte qui: +1.", lore: "La corona di radici era sua prima che fosse di ferro.", ability: { op: "aura", target: "ally", amount: 1 } },
@@ -83,11 +83,11 @@
     { id: "lampione", house: "tesoro", name: "Lanterna", cost: 1, power: 1, kind: "ongoing", text: "+1 per ogni nemico qui.", lore: "Brucia grasso di drago. I morti si vedono meglio.", ability: { op: "self", cond: "per-enemy", amount: 1 } },
     { id: "moneta", house: "tesoro", name: "Obolo", cost: 1, power: 0, kind: "reveal", text: "+1 lume all'ora dopo.", lore: "Il traghettatore non dà resto. Dà tempo.", ability: { op: "energy", amount: 1 } },
     { id: "candela", house: "tesoro", name: "Candela", cost: 1, power: 1, kind: "reveal", text: "Pesca una carta.", lore: "Si consuma perché qualcun altro possa vedere.", ability: { op: "draw", amount: 1 } },
-    { id: "chiavi", house: "tesoro", name: "Chiavi", cost: 2, power: 2, kind: "reveal", text: "Pesca una carta.", lore: "Una apre la cripta. Le altre aprono storie.", ability: { op: "draw", amount: 1 } },
+    { id: "chiavi", house: "tesoro", name: "Chiavi", cost: 2, power: 2, kind: "reveal", text: "La carta più costosa della tua mano costa 1 in meno.", lore: "Una apre la cripta. Le altre aprono storie.", ability: { op: "discount", amount: 1 } },
     { id: "folata", house: "tesoro", name: "Otre dei venti", cost: 2, power: 1, kind: "reveal", text: "Sposta altrove la tua carta più forte qui e le dà +3.", lore: "Dentro c'è una tempesta. Fuori, la strada.", ability: { op: "move", target: "ally", amount: 3 } },
     { id: "specchio", house: "tesoro", name: "Specchio", cost: 2, power: 1, kind: "reveal", text: "Se qui stai perdendo: +3.", lore: "Mostra il volto che avresti se vincessi.", ability: { op: "buff", target: "self-if-behind", amount: 3 } },
     { id: "espresso", house: "tesoro", name: "Elisir", cost: 3, power: 2, kind: "reveal", text: "+2 lume all'ora dopo.", lore: "Oro e veleno, nella stessa fiala.", ability: { op: "energy", amount: 2 } },
-    { id: "poeta", house: "tesoro", name: "Cronista", cost: 3, power: 1, kind: "reveal", text: "+1 per ogni altra carta qui.", lore: "Scrive i nomi di chi cade. I nomi pesano.", ability: { op: "buff", target: "self-per-card", amount: 1 } },
+    { id: "poeta", house: "tesoro", name: "Cronista", cost: 3, power: 2, kind: "reveal", text: "Le carte nella tua mano: +1.", lore: "Scrive i nomi di chi cade. I nomi pesano.", ability: { op: "hand", side: "ally", amount: 1 } },
     { id: "campana", house: "tesoro", name: "Campana", cost: 3, power: 2, kind: "reveal", text: "Dalla quinta ora: +5.", lore: "Suona solo quando è troppo tardi per scappare.", ability: { op: "buff", target: "self-if-turn", amount: 5, turn: 5 } },
     { id: "orologio", house: "tesoro", name: "Eclissi", cost: 4, power: 3, kind: "reveal", text: "Dalla quarta ora: +4.", lore: "Quando la luna copre il sole, i patti scadono.", ability: { op: "buff", target: "self-if-turn", amount: 4, turn: 4 } },
     { id: "alchimista", house: "tesoro", name: "Alchimista", cost: 4, power: 4, kind: "reveal", text: "+2 lume all'ora dopo.", lore: "Trasforma il piombo in ore, non in oro.", ability: { op: "energy", amount: 2 } },
@@ -96,16 +96,16 @@
 
     // FONDO — chi è già caduto
     { id: "bruma", house: "fondo", name: "Bruma", cost: 1, power: 1, kind: "reveal", text: "Sposta altrove la tua carta più forte qui e le dà +1.", lore: "Al mattino non c'è più. Il freddo resta.", ability: { op: "move", target: "ally", amount: 1 } },
-    { id: "spia", house: "fondo", name: "Assassino", cost: 2, power: 1, kind: "reveal", text: "Ruba 2 alla carta nemica più forte qui.", lore: "Non uccide il re. Gli toglie il nome.", ability: { op: "buff", target: "enemy-strong", amount: -2 } },
-    { id: "ladro", house: "fondo", name: "Ladro", cost: 2, power: 2, kind: "reveal", text: "Ruba 1 alla carta nemica più forte qui.", lore: "Non ruba oro. Ruba il peso di una vittoria.", ability: { op: "buff", target: "enemy-strong", amount: -1 } },
+    { id: "spia", house: "fondo", name: "Assassino", cost: 2, power: 1, kind: "reveal", text: "Aggiungi alla tua mano una copia della carta nemica più forte qui.", lore: "Non uccide il re. Gli toglie il nome.", ability: { op: "copy-enemy" } },
+    { id: "ladro", house: "fondo", name: "Ladro", cost: 2, power: 2, kind: "reveal", text: "Ruba un lume: all'ora dopo l'Ombra ne ha 1 in meno, tu 1 in più.", lore: "Non ruba oro. Ruba il peso di una vittoria.", ability: { op: "steal-energy", amount: 1 } },
     { id: "corvo", house: "fondo", name: "Corvo", cost: 2, power: 2, kind: "ongoing", text: "+1 per ogni nemico qui.", lore: "Ne basta uno. Gli altri arrivano dopo.", ability: { op: "self", cond: "per-enemy", amount: 1 } },
-    { id: "pirata", house: "fondo", name: "Pirata", cost: 2, power: 1, kind: "reveal", text: "+1 per ogni altra carta qui.", lore: "Ha venduto la nave. Ha tenuto la mappa.", ability: { op: "buff", target: "self-per-card", amount: 1 } },
+    { id: "pirata", house: "fondo", name: "Pirata", cost: 2, power: 1, kind: "ongoing", text: "Alla fine di ogni ora: +1.", lore: "Ha venduto la nave. Ha tenuto la mappa.", ability: { op: "grow", amount: 1 } },
     { id: "spettro", house: "fondo", name: "Spettro", cost: 3, power: 2, kind: "reveal", text: "Sposta altrove la tua carta più forte qui e le dà +3.", lore: "Attraversa il muro e si porta dietro un vivo.", ability: { op: "move", target: "ally", amount: 3 } },
     { id: "cacciatrice", house: "fondo", name: "Cacciatrice", cost: 3, power: 3, kind: "reveal", text: "Sposta via da qui la carta nemica più forte.", lore: "Non insegue prede. Insegue promesse rotte.", ability: { op: "move", target: "enemy", amount: 0 } },
     { id: "sete", house: "fondo", name: "Sete", cost: 4, power: 4, kind: "reveal", text: "Ruba 2 alla carta nemica più forte qui.", lore: "Beve il coraggio, non il vino.", ability: { op: "buff", target: "enemy-strong", amount: -2 } },
     { id: "fenice", house: "fondo", name: "Fenice", cost: 4, power: 3, kind: "reveal", text: "Se qui stai perdendo: +5.", lore: "Muore per abitudine. Torna per dispetto.", ability: { op: "buff", target: "self-if-behind", amount: 5 } },
     { id: "sepolto", house: "fondo", name: "Re sepolto", cost: 5, power: 6, kind: "reveal", text: "Se qui stai perdendo: +4.", lore: "La corona è sotto terra. Il rancore no.", ability: { op: "buff", target: "self-if-behind", amount: 4 } },
-    { id: "piaga", house: "fondo", name: "Piaga", cost: 5, power: 4, kind: "reveal", text: "Tutti i nemici qui: −2.", lore: "Non uccide. Fa dimenticare perché si combatteva.", ability: { op: "buff", target: "enemy-all", amount: -2 } },
+    { id: "piaga", house: "fondo", name: "Piaga", cost: 5, power: 4, kind: "ongoing", text: "Alla fine di ogni ora, i nemici qui: −1.", lore: "Non uccide. Fa dimenticare perché si combatteva.", ability: { op: "poison", amount: 1 } },
     { id: "caduta", house: "fondo", name: "Caduta", cost: 6, power: 9, kind: "none", text: "", lore: "Non è un angelo. È quello che resta dopo." },
     { id: "titano", house: "fondo", name: "Il Dormiente", cost: 6, power: 10, kind: "anchor", text: "Non si sposta.", lore: "È lui che il Sigillo tiene giù. Ogni tanto si gira nel sonno.", anchor: true }
   ];
@@ -131,7 +131,7 @@
     { id: "madre_bestie", house: "selva", set: "risveglio", name: "Madre delle bestie", cost: 4, power: 6, kind: "reveal", text: "Aggiungi un Lupo e un Corvo alla tua mano.", lore: "Ogni tana della valle porta il suo nome.", ability: { op: "summon", ids: ["lupo", "corvo"] } },
     { id: "mammut", house: "selva", set: "risveglio", name: "Mammut del gelo", cost: 6, power: 9, kind: "ongoing", text: "Le carte nemiche da 1 e 2 lumi qui: −2.", lore: "Era sotto il ghiaccio prima che ci fosse la valle.", ability: { op: "aura", target: "enemy", amount: -2, maxCost: 2 } },
     // CONGREGA — Patto
-    { id: "bambola", house: "congrega", set: "risveglio", name: "Bambola di pezza", cost: 1, power: 0, kind: "reveal", text: "Ruba 2 alla carta nemica più forte qui.", lore: "Ha i tuoi capelli. Chi gliel'ha dati?", ability: { op: "buff", target: "enemy-strong", amount: -2 } },
+    { id: "bambola", house: "congrega", set: "risveglio", name: "Bambola di pezza", cost: 1, power: 0, kind: "reveal", text: "Le carte nella mano dell'Ombra: −1.", lore: "Ha i tuoi capelli. Chi gliel'ha dati?", ability: { op: "hand", side: "enemy", amount: -1 } },
     { id: "cerchio_sale", house: "congrega", set: "risveglio", name: "Cerchio di sale", cost: 2, power: 0, kind: "reveal", text: "Sigilla questa rovina: da ora nessuno può più giocarci.", lore: "Dentro, nessuno entra. Fuori, nessuno dorme.", ability: { op: "seal" } },
     { id: "strega_pozzo", house: "congrega", set: "risveglio", name: "Strega del pozzo", cost: 2, power: 2, kind: "reveal", text: "Riporta in mano la tua carta più debole qui.", lore: "Ti tira giù per farti risalire. Di solito.", ability: { op: "bounce" } },
     { id: "specchio_nero", house: "congrega", set: "risveglio", name: "Specchio nero", cost: 3, power: 1, kind: "reveal", text: "Prende la forza della carta nemica più forte qui.", lore: "Non riflette il volto. Riflette quanto pesa.", ability: { op: "buff", target: "copy-strong" } },
@@ -542,8 +542,8 @@
   function beginTurn(state) {
     state.turn += 1;
     state.maxEnergy = state.turn;
-    state.you.energyLeft = state.turn + (state.you.nextEnergy || 0);
-    state.rival.energyLeft = state.turn + (state.rival.nextEnergy || 0);
+    state.you.energyLeft = Math.max(0, state.turn + (state.you.nextEnergy || 0));
+    state.rival.energyLeft = Math.max(0, state.turn + (state.rival.nextEnergy || 0));
     var cfg = state.aiCfg;
     if (state.ai && cfg && cfg.bonus && cfg.bonusFrom && state.turn >= cfg.bonusFrom) state.rival.energyLeft += cfg.bonus;
     state.you.nextEnergy = 0;
@@ -571,7 +571,7 @@
   }
 
   function playCost(state, card, locIndex) {
-    var cost = card.cost;
+    var cost = card.cost - (card.cut || 0);
     var loc = state.locations[locIndex];
     if (loc && loc.discount) cost -= loc.discount;
     return Math.max(1, cost);
@@ -789,6 +789,15 @@
     lane.splice(idx, 1);
     state.destroyed = (state.destroyed || 0) + 1;
     pushFeed(state, by.name + " distrugge " + target.name + ".");
+    var back = target.ability && target.ability.op === "revive" ? state[target.owner] : null;
+    if (back && back.hand.length < HAND_MAX) {
+      target.revive = (target.revive || 0) + (target.ability.amount || 0);
+      target.bonus = target.revive;
+      target.revealed = false;
+      target.hold = true;
+      back.hand.push(target);
+      pushFeed(state, target.name + " torna dal buio nella mano " + (target.owner === "you" ? "del Custode" : "dell'Ombra") + ", più forte di prima.");
+    }
     return true;
   }
 
@@ -885,6 +894,7 @@
       pushFeed(state, loc.name + ": il primo colpo tempra, +" + loc.firstBonus + ".");
     }
     applyAbility(state, card, locIndex, behind, others);
+    keepPromises(state, card, locIndex);
     state.revealLog.push(card.uid);
     state.fresh.push(card.uid);
   }
@@ -961,6 +971,98 @@
     }
     if (ab.op === "destroy") {
       applyDestroy(state, card, locIndex);
+      return;
+    }
+    var foe = other(card.owner);
+    if (ab.op === "pull") {
+      // Cacciadraghi: tira qui la carta nemica più debole da un'altra rovina.
+      var max = state.locations[locIndex].maxCards || LANE_MAX;
+      if (state[foe].board[locIndex].length >= max) { pushFeed(state, card.name + ": qui non c'è più posto per nessuno."); return; }
+      var prey = null, from = -1, preyPower = 0;
+      for (var li = 0; li < state.locations.length; li++) {
+        if (li === locIndex) continue;
+        var lane = state[foe].board[li];
+        for (var ci = 0; ci < lane.length; ci++) {
+          var c = lane[ci];
+          if (!c.revealed || isFixed(state, c, li)) continue;
+          var pw = cardPower(state, c, li);
+          if (!prey || pw < preyPower || (pw === preyPower && c.uid < prey.uid)) { prey = c; from = li; preyPower = pw; }
+        }
+      }
+      if (!prey || !moveCard(state, prey, from, locIndex)) { pushFeed(state, card.name + " lancia l'arpione, ma non aggancia nessuno."); return; }
+      pushFeed(state, card.name + " aggancia " + prey.name + " e lo trascina fino a " + state.locations[locIndex].name + ".");
+      return;
+    }
+    if (ab.op === "copy-enemy") {
+      // Assassino: prende il nome (una copia) della carta nemica più forte qui.
+      var marks = state[foe].board[locIndex].filter(function (c) { return c.revealed; });
+      marks.sort(function (a, b) { return cardPower(state, b, locIndex) - cardPower(state, a, locIndex) || (a.uid < b.uid ? -1 : 1); });
+      var mark = marks[0];
+      if (!mark || !BY_CARD[mark.id] || owner.hand.length >= HAND_MAX) { pushFeed(state, card.name + " non trova nessun nome da rubare."); return; }
+      var twin = instantiate(state, BY_CARD[mark.id], card.owner);
+      twin.hold = true;
+      owner.hand.push(twin);
+      pushFeed(state, card.name + " ruba il nome di " + mark.name + ": una copia " + (card.owner === "you" ? "è nella tua mano." : "passa all'Ombra."));
+      return;
+    }
+    if (ab.op === "steal-energy") {
+      if (state.turn >= 6) { pushFeed(state, card.name + ": non resta un'ora a cui rubare."); return; }
+      state[foe].nextEnergy = (state[foe].nextEnergy || 0) - ab.amount;
+      owner.nextEnergy = (owner.nextEnergy || 0) + ab.amount;
+      pushFeed(state, card.name + " ruba un lume: all'ora che viene " + (card.owner === "you" ? "l'Ombra ne avrà uno in meno, tu uno in più." : "tu ne avrai uno in meno, l'Ombra uno in più."));
+      return;
+    }
+    if (ab.op === "promise") {
+      if (state.turn >= 6) { pushFeed(state, card.name + " suona il corno, ma non verrà più nessuno."); return; }
+      card.promise = { turn: state.turn + 1, amount: ab.amount };
+      pushFeed(state, card.name + " suona il corno: se all'ora dopo arriva qualcuno qui, +" + ab.amount + ".");
+      return;
+    }
+    if (ab.op === "discount") {
+      var dear = null;
+      owner.hand.forEach(function (c) {
+        if (!dear || (c.cost - (c.cut || 0)) > (dear.cost - (dear.cut || 0))) dear = c;
+      });
+      if (!dear) { pushFeed(state, card.name + ": non c'è nessuna porta da aprire."); return; }
+      dear.cut = (dear.cut || 0) + ab.amount;
+      pushFeed(state, card.name + " apre la via: " + (card.owner === "you" ? dear.name : "una carta dell'Ombra") + " costa " + ab.amount + " in meno.");
+      return;
+    }
+    if (ab.op === "hand") {
+      var target = ab.side === "enemy" ? state[foe].hand : owner.hand;
+      target.forEach(function (c) { c.bonus = (c.bonus || 0) + ab.amount; });
+      var whose = (ab.side === "enemy") === (card.owner === "you") ? "nella mano dell'Ombra" : "nella tua mano";
+      pushFeed(state, target.length ? card.name + ": le carte " + whose + " " + (ab.amount > 0 ? "+" : "−") + Math.abs(ab.amount) + "." : card.name + ": non c'è nessuna carta da toccare.");
+    }
+  }
+
+  // L'Araldo e simili: se all'ora promessa il loro padrone scopre un'altra carta lì, il bonus arriva.
+  function keepPromises(state, card, locIndex) {
+    var mine = state[card.owner].board[locIndex];
+    for (var i = 0; i < mine.length; i++) {
+      var c = mine[i];
+      if (c.uid === card.uid || !c.promise || c.promise.turn !== state.turn) continue;
+      c.bonus += c.promise.amount;
+      pushFeed(state, c.name + ": la promessa è mantenuta, +" + c.promise.amount + ".");
+      c.promise = null;
+    }
+  }
+
+  // Alla fine di ogni ora: il Pirata cresce, la Piaga consuma i nemici. (Nella Cripta tacciono.)
+  function endOfHour(state) {
+    for (var li = 0; li < state.locations.length; li++) {
+      if (state.locations[li].suppressOngoing) continue;
+      ["you", "rival"].forEach(function (side) {
+        state[side].board[li].forEach(function (c) {
+          if (!c.revealed || !c.ability) return;
+          if (c.ability.op === "grow") c.bonus += c.ability.amount;
+          if (c.ability.op === "poison") {
+            var hit = 0;
+            state[other(side)].board[li].forEach(function (e) { if (e.revealed) { e.bonus -= c.ability.amount; hit++; } });
+            if (hit) pushFeed(state, c.name + " consuma " + (hit === 1 ? "un nemico" : hit + " nemici") + " a " + state.locations[li].name + ": −" + c.ability.amount + ".");
+          }
+        });
+      });
     }
   }
 
@@ -1173,6 +1275,7 @@
   }
 
   function finishRevealPhase(state) {
+    endOfHour(state);
     updatePriority(state);
     if (state.turn >= 6) {
       conclude(state, winnerFromBoard(state), "banchi");
@@ -1385,7 +1488,8 @@
       id: card.id,
       house: card.house || "",
       name: card.name,
-      cost: card.cost,
+      cost: Math.max(Math.min(1, card.cost), card.cost - (card.cut || 0)),
+      baseCost: card.cost,
       power: card.power,
       current: card.revealed ? cardPower(state, card, locIndex) : card.power + (card.bonus || 0),
       text: card.text,
@@ -1545,7 +1649,10 @@
       revealAt: revealAt,
       sidePower: sidePower,
       cardPower: cardPower,
-      position: position
+      position: position,
+      endOfHour: endOfHour,
+      destroyCard: destroyCard,
+      playCost: playCost
     }
   };
 });

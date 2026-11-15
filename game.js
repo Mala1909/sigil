@@ -450,9 +450,10 @@
         var can = q && q.some(function (x) { return x.ok; });
         var held = match.you.hand[index] && match.you.hand[index].hold;
         var tilt = n > 1 ? (index - (n - 1) / 2) * 1.6 : 0;
-        var cls = (card.uid === selected ? "selected" : "") + (can ? "" : " cant") + (held ? " held" : "");
+        var cls = (card.uid === selected ? "selected" : "") + (can ? "" : " cant") + (held ? " held" : "") + changed(card);
         return cardHTML(card, {
           tag: "button",
+          power: card.current,
           cls: cls.trim(),
           attrs: ' data-act="hand" data-uid="' + esc(card.uid) + '" style="--tilt:' + tilt.toFixed(2) + 'deg" aria-label="' + esc(card.name + ", costo " + card.cost + ", potenza " + card.power) + '"'
         });
@@ -460,6 +461,17 @@
     }
     var staged = view.lanes.some(function (l) { return l.incoming.length; });
     $("undoButton").hidden = !(view.phase === "plan" && staged);
+  }
+
+  // Carte in mano toccate da Cronista, Bambola di pezza, Chiavi: i numeri cambiano colore.
+  function changed(card) {
+    var out = "";
+    if (card.baseCost != null && card.cost < card.baseCost) out += " cheaper";
+    if (card.current != null && !card.revealed) {
+      if (card.current > card.power) out += " buffed";
+      else if (card.current < card.power) out += " nerfed";
+    }
+    return out;
   }
 
   function findShown(view, uid) {
@@ -747,7 +759,7 @@
     if (!card) return;
     var held = match.you.hand.some(function (c) { return c.uid === uid && c.hold; });
     var quotes = E.quote(match, uid);
-    var html = '<div class="play-sheet">' + cardHTML(card, { cls: "play-card" });
+    var html = '<div class="play-sheet">' + cardHTML(card, { cls: "play-card" + changed(card), power: card.current });
     if (card.text && card.lore) html += '<p class="lore-line">' + esc(card.lore) + "</p>";
     if (view.phase !== "plan" || locked()) {
       html += '<p class="play-ask">Aspetta: le carte si stanno voltando.</p>';

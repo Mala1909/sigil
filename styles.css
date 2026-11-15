@@ -2362,3 +2362,8 @@ html.drag-on, html.drag-on * { cursor: grabbing !important; }
 @media (max-width: 400px) { .journey-head h2 { font-size: 19px; } .journey-total { font-size: 16px; } }
 .duel-inner { padding-top: max(18px, env(safe-area-inset-top)); padding-bottom: max(40px, env(safe-area-inset-bottom)); }
 .duel-inner .journey-head { padding: 0 0 10px; }
+
+/* Carte in mano cambiate da altre carte (Cronista, Bambola di pezza, Chiavi). */
+.card.cheaper .c-cost { background: radial-gradient(circle at 35% 30%, #e9ffd9, #7fd36a 55%, #2f7a2a); color: #0d2a0a; }
+.card.buffed .c-power { border-color: var(--good); color: #c9f5c0; box-shadow: 0 0 10px rgba(120, 200, 140, 0.55); }
+.card.nerfed .c-power { border-color: var(--bad); color: #ffc9c0; box-shadow: 0 0 10px rgba(220, 90, 80, 0.55); }
