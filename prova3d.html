@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SIGIL · prova delle evoluzioni 3D</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap">
+<style>
+  /* Pagina di prova: le evoluzioni di una carta, con il 3D che segue l'inclinazione del telefono. */
+  :root { --gold: #e7c66f; --parch: #efe4cd; --parch-2: #cbbd9f; --muted: #8f8577; --display: "Cinzel", Georgia, serif; --serif: "Cormorant Garamond", Georgia, serif; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: radial-gradient(ellipse at 50% 20%, #1d1726, #07060a 72%); color: var(--parch); font-family: system-ui, sans-serif; }
+  body { display: flex; flex-direction: column; align-items: center; padding: max(18px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)); overflow-x: hidden; }
+  h1 { margin: 6px 0 2px; font-family: var(--display); font-size: 20px; letter-spacing: .12em; color: var(--gold); text-align: center; }
+  .sub { margin: 0 0 6px; font-family: var(--serif); font-style: italic; font-size: 17px; color: var(--parch-2); text-align: center; }
+
+  .scene { perspective: 900px; margin: 46px 0 18px; }
+  .card3d { --w: min(78vw, 300px); position: relative; width: var(--w); aspect-ratio: 5 / 7.2; border-radius: 16px; transform-style: preserve-3d;
+    transform: rotateY(calc(var(--tx, 0) * 16deg)) rotateX(calc(var(--ty, 0) * -16deg)); transition: transform .08s linear; }
+  .frame { position: absolute; inset: 0; border-radius: 16px; background: linear-gradient(170deg, #4a3d2a, #120e0b 72%); box-shadow: 0 22px 40px rgba(0,0,0,.65), inset 0 0 0 1px rgba(255,255,255,.08); }
+  .frame::before { content: ""; position: absolute; inset: 5px; border-radius: 12px; border: 1px solid rgba(120, 190, 120, .5); }
+
+  /* la finestra del dipinto: ritaglia l'arte; l'arte è più grande della finestra */
+  .window { position: absolute; left: 4%; right: 4%; top: 3.5%; height: 52%; border-radius: 10px 10px 4px 4px; overflow: hidden; background: #0d0b10; }
+  .art { position: absolute; left: calc(var(--w) * -0.04); width: var(--w); top: calc(var(--w) * -0.035 - var(--lift, 0px)); height: calc(var(--w) * 1.49); }
+  .art img, .art canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .art canvas { display: none; }
+  .breakout { position: absolute; left: 0; width: var(--w); top: calc(var(--w) * 0 - var(--lift, 0px)); height: calc(var(--w) * 1.49); pointer-events: none; display: none;
+    transform: translate(calc(var(--tx, 0) * var(--pop, 0px)), calc(var(--ty, 0) * var(--pop, 0px))) translateZ(6px); filter: drop-shadow(0 6px 10px rgba(0,0,0,.55));
+    -webkit-mask-image: linear-gradient(180deg, #000 calc(var(--w) * 0.66), transparent calc(var(--w) * 0.76)); mask-image: linear-gradient(180deg, #000 calc(var(--w) * 0.66), transparent calc(var(--w) * 0.76)); }
+  .embers { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; display: none; }
+  .glare { position: absolute; inset: 0; border-radius: 16px; pointer-events: none; opacity: 0; mix-blend-mode: soft-light;
+    background: radial-gradient(circle at calc(50% + var(--tx, 0) * 40%) calc(30% + var(--ty, 0) * 40%), rgba(255,255,255,.9), transparent 55%); }
+  .holo { position: absolute; inset: 0; border-radius: 16px; pointer-events: none; opacity: 0; mix-blend-mode: color-dodge;
+    background: linear-gradient(calc(110deg + var(--tx, 0) * 40deg), transparent 30%, rgba(255, 215, 140, .35) 42%, rgba(160, 220, 255, .25) 50%, rgba(255, 160, 220, .2) 58%, transparent 70%); }
+
+  .info { position: absolute; left: 0; right: 0; bottom: 0; top: 56%; padding: 0 7% 6%; display: flex; flex-direction: column; transform: translateZ(14px); }
+  .cost, .power { position: absolute; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; font-family: var(--display); font-weight: 700; font-size: 21px; z-index: 3; transform: translateZ(40px); }
+  .cost { top: 10px; left: 10px; color: #2a1a05; background: radial-gradient(circle at 35% 30%, #fff1c2, #f4b63c 55%, #9b5f12); box-shadow: 0 3px 10px rgba(0,0,0,.6); }
+  .power { bottom: 10px; right: 10px; color: var(--parch); background: radial-gradient(circle at 35% 30%, #5a4a6e, #241b33 70%); border: 2px solid #8bbf7a; box-shadow: 0 3px 10px rgba(0,0,0,.6); }
+  .name { margin: 8px 0 0; font-family: var(--display); font-weight: 700; font-size: 22px; letter-spacing: .03em; text-shadow: 0 2px 6px #000; }
+  .kind { font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: #9fd08c; font-weight: 600; }
+  .text { margin-top: 8px; flex: 1; padding: 8px 46px 8px 10px; border-radius: 8px; background: linear-gradient(180deg, #f4ead6, #e4d5b6); color: #3a2c1c; font-family: var(--serif); font-style: italic; font-size: 16px; line-height: 1.15; }
+
+  /* ── livelli ── */
+  .lv2 .frame, .lv3 .frame, .lv4 .frame, .lv5 .frame { background: linear-gradient(165deg, #6e4a26, #2a1a0c 72%); box-shadow: 0 22px 40px rgba(0,0,0,.65), inset 0 0 0 2px #b9814a, inset 0 0 0 4px #3a2410, inset 0 0 0 5px #e0aa68; }
+  .lv2 .frame::before, .lv3 .frame::before, .lv4 .frame::before, .lv5 .frame::before { border-color: rgba(224,170,104,.55); }
+  .lv3 .glare, .lv4 .glare, .lv5 .glare, .lv6 .glare { opacity: .45; }
+  .gl .art img { display: none; }
+  .gl .art #gl { display: block; }
+  /* fuori cornice: la finestra si abbassa e il drago ne esce */
+  .lv4, .lv5, .lv6 { --lift: calc(var(--w) * 0.12); --pop: 12px; }
+  .lv4 .window, .lv5 .window, .lv6 .window { top: 15%; height: 41%; }
+  .lv4 .breakout, .lv5 .breakout, .lv6 .breakout { display: block; top: calc(15% - var(--w) * 0.035 - var(--lift)); }
+  /* vivo: braci che salgono, il dipinto arriva fino in fondo */
+  .lv5 .embers, .lv6 .embers { display: block; }
+  .lv5 .window, .lv6 .window { height: 81%; border-radius: 10px; }
+  .lv5 .text, .lv6 .text { background: rgba(12, 10, 8, .62); color: var(--parch); border: 1px solid rgba(231,198,111,.3); backdrop-filter: blur(2px); }
+  .lv5 .info, .lv6 .info { top: 60%; }
+  /* sigillo d'oro */
+  .lv6 .frame { background: linear-gradient(160deg, #6a4c16, #1b1306 70%); box-shadow: 0 22px 40px rgba(0,0,0,.65), inset 0 0 0 2px #f0cf78, inset 0 0 0 4px #6a4b12, inset 0 0 0 6px #fbe3a2; }
+  .lv6 .frame::before { border-color: rgba(246,220,158,.7); }
+  .lv6 .holo { opacity: .5; }
+  .lv6 .name { background: linear-gradient(180deg, #fff5cf, #e7b54d 58%, #a26f17); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; filter: drop-shadow(0 2px 3px #000); }
+  .lv6 .power { border-color: #f0cf78; }
+
+  .levels { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 520px; margin-top: 8px; }
+  .levels button { min-width: 46px; padding: 9px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.04); color: var(--parch-2); font-family: var(--display); font-size: 15px; cursor: pointer; }
+  .levels button.on { border-color: var(--gold); color: var(--gold); background: rgba(231,198,111,.12); }
+  .what { max-width: 440px; margin: 12px 0 0; min-height: 3.2em; text-align: center; font-family: var(--serif); font-size: 18px; color: var(--parch-2); }
+  .what b { display: block; font-family: var(--display); font-size: 15px; letter-spacing: .1em; color: var(--parch); font-style: normal; }
+  .motion { margin-top: 12px; padding: 10px 16px; border-radius: 999px; border: 1px solid var(--gold); background: rgba(231,198,111,.1); color: var(--gold); font: 600 14px system-ui; cursor: pointer; }
+  .hint { margin-top: 8px; font-size: 13px; color: var(--muted); text-align: center; }
+</style>
+</head>
+<body>
+<h1>Le evoluzioni della carta</h1>
+<p class="sub">Prova: inclina il telefono (o muovi il mouse sulla carta)</p>
+
+<div class="scene">
+  <div class="card3d lv1" id="card">
+    <div class="frame"></div>
+    <div class="window"><div class="art" id="art"><img src="art/cards/prof/camion-art.jpg" alt=""><canvas id="gl"></canvas><canvas class="embers" id="embers"></canvas></div></div>
+    <img class="breakout" src="art/cards/fuori/camion.webp" alt="">
+    <div class="holo"></div>
+    <div class="glare"></div>
+    <span class="cost">6</span>
+    <div class="info">
+      <div class="name">Drago</div><div class="kind">Selva</div>
+      <div class="text">Dormiva sotto la piana. Qualcuno ha contato fino a sei.</div>
+    </div>
+    <span class="power">10</span>
+  </div>
+</div>
+
+<div class="levels" id="levels"></div>
+<p class="what" id="what"></p>
+<button class="motion" id="motion" type="button" hidden>Attiva l'inclinazione del telefono</button>
+<p class="hint" id="hint"></p>
+
+<script>
+(function () {
+  var card = document.getElementById("card");
+  var LEVELS = [
+    ["Pergamena", "La carta com'è oggi."],
+    ["Cornice", "Una cornice di bronzo battuto."],
+    ["Rilievo", "La carta diventa 3D: si muove con il telefono e il dipinto ha profondità."],
+    ["Fuori cornice", "Il drago esce dal riquadro e sporge sopra la cornice."],
+    ["Vivo", "Il dipinto riempie la carta e salgono braci lente."],
+    ["Sigillo d'oro", "Cornice e nome d'oro, con un riflesso che cambia inclinando."]
+  ];
+  var level = 6;
+  var levelsBox = document.getElementById("levels");
+  levelsBox.innerHTML = LEVELS.map(function (l, i) { return '<button type="button" data-lv="' + (i + 1) + '">' + (i + 1) + "</button>"; }).join("");
+  function setLevel(n) {
+    level = n;
+    card.className = "card3d lv" + n + (n >= 3 && gl ? " gl" : "");
+    Array.prototype.forEach.call(levelsBox.children, function (b) { b.classList.toggle("on", Number(b.dataset.lv) === n); });
+    document.getElementById("what").innerHTML = "<b>" + n + " · " + LEVELS[n - 1][0] + "</b>" + LEVELS[n - 1][1];
+  }
+  levelsBox.addEventListener("click", function (e) { var b = e.target.closest("[data-lv]"); if (b) setLevel(Number(b.dataset.lv)); });
+
+  /* ── WebGL: il dipinto con la sua mappa di profondità ── */
+  var canvas = document.getElementById("gl");
+  var gl = canvas.getContext("webgl", { premultipliedAlpha: false });
+  var uTilt, uStrength, ready = 0;
+  if (gl) {
+    var vs = "attribute vec2 p; varying vec2 v; void main(){ v = p * 0.5 + 0.5; v.y = 1.0 - v.y; gl_Position = vec4(p, 0.0, 1.0); }";
+    var fs = "precision mediump float; uniform sampler2D art; uniform sampler2D dep; uniform vec2 tilt; uniform float strength; varying vec2 v;" +
+      "void main(){ vec2 uv = (v - 0.5) * 0.93 + 0.5; float d = texture2D(dep, uv).r; vec2 o = tilt * (d - 0.35) * strength;" +
+      " d = texture2D(dep, uv + o).r; o = tilt * (d - 0.35) * strength; d = texture2D(dep, uv + o).r; o = tilt * (d - 0.35) * strength;" +
+      " gl_FragColor = texture2D(art, uv + o); }";
+    var sh = function (t, src) { var s = gl.createShader(t); gl.shaderSource(s, src); gl.compileShader(s); return s; };
+    var prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(prog); gl.useProgram(prog);
+    var buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    var loc = gl.getAttribLocation(prog, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    uTilt = gl.getUniformLocation(prog, "tilt"); uStrength = gl.getUniformLocation(prog, "strength");
+    var tex = function (unit, src, name) {
+      var t = gl.createTexture(); var img = new Image();
+      img.onload = function () {
+        gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.uniform1i(gl.getUniformLocation(prog, name), unit); ready++; if (ready === 2) setLevel(level);
+      };
+      img.src = src;
+    };
+    tex(0, "art/cards/prof/camion-art.jpg", "art");
+    tex(1, "art/cards/prof/camion.png", "dep");
+  }
+
+  /* ── braci (livello 5 e 6) ── */
+  var ec = document.getElementById("embers"), ex = ec.getContext("2d"), sparks = [];
+  for (var i = 0; i < 26; i++) sparks.push({ x: Math.random(), y: Math.random(), s: 0.6 + Math.random() * 1.6, v: 0.0006 + Math.random() * 0.0012, a: Math.random() * 6.28 });
+
+  /* ── inclinazione: telefono o mouse ── */
+  var tx = 0, ty = 0, gx = 0, gy = 0, base = null;
+  function onOrient(e) {
+    if (e.gamma == null) return;
+    if (!base) base = { g: e.gamma, b: e.beta };
+    gx = Math.max(-1, Math.min(1, (e.gamma - base.g) / 22));
+    gy = Math.max(-1, Math.min(1, (e.beta - base.b) / 22));
+  }
+  function startMotion() {
+    window.addEventListener("deviceorientation", onOrient);
+    document.getElementById("hint").textContent = "Inclina il telefono. Tocca due volte la carta per ricentrare.";
+  }
+  if (window.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === "function") {
+    var mb = document.getElementById("motion"); mb.hidden = false;
+    mb.addEventListener("click", function () { DeviceOrientationEvent.requestPermission().then(function (r) { if (r === "granted") { mb.hidden = true; startMotion(); } }); });
+  } else if ("ondeviceorientation" in window && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) startMotion();
+  else document.getElementById("hint").textContent = "Sul computer: muovi il mouse sopra la carta.";
+  card.addEventListener("dblclick", function () { base = null; });
+  document.querySelector(".scene").addEventListener("pointermove", function (e) {
+    if (e.pointerType !== "mouse") return;
+    var r = card.getBoundingClientRect();
+    gx = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width - 0.5) * 2));
+    gy = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height - 0.5) * 2));
+  });
+  document.querySelector(".scene").addEventListener("pointerleave", function () { gx = 0; gy = 0; });
+
+  function frame(t) {
+    var moving = level >= 3;
+    tx += ((moving ? gx : 0) - tx) * 0.12;
+    ty += ((moving ? gy : 0) - ty) * 0.12;
+    card.style.setProperty("--tx", tx.toFixed(3));
+    card.style.setProperty("--ty", ty.toFixed(3));
+    if (gl && ready === 2 && level >= 3) {
+      var r = canvas.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);
+      var W = Math.round(r.width * dpr), H = Math.round(r.height * dpr);
+      if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; gl.viewport(0, 0, W, H); }
+      gl.uniform2f(uTilt, -tx, -ty);
+      gl.uniform1f(uStrength, level >= 5 ? 0.075 : 0.055);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    }
+    if (level >= 5) {
+      var r2 = ec.getBoundingClientRect();
+      if (ec.width !== Math.round(r2.width)) { ec.width = Math.round(r2.width); ec.height = Math.round(r2.height); }
+      ex.clearRect(0, 0, ec.width, ec.height);
+      sparks.forEach(function (p) {
+        p.y -= p.v; p.a += 0.02; if (p.y < -0.05) { p.y = 1.05; p.x = Math.random(); }
+        var x = (p.x + Math.sin(p.a) * 0.01 + tx * 0.02 * p.s) * ec.width, y = p.y * ec.height;
+        var g = ex.createRadialGradient(x, y, 0, x, y, 4 * p.s);
+        g.addColorStop(0, "rgba(255, 200, 120, .9)"); g.addColorStop(1, "rgba(255, 90, 20, 0)");
+        ex.fillStyle = g; ex.beginPath(); ex.arc(x, y, 4 * p.s, 0, 6.28); ex.fill();
+      });
+    }
+    requestAnimationFrame(frame);
+  }
+  setLevel(level);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
