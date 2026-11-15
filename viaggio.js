@@ -2,7 +2,7 @@
 
 /*
  * SIGIL — Il Viaggio.
- * Trenta tappe contro l'Ombra, su un sentiero che sale. Ogni capitolo è
+ * Novanta tappe contro l'Ombra su tre atlanti (Sigillo, Ombra, Fuoco), trenta per atlante. Ogni capitolo è
  * un'arena; l'Ombra diventa più forte e le rovine aumentano (3, poi 4, poi 5).
  * Si sblocca una tappa alla volta. Fino a tre stelle per tappa:
  *   ★   vinci
@@ -24,8 +24,37 @@
     { id: "porto", name: "Porto del Leviatano", arena: "porto", poster: "art/arene/porto.jpg", lanes: 4, ai: [4, 5, 5, 5, 6, 6], sign: "osteria",
       boss: "Il Pescatore d'ossa", tale: "Il faro è spento da cent'anni. Al largo, qualcosa che sembra un'isola respira." },
     { id: "piana", name: "Piana del drago", arena: "piana", poster: "art/arene/piana.jpg", lanes: 5, ai: [5, 6, 6, 6, 7, 7], sign: "piazza",
-      boss: "Il Dormiente", tale: "L'ultima piana. Cinque rovine sulla terra che brucia. Sotto di te, il Dormiente apre un occhio." }
+      boss: "Il Dormiente", tale: "L'ultima piana. Cinque rovine sulla terra che brucia. Sotto di te, il Dormiente apre un occhio." },
+    // Secondo atlante (15 nov): le Terre dell'Ombra, oltre le montagne. Si riparte da tre rovine.
+    { id: "passo", book: 1, name: "Passo dei Menhir", arena: "valle", lanes: 3, ai: [3, 3, 4, 4, 4, 5], sign: "mercato",
+      boss: "Il Guardiano del Passo", tale: "Oltre le montagne la neve copre le ossa. Tre pietre accese segnano l'unico ponte, e qualcuno lo sorveglia ancora." },
+    { id: "monastero", book: 1, name: "Monastero della Rupe", arena: "cripta", lanes: 3, ai: [4, 4, 5, 5, 5, 6], sign: "semaforo",
+      boss: "L'Abate senza volto", tale: "Le candele sono accese, ma nessuno canta. Il campanile suona solo per chi ha già perso." },
+    { id: "lago", book: 1, name: "Lago dei Sommersi", arena: "porto", lanes: 4, ai: [4, 5, 5, 5, 6, 6], sign: "orto",
+      boss: "La Dama del Ghiaccio", tale: "Sotto il ghiaccio ci sono torri intere, e finestre. Qualcuno, dietro le finestre, guarda in su." },
+    { id: "foresta", book: 1, name: "Foresta dei Lumi", arena: "palude", lanes: 4, ai: [5, 5, 6, 6, 6, 7], sign: "balcone",
+      boss: "Il Boscaiolo cieco", tale: "Gli alberi sono morti da secoli, eppure nelle case tra le radici le lanterne restano accese." },
+    { id: "castello", book: 1, name: "Castello della Crepa", arena: "piana", lanes: 5, ai: [5, 6, 6, 7, 7, 7], sign: "bar",
+      boss: "Il Re d'Ombra", tale: "Una crepa di luce viola scende dalla porta del castello. È da lì che l'Ombra è venuta al mondo." },
+    // Terzo atlante (15 nov): le Terre del Fuoco, ai piedi del vulcano. Di nuovo tre rovine.
+    { id: "borgo", book: 2, name: "Borgo delle Fornaci", arena: "valle", lanes: 3, ai: [5, 5, 5, 6, 6, 6], sign: "forno",
+      boss: "Il Mastro fonditore", tale: "Le fornaci non si spengono mai, neanche la notte. Si dice che il borgo fonda anche quello che non è metallo." },
+    { id: "eremo", book: 2, name: "Eremo dello Zolfo", arena: "cripta", lanes: 3, ai: [5, 6, 6, 6, 7, 7], sign: "fontana",
+      boss: "L'Eremita dello zolfo", tale: "Sulla rupe l'acqua esce gialla e bollente. L'eremita ci si bagna ogni mattina, e non invecchia." },
+    { id: "ponte", book: 2, name: "Ponte sulla Lava", arena: "piana", lanes: 4, ai: [6, 6, 6, 7, 7, 7], sign: "panchina",
+      boss: "Il Pontiere di brace", tale: "Un solo ponte di pietra sopra il fiume di fuoco. Chi lo attraversa paga, in un modo o nell'altro." },
+    { id: "anfiteatro", book: 2, name: "Anfiteatro del Cratere", arena: "piana", lanes: 4, ai: [6, 7, 7, 7, 7, 7], sign: "piazza",
+      boss: "La Sibilla del cratere", tale: "Gli antichi giocavano qui, sotto la montagna. Le gradinate sono vuote, ma l'altare è ancora caldo." },
+    { id: "fortezza", book: 2, name: "Fortezza Nera", arena: "piana", lanes: 5, ai: [7, 7, 7, 7, 7, 7], sign: "terrazza",
+      boss: "Il Signore della Fortezza", tale: "Un'isola di roccia in mezzo alla lava, e una sola strada. In cima, chi ha acceso il vulcano." }
   ];
+  // I tre atlanti: ognuno ha il suo dipinto e trenta tappe.
+  var BOOKS = [
+    { title: "L'atlante del Sigillo", short: "Il Sigillo", map: "art/arene/atlante-valle.jpg" },
+    { title: "Le Terre dell'Ombra", short: "L'Ombra", map: "art/arene/atlante-ombra.jpg" },
+    { title: "Le Terre del Fuoco", short: "Il Fuoco", map: "art/arene/atlante-vulcano.jpg" }
+  ];
+  CHAPTERS.forEach(function (ch) { ch.book = ch.book || 0; });
 
   var HOUSE_IDS = E.HOUSES.map(function (h) { return h.id; });
   var LOC_IDS = E.LOCATIONS.map(function (l) { return l.id; });
@@ -60,6 +89,7 @@
       LEVELS.push({
         n: n,
         chapter: ci,
+        book: ch.book,
         step: li + 1,
         lanes: ch.lanes,
         aiLevel: ai,
@@ -76,7 +106,11 @@
   function J() {
     var s = G.save();
     if (!s.journey) s.journey = { unlocked: 1, stars: {} };
-    return s.journey;
+    var j = s.journey;
+    // Chi aveva già battuto il Dormiente quando il Viaggio finiva alla tappa 30 trova aperto il nuovo atlante.
+    if (j.stars && j.stars[30] && (j.unlocked || 1) < 31) j.unlocked = 31;
+    j.finished = !!(j.stars && j.stars[LEVELS.length]);
+    return j;
   }
   function totalStars() {
     var st = J().stars;
@@ -113,7 +147,7 @@
     { x: 2170, y: 960, r: 270, label: [0, 1] },    // IV · Porto, a est: i moli e il faro
     { x: 1615, y: 1075, r: 300, label: [0, 1] }    // V · Piana del drago: il cerchio di rune, il Sigillo
   ];
-  var ROMAN = ["I", "II", "III", "IV", "V"];
+  var ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV"];
 
   function unit(ax, ay, bx, by) { var dx = bx - ax, dy = by - ay, l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l]; }
 
@@ -135,37 +169,60 @@
     19: [[1860, 700], [1810, 800], [1750, 880], [1790, 975], [1870, 1005]],
     25: [[2310, 1060], [2150, 1130], [1980, 1115]]
   };
-  var ON_PAINTING = LEVELS.length === PAINTED.length;
-  var NODES = ON_PAINTING ? PAINTED.map(function (p) { return { x: p[0], y: p[1] }; }) : [];
-  // Riserva (se un giorno le tappe fossero di più): un arco che attraversa ogni regione.
-  if (!ON_PAINTING) REGIONS.forEach(function (R, ci) {
-    var prev = REGIONS[ci - 1], next = REGIONS[ci + 1];
-    var din = prev ? unit(R.x, R.y, prev.x, prev.y) : [0, 1];
-    var count = LEVELS.filter(function (l) { return l.chapter === ci; }).length;
-    var i, t;
-    if (!next) {
-      // L'ultima regione: una spirale che scende fino al cuore del Sigillo.
-      var a0 = Math.atan2(din[1], din[0]);
-      for (i = 0; i < count; i++) {
-        t = i / (count - 1);
-        var ang = a0 + t * Math.PI * 1.55;
-        var rad = R.r * 0.74 * (1 - t);
-        NODES.push({ x: R.x + Math.cos(ang) * rad, y: R.y + Math.sin(ang) * rad });
-      }
-      return;
-    }
-    var dout = unit(R.x, R.y, next.x, next.y);
-    var a = [R.x + din[0] * R.r * 0.72, R.y + din[1] * R.r * 0.72];
-    var b = [R.x + dout[0] * R.r * 0.72, R.y + dout[1] * R.r * 0.72];
-    var mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
-    var n = unit(mid[0], mid[1], R.x, R.y);
-    var c = [R.x + n[0] * R.r * 0.62, R.y + n[1] * R.r * 0.62];
-    for (i = 0; i < count; i++) {
-      t = i / (count - 1);
-      var u = 1 - t;
-      NODES.push({ x: u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], y: u * u * a[1] + 2 * u * t * c[1] + t * t * b[1] });
-    }
-  });
+  // Il dipinto copre il mondo (2700×2200) con un margine del 2% (vedi .atlas-map): da pixel
+  // del dipinto (2400×1792) a coordinate del mondo.
+  function px(p) { return [-54 + p[0] * 2808 / 2400, -44 + p[1] * 2288 / 1792]; }
+  function pxRegion(x, y, r, label) { var w = px([x, y]); return { x: w[0], y: w[1], r: r * 1.2, label: label }; }
+
+  // Secondo e terzo atlante: tappe prese una per una sui sentieri dei dipinti (in pixel del dipinto).
+  // Ombra: il ponte di neve tra i menhir, la strada fino al monastero, la riva e il ghiaccio del lago,
+  // la strada della foresta fino al villaggio tra le radici, e la crepa viola fino alla porta del castello.
+  var PAINTED_OMBRA = [
+    [1775, 1225], [1660, 1300], [1520, 1350], [1440, 1425], [1290, 1470], [1135, 1545],
+    [985, 1375], [830, 1285], [660, 1235], [520, 1165], [425, 1045], [350, 885],
+    [660, 1045], [760, 930], [740, 800], [705, 705], [870, 590], [930, 310],
+    [1515, 555], [1650, 640], [1690, 765], [1630, 860], [1730, 965], [1990, 905],
+    [1690, 1040], [1575, 1100], [1430, 1085], [1335, 1000], [1305, 900], [1287, 805]
+  ];
+  // Fuoco: le strade attorno al borgo e le fornaci, la strada dell'eremo fino alla sorgente di zolfo,
+  // la strada alta fino al ponte sulla lava, la salita all'anfiteatro, e la strada della fortezza.
+  var PAINTED_FUOCO = [
+    [1765, 1185], [1862, 1258], [1895, 1355], [1790, 1425], [1680, 1465], [1452, 1405],
+    [850, 1255], [810, 1150], [700, 1085], [560, 1072], [410, 1065], [230, 1085],
+    [1000, 1000], [920, 852], [770, 828], [635, 790], [470, 532], [230, 572],
+    [1100, 880], [1180, 848], [1245, 790], [1290, 725], [1295, 668], [1300, 612],
+    [1250, 1025], [1430, 1040], [1600, 1040], [1730, 1010], [1830, 980], [1920, 958]
+  ];
+  // Le strade lunghe (chiave = tappa d'arrivo), in pixel del dipinto.
+  var ROUTES_PX = {
+    37: [[1060, 1470], [1010, 1410]],
+    43: [[430, 1065], [520, 1120], [600, 1070]],
+    48: [[900, 520], [920, 420]],
+    49: [[1060, 300], [1250, 360], [1420, 430]],
+    54: [[1820, 955], [1910, 935]],
+    55: [[1910, 935], [1800, 960], [1740, 990]],
+    57: [[1500, 1095]],
+    67: [[1180, 1290], [1020, 1235], [920, 1265]],
+    73: [[410, 1065], [700, 1085], [830, 1100], [950, 1030]],
+    77: [[600, 720], [560, 620]],
+    79: [[470, 532], [600, 720], [635, 790], [770, 828], [920, 852], [1040, 885]],
+    85: [[1290, 725], [1245, 790], [1180, 848], [1110, 905], [1150, 990]]
+  };
+  Object.keys(ROUTES_PX).forEach(function (k) { ROUTES[k] = ROUTES_PX[k].map(px); });
+  REGIONS = REGIONS.concat([
+    pxRegion(1450, 1400, 330, [1, 0]),    // VI · Passo dei Menhir: il ponte e le tre pietre
+    pxRegion(600, 1100, 350, [0, 1]),     // VII · Monastero della Rupe
+    pxRegion(830, 560, 370),              // VIII · Lago dei Sommersi
+    pxRegion(1790, 800, 320, [0, -1]),    // IX · Foresta dei Lumi
+    pxRegion(1350, 960, 260, [0, 1]),     // X · Castello della Crepa
+    pxRegion(1580, 1400, 320, [1, 0]),    // XI · Borgo delle Fornaci
+    pxRegion(480, 1100, 320, [0, 1]),     // XII · Eremo dello Zolfo
+    pxRegion(560, 700, 330, [0, -1]),     // XIII · Ponte sulla Lava
+    pxRegion(1220, 760, 280, [0, -1]),    // XIV · Anfiteatro del Cratere
+    pxRegion(1780, 980, 290, [0, -1])     // XV · Fortezza Nera
+  ]);
+  var NODES = PAINTED.map(function (p) { return { x: p[0], y: p[1] }; })
+    .concat(PAINTED_OMBRA.concat(PAINTED_FUOCO).map(function (p) { var w = px(p); return { x: w[0], y: w[1] }; }));
 
   var sheet = document.createElement("section");
   sheet.className = "sheet journey-sheet";
@@ -174,7 +231,8 @@
   sheet.innerHTML =
     '<header class="journey-head">' +
       '<button type="button" class="icon-button" id="journeyBack" aria-label="Torna alla soglia">←</button>' +
-      '<div><p class="eyebrow">Il Viaggio</p><h2>L\'atlante del Sigillo</h2></div>' +
+      '<div><p class="eyebrow">Il Viaggio</p><h2 id="journeyTitle">L\'atlante del Sigillo</h2></div>' +
+      '<div class="journey-books" id="journeyBooks" role="tablist" aria-label="Gli atlanti"></div>' +
       '<div class="journey-total" id="journeyTotal"></div>' +
     "</header>" +
     '<div class="atlas" id="atlas"><div class="atlas-world" id="atlasWorld"></div>' +
@@ -197,8 +255,10 @@
   map.style.width = W + "px";
   map.style.height = H + "px";
 
-  // Il dipinto della valle sotto l'atlante (Gemini, versione 1 scelta il 15 nov, 2400×1792).
-  var ATLAS_MAP = "art/arene/atlante-valle.jpg";
+  // I dipinti sotto gli atlanti (Gemini, 2400×1792): la valle (versione 1 scelta il 15 nov),
+  // le Terre dell'Ombra e le Terre del Fuoco (15 nov). Si vede un atlante alla volta.
+  var book = 0;
+  function bookOpen(b, j) { return b === 0 || LEVELS.some(function (l) { return l.book === b && l.n <= j.unlocked; }); }
 
   function stateOf(l, j) {
     var st = j.stars[l.n] || 0;
@@ -225,12 +285,21 @@
 
   function paintMap() {
     var j = J();
-    sheet.querySelector("#journeyTotal").innerHTML = "★ " + totalStars() + " / " + LEVELS.length * 3;
+    var B = BOOKS[book];
+    var mine = LEVELS.filter(function (l) { return l.book === book; });
+    var got = mine.reduce(function (a, l) { return a + (j.stars[l.n] || 0); }, 0);
+    sheet.querySelector("#journeyTotal").innerHTML = "★ " + got + " / " + mine.length * 3;
+    sheet.querySelector("#journeyTitle").textContent = B.title;
+    sheet.querySelector("#journeyBooks").innerHTML = BOOKS.map(function (b, bi) {
+      var open = bookOpen(bi, j);
+      return '<button type="button" role="tab" data-book="' + bi + '" aria-selected="' + (bi === book) + '"' + (open ? "" : " disabled") +
+        ' title="' + G.esc(open ? b.title : b.title + ": si apre finendo l'atlante prima") + '"><b>' + ROMAN[bi] + "</b><span>" + G.esc(b.short) + "</span></button>";
+    }).join("");
     var html = "";
     var currentChapter = (LEVELS[Math.min(j.unlocked, LEVELS.length) - 1] || LEVELS[0]).chapter;
-    // Il dipinto della valle sotto tutto.
+    // Il dipinto dell'atlante sotto tutto.
     map.classList.add("has-map");
-    html += '<div class="atlas-map" style="background-image:url(&quot;' + ATLAS_MAP + '&quot;)"></div>';
+    html += '<div class="atlas-map" style="background-image:url(&quot;' + B.map + '&quot;)"></div>';
 
     // Il Sigillo: anelli che girano piano dietro a tutto, e i raggi verso le regioni.
     var seal = '<svg class="atlas-seal" viewBox="0 0 ' + W + " " + H + '" aria-hidden="true"><g class="seal-turn">' +
@@ -247,10 +316,11 @@
       seal += '<line x1="' + CX + '" y1="' + CY + '" x2="' + R.x + '" y2="' + R.y + '" class="seal-spoke"/>';
     });
     seal += "</svg>";
-    html += seal;
+    if (book === 0) html += seal; // il Sigillo sta solo sul primo atlante
 
     // Le regioni: il dipinto dell'arena in un cerchio di luce, la nebbia se è ancora chiusa.
     CHAPTERS.forEach(function (ch, ci) {
+      if (ch.book !== book) return;
       var R = REGIONS[ci];
       var levels = LEVELS.filter(function (l) { return l.chapter === ci; });
       var locked = levels[0].n > j.unlocked;
@@ -259,7 +329,7 @@
       var lx = R.x + away[0] * (R.r + 34), ly = R.y + away[1] * (R.r + 34);
       var ax = -50 + away[0] * 50, ay = -50 + away[1] * 50;
       html += '<div class="region' + (locked ? " locked" : "") + (ci === currentChapter && !locked ? " current" : "") + '" style="left:' + (R.x - R.r) + "px;top:" + (R.y - R.r) + "px;width:" + R.r * 2 + "px;height:" + R.r * 2 + 'px">' +
-        "<div class=\"region-art\" style=\"background-image:url('" + ch.poster + "')\"></div>" +
+        (ch.poster ? "<div class=\"region-art\" style=\"background-image:url('" + ch.poster + "')\"></div>" : "") +
         '<div class="region-fog"></div><div class="region-ring"></div></div>' +
         '<div class="region-label' + (locked ? " locked" : "") + '" style="left:' + lx + "px;top:" + ly + "px;--ax:" + ax + "%;--ay:" + ay + '%">' +
           "<span>Capitolo " + ROMAN[ci] + " · " + ch.lanes + " rovine</span><b>" + G.esc(ch.name) + "</b>" +
@@ -271,12 +341,13 @@
     // I sentieri tra le tappe: d'oro quelli percorsi, accesi quelli aperti, spenti gli altri.
     var roads = "";
     LEVELS.forEach(function (l, i) {
-      if (!i) return;
+      if (!i || l.book !== book) return;
       var p = NODES[i - 1], q = NODES[i];
       var prev = LEVELS[i - 1];
+      if (prev.book !== book) return; // la prima tappa di un atlante non ha strada d'arrivo
       var cls = stateOf(l, j) === "done" ? "road done" : stateOf(l, j) === "current" ? "road open" : "road";
       var bend;
-      if (ON_PAINTING && ROUTES[l.n]) {
+      if (ROUTES[l.n]) {
         roads += roadThrough([[p.x, p.y]].concat(ROUTES[l.n], [[q.x, q.y]]), cls + " long");
         return;
       }
@@ -286,9 +357,7 @@
         bend = l.chapter === 4 ? [0, 0] : [m[0] * 140, m[1] * 140];
         cls += " long";
       } else {
-        var d = unit(p.x, p.y, q.x, q.y);
-        var s = ON_PAINTING ? 0 : i % 2 ? 14 : -14; // sul dipinto: dritte, lungo la strada
-        bend = [-d[1] * s, d[0] * s];
+        bend = [0, 0]; // sul dipinto: dritte, lungo la strada
       }
       roads += road(p, q, bend, cls);
     });
@@ -296,6 +365,7 @@
 
     // Le tappe
     LEVELS.forEach(function (l, i) {
+      if (l.book !== book) return;
       var p = NODES[i];
       var st = j.stars[l.n] || 0;
       var state = stateOf(l, j);
@@ -361,6 +431,7 @@
   function here() {
     var j = J();
     var i = Math.min(j.unlocked, LEVELS.length) - 1;
+    if (LEVELS[i].book !== book) { book = LEVELS[i].book; paintMap(); }
     var R = REGIONS[LEVELS[i].chapter];
     var fit = Math.min(atlas.clientWidth, atlas.clientHeight) / (R.r * 2.9);
     lookAt((NODES[i].x + R.x) / 2, (NODES[i].y + R.y) / 2, Math.max(minScale(), Math.min(1.1, fit)));
@@ -533,8 +604,10 @@
         var next = LEVELS[l.n];
         var html = '<div class="end-stars">' + starRow(earned) + "</div>";
         if (earned && improved) html += '<p class="end-note">Nuove stelle: ogni stella vale un pegno.</p>';
-        if (earned && next && next.chapter !== l.chapter) html += '<p class="end-note">Si apre un nuovo capitolo: <b>' + G.esc(CHAPTERS[next.chapter].name) + "</b>, con " + CHAPTERS[next.chapter].lanes + " rovine.</p>";
-        if (earned && !next) html += '<p class="end-note">Il Dormiente torna a dormire. Hai completato il Viaggio.</p>';
+        if (earned && next && next.book !== l.book) html += '<p class="end-note">' + (l.n === 30 ? "Il Dormiente torna a dormire, ma oltre le montagne qualcosa si muove. " : "Il Re d'Ombra cade, e la terra comincia a bruciare. ") +
+          "Si apre un nuovo atlante: <b>" + G.esc(BOOKS[next.book].title) + "</b>, di nuovo con " + CHAPTERS[next.chapter].lanes + " rovine.</p>";
+        else if (earned && next && next.chapter !== l.chapter) html += '<p class="end-note">Si apre un nuovo capitolo: <b>' + G.esc(CHAPTERS[next.chapter].name) + "</b>, con " + CHAPTERS[next.chapter].lanes + " rovine.</p>";
+        if (earned && !next) html += '<p class="end-note">Il vulcano si quieta. Hai completato il Viaggio, tutti e tre gli atlanti.</p>';
         el.extra.innerHTML = html;
         el.again.textContent = earned && next ? "Tappa successiva" : "Riprova la tappa";
       },
@@ -549,6 +622,19 @@
 
   /* ───────── eventi ───────── */
   sheet.querySelector("#journeyBack").addEventListener("click", function () { close(); G.showMenu(true); });
+  // Passare da un atlante all'altro (quelli ancora chiusi restano spenti).
+  sheet.querySelector("#journeyBooks").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-book]");
+    if (!b || b.disabled) return;
+    var n = Number(b.dataset.book);
+    if (n === book) return;
+    book = n;
+    tip.hidden = true;
+    paintMap();
+    var j = J();
+    var i = Math.min(j.unlocked, LEVELS.length) - 1;
+    if (LEVELS[i].book === book) here(); else all();
+  });
   map.addEventListener("click", function (e) {
     if (moved) return; // era un trascinamento, non un tocco
     var b = e.target.closest(".stop");

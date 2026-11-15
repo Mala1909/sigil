@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap">
-  <link rel="stylesheet" href="styles.css?v=39">
+  <link rel="stylesheet" href="styles.css?v=40">
 </head>
 <body>
   <!-- Simboli: il Sigillo e i sigilli delle cinque casate -->
@@ -153,7 +153,7 @@
         <p class="menu-level" id="menuLevel"></p>
 
         <nav class="menu-buttons" aria-label="Modalità">
-          <button id="journeyButton" class="button primary mode mode-journey" type="button"><span class="mode-name">Il Viaggio</span> <small id="journeyLabel"></small><em class="mode-desc">Trenta tappe sull'atlante del Sigillo</em></button>
+          <button id="journeyButton" class="button primary mode mode-journey" type="button"><span class="mode-name">Il Viaggio</span> <small id="journeyLabel"></small><em class="mode-desc">Novanta tappe su tre atlanti</em></button>
           <button id="duelButton" class="button ghost duel mode mode-duel" type="button"><span class="mode-name">Duello tra Custodi</span> <small>PvP</small><em class="mode-desc">Contro un altro Custode, dal vivo</em></button>
           <button id="deckButton" class="button ghost deck mode mode-deck" type="button"><span class="mode-name">Mazzo e collezione</span><span class="mode-badge"></span><em class="mode-desc">Le tue carte e il tuo mazzo</em></button>
           <div class="menu-row menu-play">
@@ -295,13 +295,13 @@
   <script src="live.js?v=13"></script>
   <script src="game.js?v=22"></script>
   <script src="cloud.js?v=9"></script>
-  <script src="viaggio.js?v=16"></script>
+  <script src="viaggio.js?v=17"></script>
   <script src="duello.js?v=16"></script>
   <script src="collezione.js?v=19"></script>
   <script src="carta3d.js?v=1"></script>
   <script src="negozio.js?v=8"></script>
   <script src="account.js?v=1"></script>
-  <script src="musica.js?v=1"></script>
+  <script src="musica.js?v=2"></script>
   <script src="impostazioni.js?v=1"></script>
   <script>if ("serviceWorker" in navigator && location.protocol !== "file:") { var hadSW = !!navigator.serviceWorker.controller, reloaded = false; navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(function (r) { r.update(); }).catch(function () {}); navigator.serviceWorker.addEventListener("controllerchange", function () { if (hadSW && !reloaded && !document.body.hasAttribute("data-mode")) { reloaded = true; location.reload(); } }); }</script>
 </body>

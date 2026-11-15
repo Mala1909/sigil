@@ -145,9 +145,9 @@
     var o = d.opts || {};
     var n = Number(o.journeyLevel) || 0;
     if (d.mode === "viaggio" && n) {
-      if (n >= 30) return "descent";
+      if (n % 30 === 0) return "descent"; // l'ultimo nemico di ogni atlante
       if (n % 6 === 0) return "incantation";
-      var chapter = Math.ceil(n / 6);
+      var chapter = (Math.ceil(n / 6) - 1) % 5 + 1; // ogni atlante ha cinque capitoli
       if (chapter === 2 || chapter === 5) return "echoes";
       if (chapter === 3 || chapter === 4) return "lands";
     }
