@@ -2428,13 +2428,15 @@ html.drag-on, html.drag-on * { cursor: grabbing !important; }
   }
 }
 /* Il testo resta sempre lontano dalla frangia, qualsiasi sia la larghezza del riquadro. */
-html[data-menu="b"] .mode { padding-left: max(26px, calc(6% + 12px)); padding-right: max(22px, calc(6% + 10px)); padding-bottom: 26px; }
-@media (max-width: 400px) { html[data-menu="b"] .mode { padding-left: max(24px, calc(6% + 10px)); padding-right: max(20px, calc(6% + 8px)); padding-bottom: 24px; } }
+html[data-menu="b"] .mode { padding-left: 26px; padding-right: 22px; padding-bottom: 26px; }
+@media (max-width: 400px) { html[data-menu="b"] .mode { padding-left: 24px; padding-right: 20px; padding-bottom: 24px; } }
+/* Solo dove la cornice si stira ancora (browser senza bordi a nove pezzi) serve più margine. */
+@supports not (-webkit-mask-box-image: none) {
+  html[data-menu="b"] .mode { padding-left: max(26px, calc(6% + 12px)); padding-right: max(22px, calc(6% + 10px)); }
+}
 @media (max-height: 420px) and (max-width: 480px) { html[data-menu="b"] .mode { padding-bottom: 20px; } }
-/* Il Viaggio, il riquadro principale, si allunga davvero e allo stesso modo a destra e a
-   sinistra oltre la colonna degli altri riquadri (prima si spostava soltanto a sinistra). */
-html[data-menu="b"] .mode-journey { --spill: 12px; justify-self: start; width: calc(100% + 2 * var(--spill)); margin: 0 0 0 calc(-1 * var(--spill)); }
-@media (min-width: 700px) { html[data-menu="b"] .mode-journey { --spill: 22px; } }
+/* Il Viaggio è largo esattamente quanto la colonna: allineato ai riquadri sotto, a destra e a sinistra. */
+html[data-menu="b"] .mode-journey { justify-self: stretch; width: auto; margin: 0; }
 /* Il bollino «N nuove» è una scritta piccola come le altre del riquadro: resta scuro sul fondo d'oro. */
 html[data-menu="b"] .mode .new-badge, html[data-menu="c"] .mode .new-badge { color: #2a1a05; font-size: 11px; letter-spacing: 0.06em; text-shadow: none; }
 /* Con il testo del telefono ingrandito, le parole lunghe vanno a capo invece di uscire dal riquadro. */
