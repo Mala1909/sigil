@@ -15,6 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap">
   <link rel="stylesheet" href="styles.css?v=43">
+  <link rel="stylesheet" href="ui.css?v=2">
 </head>
 <body>
   <!-- Simboli: il Sigillo e i sigilli delle cinque casate -->
@@ -139,39 +140,77 @@
       </div>
     </aside>
 
-    <!-- INGRESSO -->
-    <section class="sheet menu-sheet" id="menu">
-      <div class="menu-bg" aria-hidden="true"><div class="live" id="menuLive"></div></div>
-      <div class="menu-main">
-        <header class="menu-title">
-          <p class="eyebrow">Un duello di carte · sei ore · tre rovine</p>
-          <h1>SIGIL</h1>
-          <p class="tagline">Sotto la valle dorme qualcosa che non deve svegliarsi.<br>Ogni notte, per sei ore, il Sigillo si allenta.</p>
-          <p class="lore-intro">Tre rovine lo inchiodano alla terra. Tu sei il Custode, l'ultimo a vegliarle. Di fronte a te siede l'Ombra: conosce le tue carte, perché è nata dal tuo stesso buio. Tieni due rovine quando suona la sesta campana, e il Sigillo reggerà ancora una notte.</p>
-        </header>
+    <!-- INGRESSO: la sala del Custode (16 nov). Tutti i pezzi sono oggetti "forgiati" (art/ui, vedi _fucina/).
+         I tasti di sempre restano, con gli stessi id; quelli delle modalità sono nascosti e li preme il grande «Gioca». -->
+    <section class="sheet menu-sheet sala" id="menu">
+      <div class="menu-bg sala-bg" aria-hidden="true"><canvas class="sala-scene" id="salaScene"></canvas><div class="sala-veil"></div></div>
 
-        <p class="menu-level" id="menuLevel"></p>
+      <header class="sala-hud">
+        <button type="button" class="hud-profile" id="hudProfile" aria-label="Il tuo profilo">
+          <span class="hud-med">
+            <img src="art/ui/medaglione.webp?v=2" alt="" width="88" height="92">
+            <svg viewBox="0 0 88 92" aria-hidden="true"><circle cx="44" cy="43" r="26.5" id="hudRing" pathLength="100"/></svg>
+            <b id="hudLevel">1</b>
+            <i class="hud-dot" id="hudDot"></i>
+          </span>
+          <span class="hud-who ui-targa"><strong id="hudName">Custode</strong><small id="hudHouse"></small></span>
+        </button>
+        <div class="hud-wallet ui-targa" role="group" aria-label="Le tue ricchezze">
+          <span class="hud-coin" title="Pegni"><img src="art/ui/pegno.webp?v=2" alt="Pegni" width="46" height="48"><b id="menuCoins">0</b></span>
+          <span class="hud-coin" title="Ambra"><img src="art/ui/ambra.webp?v=2" alt="Ambra" width="46" height="48"><b id="hudAmbra">0</b></span>
+          <span class="hud-coin" title="Inchiostro"><img src="art/ui/inchiostro.webp?v=2" alt="Inchiostro" width="46" height="48"><b id="hudInk">0</b></span>
+        </div>
+      </header>
+      <p class="menu-level" id="menuLevel"></p>
+      <button type="button" class="icon-button sala-gear" id="salaGear" aria-label="Impostazioni" title="Impostazioni">⚙</button>
 
-        <nav class="menu-buttons" aria-label="Modalità">
-          <button id="journeyButton" class="button primary mode mode-journey" type="button"><span class="mode-name">Il Viaggio</span> <small id="journeyLabel"></small><em class="mode-desc">Novanta tappe su tre atlanti</em></button>
-          <button id="duelButton" class="button ghost duel mode mode-duel" type="button"><span class="mode-name">Duello tra Custodi</span> <small>PvP</small><em class="mode-desc">Contro un altro Custode, dal vivo</em></button>
-          <button id="deckButton" class="button ghost deck mode mode-deck" type="button"><span class="mode-name">Mazzo e collezione</span><span class="mode-badge"></span><em class="mode-desc">Le tue carte e il tuo mazzo</em></button>
-          <div class="menu-row menu-play">
-            <button id="playButton" class="button ghost mode mode-free" type="button"><span class="mode-name">Partita libera</span><em class="mode-desc">Una veglia qualsiasi</em></button>
-            <button id="dailyButton" class="button ghost mode mode-daily" type="button"><span class="mode-name">Veglia di stanotte</span> <small id="dailyLabel"></small><em class="mode-desc">Lo stesso tavolo per tutti, oggi</em></button>
-          </div>
-          <div class="menu-row menu-shop">
-            <button id="shopButton" class="button ghost shop chip" type="button"><svg aria-hidden="true"><use href="#g-bottega"/></svg><span class="mode-name">Bottega</span></button>
-            <button id="objButton" class="button ghost shop chip" type="button"><svg aria-hidden="true"><use href="#g-obiettivi"/></svg><span class="mode-name">Obiettivi</span><span class="mode-badge"></span></button>
-            <button id="passButton" class="button ghost shop chip" type="button"><svg aria-hidden="true"><use href="#g-flame"/></svg><span class="mode-name">Pass della veglia</span><span class="mode-badge"></span></button>
-          </div>
+      <div class="sala-logo" aria-hidden="true"><img src="art/ui/logo.webp?v=2" alt="" width="320" height="100"></div>
+
+      <div class="sala-stage">
+        <div class="sala-hero" id="salaHero" aria-label="La tua carta in vetrina"></div>
+        <button type="button" class="hero-deck ui-pergamena" id="heroDeck"><span id="heroDeckName">Il tuo mazzo</span><small id="heroDeckInfo"></small></button>
+      </div>
+
+      <div class="sala-play">
+        <div class="mode-pick" id="modePick" role="tablist" aria-label="Modalità">
+          <button type="button" role="tab" data-mode="journey"><b>Viaggio</b><small id="journeyLabel"></small></button>
+          <button type="button" role="tab" data-mode="duel"><b>Duello</b><small>dal vivo</small></button>
+          <button type="button" role="tab" data-mode="free"><b>Libera</b><small>una veglia</small></button>
+          <button type="button" role="tab" data-mode="daily"><b>Stanotte</b><small id="dailyLabel"></small></button>
+        </div>
+        <button type="button" class="play-big" id="salaPlay" aria-describedby="salaPlaySub">
+          <img src="art/ui/gioca.webp?v=2" alt="Gioca" width="344" height="136" draggable="false">
+          <span class="play-shine" aria-hidden="true"></span>
+        </button>
+        <p class="sr-only" id="salaPlaySub"></p>
+        <nav class="sala-hidden" aria-hidden="true">
+          <button id="journeyButton" type="button" tabindex="-1">Il Viaggio</button>
+          <button id="duelButton" type="button" tabindex="-1">Duello tra Custodi</button>
+          <button id="playButton" type="button" tabindex="-1">Partita libera</button>
+          <button id="dailyButton" type="button" tabindex="-1">Veglia di stanotte</button>
         </nav>
+      </div>
 
+      <nav class="sala-dock ui-mensola" aria-label="La soglia">
+        <button id="deckButton" type="button" class="dock-btn"><img src="art/ui/dock-collezione.webp?v=2" alt="" width="76" height="80"><span class="dock-name"><span class="dn-lungo">Collezione</span><span class="dn-corto">Mazzo</span></span><span class="mode-badge"></span></button>
+        <button id="shopButton" type="button" class="dock-btn"><img src="art/ui/dock-bottega.webp?v=2" alt="" width="76" height="80"><span class="dock-name">Bottega</span></button>
+        <button id="objButton" type="button" class="dock-btn"><img src="art/ui/dock-obiettivi.webp?v=2" alt="" width="76" height="80"><span class="dock-name">Obiettivi</span><span class="mode-badge"></span></button>
+        <button id="passButton" type="button" class="dock-btn"><img src="art/ui/dock-pass.webp?v=2" alt="" width="76" height="80"><span class="dock-name">Pass</span><span class="mode-badge"></span></button>
+        <button id="codexButton" type="button" class="dock-btn"><img src="art/ui/dock-grimorio.webp?v=2" alt="" width="76" height="80"><span class="dock-name">Grimorio</span></button>
+        <button id="moreButton" type="button" class="dock-btn"><img src="art/ui/dock-altro.webp?v=2" alt="" width="76" height="80"><span class="dock-name">Altro</span></button>
+      </nav>
+
+      <div class="modal sala-more" id="salaMore" hidden><div class="modal-card sala-more-card">
+        <p class="eyebrow">La soglia</p><h2>Il Custode</h2>
+        <p class="sala-lore">Sotto la valle dorme qualcosa che non deve svegliarsi. Ogni notte, per sei ore, il Sigillo si allenta: tieni due rovine quando suona la sesta campana, e reggerà ancora una notte.</p>
         <div class="menu-meta">
-          <span>Pegni <strong id="menuCoins">0</strong></span>
           <span>Veglie di fila <strong id="menuStreak">0</strong></span>
           <span>Notti salvate <strong id="menuWins">0</strong></span>
           <span>Stanotte <strong id="menuDaily">—</strong></span>
+          <span>Carte <strong id="menuCards">—</strong></span>
+        </div>
+        <div class="menu-links">
+          <button id="rulesFromMenu" class="text-button" type="button">Il giuramento del Custode</button>
         </div>
         <details class="seed-details">
           <summary>Evoca una notte già vissuta, dal suo seme</summary>
@@ -183,12 +222,9 @@
             </div>
           </form>
         </details>
-        <div class="menu-links">
-          <button id="codexButton" class="text-button" type="button">Il grimorio</button>
-          <button id="rulesFromMenu" class="text-button" type="button">Il giuramento del Custode</button>
-        </div>
-      </div>
-      <div class="menu-show" id="menuShow" aria-hidden="true"></div>
+        <div class="modal-actions"><button type="button" class="button primary" data-close-more>Chiudi</button></div>
+      </div></div>
+      <div class="menu-show" id="menuShow" aria-hidden="true" hidden></div>
     </section>
 
     <!-- FINE NOTTE -->
@@ -290,14 +326,14 @@
   </div>
 
   <script src="engine.js?v=16"></script>
-  <script src="anteprima.js?v=4"></script>
+  <script src="anteprima.js?v=5"></script>
   <script src="paint.js?v=7"></script>
   <script src="live.js?v=13"></script>
   <script src="game.js?v=26"></script>
   <script src="cloud.js?v=9"></script>
   <script src="viaggio.js?v=18"></script>
   <script src="duello.js?v=16"></script>
-  <script src="collezione.js?v=19"></script>
+  <script src="collezione.js?v=20"></script>
   <script src="carta3d.js?v=2"></script>
   <script src="tavolo.js?v=2"></script>
   <script src="effetti.js?v=4"></script>
@@ -305,6 +341,7 @@
   <script src="account.js?v=1"></script>
   <script src="musica.js?v=2"></script>
   <script src="impostazioni.js?v=3"></script>
+  <script src="soglia.js?v=2"></script>
   <script>if ("serviceWorker" in navigator && location.protocol !== "file:") { var hadSW = !!navigator.serviceWorker.controller, reloaded = false; navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(function (r) { r.update(); }).catch(function () {}); navigator.serviceWorker.addEventListener("controllerchange", function () { if (hadSW && !reloaded && !document.body.hasAttribute("data-mode")) { reloaded = true; location.reload(); } }); }</script>
 </body>
 </html>

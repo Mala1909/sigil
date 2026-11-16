@@ -592,7 +592,7 @@
     var fresh = Object.keys(s.fresh || {}).length;
     var btn = document.getElementById("deckButton");
     var badge = btn && btn.querySelector(".mode-badge");
-    if (badge) badge.innerHTML = fresh ? '<small class="new-badge">' + fresh + " nuove</small>" : "";
+    if (badge) badge.innerHTML = fresh ? '<small class="new-badge">' + fresh + '<span class="nb-word"> nuove</span></small>' : "";
   }
   var prev = G.onMenu;
   G.onMenu = function () { if (prev) prev(); menuLine(); };

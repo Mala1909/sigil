@@ -1,0 +1,340 @@
+/*
+ * SIGIL — l'interfaccia "forgiata" (16 nov 2026).
+ *
+ * I pezzi (art/ui/*.webp) sono oggetti resi in rilievo dalla fucina (_fucina/): oro, bronzo, ferro battuto,
+ * ardesia dell'arena, ceralacca, pergamena. Qui si montano:
+ *   1. gli attrezzi: classi .ui-… che vestono un elemento con un pezzo che si allunga (9 fette);
+ *   2. la soglia (la sala del Custode);
+ *   3. lo stesso stile sul resto del gioco (tasti, finestre, barre).
+ * Va caricato dopo styles.css.
+ */
+
+/* ───────────────────────── 1. ATTREZZI ───────────────────────── */
+/* --k = quanti px di schermo vale un px di progetto del pezzo (1px = misura piena). */
+.ui-placca, .ui-targa, .ui-oro, .ui-tessera, .ui-mensola, .ui-pergamena, .ui-binario, .ui-pannello { --k: 1px; border: 0 solid transparent; background: none; }
+.ui-placca, .ui-targa {
+  border-image: url("art/ui/placca.webp?v=2") 66 78 84 78 fill / calc(22 * var(--k)) calc(26 * var(--k)) calc(28 * var(--k)) calc(26 * var(--k)) / calc(6 * var(--k)) calc(8 * var(--k)) calc(12 * var(--k)) calc(8 * var(--k));
+}
+.ui-oro {
+  border-image: url("art/ui/placca-oro.webp?v=2") 66 78 84 78 fill / calc(22 * var(--k)) calc(26 * var(--k)) calc(28 * var(--k)) calc(26 * var(--k)) / calc(6 * var(--k)) calc(8 * var(--k)) calc(12 * var(--k)) calc(8 * var(--k));
+}
+.ui-tessera {
+  border-image: url("art/ui/tessera.webp?v=2") 60 72 78 72 fill / calc(20 * var(--k)) calc(24 * var(--k)) calc(26 * var(--k)) calc(24 * var(--k)) / calc(6 * var(--k)) calc(8 * var(--k)) calc(12 * var(--k)) calc(8 * var(--k));
+}
+.ui-tessera.on, .ui-tessera[aria-selected="true"] { border-image-source: url("art/ui/tessera-on.webp?v=2"); }
+.ui-mensola {
+  border-image: url("art/ui/mensola.webp?v=2") 56 80 60 80 fill / calc(28 * var(--k)) calc(40 * var(--k)) calc(30 * var(--k)) calc(40 * var(--k)) / calc(12 * var(--k)) calc(10 * var(--k)) calc(14 * var(--k)) calc(10 * var(--k));
+}
+.ui-pergamena {
+  border-image: url("art/ui/pergamena.webp?v=2") 54 84 66 84 fill / calc(18 * var(--k)) calc(28 * var(--k)) calc(22 * var(--k)) calc(28 * var(--k)) / calc(10 * var(--k)) calc(12 * var(--k)) calc(14 * var(--k)) calc(12 * var(--k));
+}
+.ui-binario {
+  border-image: url("art/ui/binario.webp?v=2") 45 60 45 60 fill / calc(15 * var(--k)) calc(20 * var(--k)) calc(15 * var(--k)) calc(20 * var(--k)) / calc(7 * var(--k)) calc(8 * var(--k)) calc(9 * var(--k)) calc(8 * var(--k));
+}
+/* La cornice di ferro: il centro resta vuoto, sotto ci va la pietra (che si ripete senza allungarsi). */
+.ui-pannello {
+  border-image: url("art/ui/pannello.webp?v=2") 80 / calc(40 * var(--k)) / calc(12 * var(--k)) calc(14 * var(--k)) calc(16 * var(--k)) calc(14 * var(--k));
+  background: linear-gradient(180deg, rgba(255, 214, 150, .07), rgba(0, 0, 0, .22)), #17171b url("art/ui/pietra.webp?v=2") 0 0 / 192px 192px;
+  background-clip: padding-box;
+  border-radius: calc(12 * var(--k));
+}
+
+/* Le scritte: oro inciso nella pietra o nel ferro, e nero inciso nell'oro. */
+.ui-inciso { color: #e9c77e; text-shadow: 0 -1px 0 rgba(0, 0, 0, .85), 0 1px 0 rgba(255, 226, 160, .16); }
+.ui-niello { color: #23160a; text-shadow: 0 1px 0 rgba(255, 232, 170, .5), 0 -1px 0 rgba(60, 30, 0, .35); }
+
+/* ───────────────────────── 2. LA SOGLIA ───────────────────────── */
+.menu-sheet.sala {
+  /* --s: l'unità di misura della soglia; cresce con lo schermo, ma guarda sia la larghezza sia l'altezza */
+  --s: clamp(.78px, min(100vw / 390, 100dvh / 800), 1.42px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  justify-items: center;
+  align-items: stretch;
+  gap: 0;
+  overflow: hidden;
+  padding: max(calc(var(--s) * 8), env(safe-area-inset-top)) max(calc(var(--s) * 8), env(safe-area-inset-right)) max(calc(var(--s) * 8), env(safe-area-inset-bottom)) max(calc(var(--s) * 8), env(safe-area-inset-left));
+  background: #07060a;
+  color: var(--parch);
+  -webkit-user-select: none; user-select: none;
+}
+.sala > * { position: relative; z-index: 1; min-width: 0; }
+.sala > .sala-hud { grid-row: 1; } .sala > .sala-logo { grid-row: 2; } .sala > .sala-stage { grid-row: 3; } .sala > .sala-play { grid-row: 4; } .sala > .sala-dock { grid-row: 5; }
+.sala > .sala-bg { position: fixed; inset: 0; z-index: 0; background: #08070a url("art/arene/sala.jpg") 50% 50% / cover no-repeat; filter: none; }
+.sala > .sala-bg::after { display: none; }
+.sala-scene { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 1s ease; }
+.sala-scene.on { opacity: 1; }
+.sala-veil {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg, rgba(5, 4, 8, .78) 0, rgba(5, 4, 8, .28) 11%, rgba(5, 4, 8, 0) 22%, rgba(5, 4, 8, 0) 50%, rgba(5, 4, 8, .5) 72%, rgba(5, 4, 8, .92) 100%),
+    radial-gradient(ellipse at 50% 46%, rgba(5, 4, 8, 0) 40%, rgba(5, 4, 8, .5) 100%);
+}
+.sala .menu-level, .sala-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); pointer-events: none; }
+.sala button { cursor: pointer; font: inherit; -webkit-tap-highlight-color: transparent; }
+.sala button:focus-visible { outline: 2px solid #ffe2a0; outline-offset: 3px; border-radius: 8px; }
+
+/* in alto: il Custode e le sue ricchezze */
+.sala-hud { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: calc(var(--s) * 6); }
+.hud-profile { display: flex; align-items: center; min-width: 0; padding: 0; border: 0; background: none; color: inherit; text-align: left; }
+.hud-med { position: relative; z-index: 2; flex: none; width: calc(var(--s) * 60); aspect-ratio: 88 / 92; }
+.hud-med img, .hud-med svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.hud-med circle { fill: none; stroke: #f3b552; stroke-width: 3.6; stroke-linecap: round; stroke-dasharray: 0 100; transform: rotate(-90deg); transform-origin: 44px 43px; filter: drop-shadow(0 0 2.5px rgba(255, 168, 60, .9)); transition: stroke-dasharray .9s ease; }
+.hud-med b { position: absolute; left: 0; right: 0; top: 46.7%; transform: translateY(-52%); text-align: center; font: 700 calc(var(--s) * 19) / 1 var(--display); color: #f1d08c; text-shadow: 0 -1px 0 rgba(0, 0, 0, .9), 0 1px 0 rgba(255, 226, 160, .2), 0 0 8px rgba(240, 170, 70, .35); }
+.hud-dot { position: absolute; right: 9%; bottom: 13%; width: calc(var(--s) * 8); height: calc(var(--s) * 8); border-radius: 50%; background: #6c6659; box-shadow: 0 0 0 1.5px #1a140c, 0 1px 2px #000; }
+.hud-dot.on { background: #7fd08f; box-shadow: 0 0 0 1.5px #1a140c, 0 0 6px rgba(120, 220, 150, .8); }
+.hud-dot.off { background: #e0705c; }
+.hud-who { --k: calc(var(--s) * .74); display: flex; flex-direction: column; justify-content: center; min-width: 0; min-height: calc(var(--s) * 36); margin-left: calc(var(--s) * -15); padding: calc(var(--s) * 2) calc(var(--s) * 13) calc(var(--s) * 2) calc(var(--s) * 20); }
+.hud-who strong { font: 600 calc(var(--s) * 13.5) / 1.1 var(--display); letter-spacing: .05em; color: #ecd096; text-shadow: 0 -1px 0 #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: calc(var(--s) * 96); }
+.hud-who small { font: italic 500 calc(var(--s) * 11.5) / 1.1 var(--serif); color: var(--house, #b9ae98); white-space: nowrap; }
+.hud-wallet { --k: calc(var(--s) * .74); display: flex; align-items: center; gap: calc(var(--s) * 8); min-height: calc(var(--s) * 36); padding: 0 calc(var(--s) * 11) 0 calc(var(--s) * 5); }
+.hud-coin { display: flex; align-items: center; gap: calc(var(--s) * 2); }
+.hud-coin img { width: calc(var(--s) * 25); height: auto; margin: calc(var(--s) * -4) 0 calc(var(--s) * -5); }
+.hud-coin b { font: 600 calc(var(--s) * 14) / 1 var(--display); color: #f0d596; text-shadow: 0 -1px 0 #000; font-variant-numeric: tabular-nums; }
+
+/* la scritta d'oro */
+.sala-logo { margin-top: calc(var(--s) * -6); height: calc(var(--s) * 46); pointer-events: none; }
+.sala-logo img { display: block; height: calc(var(--s) * 60); width: auto; margin-top: calc(var(--s) * -6); }
+
+/* al centro: la carta in vetrina e il mazzo */
+.sala-stage { width: 100%; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--s) * 4); padding: calc(var(--s) * 4) 0 calc(var(--s) * 8); }
+.sala-hero { flex: 1 1 0; min-height: 0; width: 100%; display: grid; place-items: center; }
+.sala-hero .c3d-scene { cursor: pointer; }
+.sala-hero:empty::before { content: ""; width: calc(var(--s) * 120); aspect-ratio: 1 / 1.44; border-radius: 10px; background: rgba(10, 8, 14, .35); box-shadow: 0 0 0 1px rgba(217, 171, 91, .25); }
+.hero-deck { --k: calc(var(--s) * .8); flex: none; display: flex; align-items: baseline; gap: calc(var(--s) * 7); max-width: 86%; min-height: calc(var(--s) * 27); padding: calc(var(--s) * 2) calc(var(--s) * 24) calc(var(--s) * 3); color: #2b1c0c; }
+.hero-deck span { font: 700 calc(var(--s) * 12.5) / 1.2 var(--display); letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hero-deck small { font: italic 600 calc(var(--s) * 12.5) / 1.2 var(--serif); color: #5a3d1c; white-space: nowrap; }
+
+/* le quattro lastre delle modalità e il grande «Gioca» */
+.sala-play { width: min(100%, calc(var(--s) * 374)); display: flex; flex-direction: column; align-items: center; }
+.mode-pick { width: 100%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: calc(var(--s) * 7); padding: 0 calc(var(--s) * 5); }
+.mode-pick button {
+  --k: calc(var(--s) * .8);
+  border: 0 solid transparent;
+  border-image: url("art/ui/tessera.webp?v=2") 60 72 78 72 fill / calc(20 * var(--k)) calc(24 * var(--k)) calc(26 * var(--k)) calc(24 * var(--k)) / calc(6 * var(--k)) calc(8 * var(--k)) calc(12 * var(--k)) calc(8 * var(--k));
+  background: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--s) * 1);
+  min-height: calc(var(--s) * 46); padding: calc(var(--s) * 4) calc(var(--s) * 3) calc(var(--s) * 5);
+  color: #cdc1a8; transition: transform .18s ease, color .18s ease, filter .18s ease;
+}
+.mode-pick b { font: 600 min(calc(var(--s) * 12), 3.05vw) / 1.1 var(--display); letter-spacing: .06em; text-transform: uppercase; text-shadow: 0 -1px 0 rgba(0, 0, 0, .9), 0 1px 0 rgba(255, 255, 255, .07); }
+.mode-pick small { max-width: 100%; font: italic 500 calc(var(--s) * 11) / 1.1 var(--serif); opacity: .82; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 -1px 0 rgba(0, 0, 0, .8); }
+.mode-pick small:empty { display: none; }
+.mode-pick button:hover { filter: brightness(1.15); }
+.mode-pick button[aria-selected="true"] { border-image-source: url("art/ui/tessera-on.webp?v=2"); color: #ffe6ad; transform: translateY(calc(var(--s) * -3)); }
+.mode-pick button[aria-selected="true"] b { text-shadow: 0 -1px 0 rgba(0, 0, 0, .9), 0 0 10px rgba(255, 180, 70, .55); }
+
+.play-big { position: relative; display: block; width: min(100%, calc(var(--s) * 322)); margin: calc(var(--s) * -1) 0 calc(var(--s) * -4); padding: 0; border: 0; background: none; transition: transform .12s ease, filter .12s ease; }
+.play-big img { position: relative; display: block; width: 100%; height: auto; pointer-events: none; }
+/* la luce delle candele si raccoglie sul tavolo, sotto la targa */
+.play-big::before { content: ""; position: absolute; left: -22%; right: -22%; top: -8%; bottom: -30%; background: radial-gradient(ellipse at 50% 55%, rgba(255, 170, 70, .20), rgba(255, 150, 50, .07) 45%, rgba(255, 150, 50, 0) 70%); pointer-events: none; }
+.play-big:hover { filter: brightness(1.07) saturate(1.05); }
+.play-big:active { transform: translateY(calc(var(--s) * 2)) scale(.985); filter: brightness(.9); }
+/* un riflesso che attraversa la targa ogni tanto, come la fiamma di una candela che si muove */
+.play-shine { position: absolute; left: 6.5%; right: 6.5%; top: 26%; bottom: 17%; border-radius: calc(var(--s) * 8); overflow: hidden; pointer-events: none; mix-blend-mode: screen; }
+.play-shine::before { content: ""; position: absolute; top: -20%; bottom: -20%; left: -40%; width: 34%; background: linear-gradient(100deg, rgba(255, 230, 170, 0) 0, rgba(255, 232, 180, .38) 50%, rgba(255, 230, 170, 0) 100%); transform: skewX(-18deg); animation: sala-shine 7.5s ease-in-out 2.5s infinite; }
+@keyframes sala-shine { 0%, 62% { left: -40%; } 82%, 100% { left: 112%; } }
+
+/* in basso: la mensola d'ardesia coi sei medaglioni */
+.sala-dock { --k: var(--s); width: min(100%, calc(var(--s) * 610)); display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); margin-top: calc(var(--s) * 34); padding: 0 calc(var(--s) * 8) calc(var(--s) * 6); min-height: calc(var(--s) * 40); }
+.dock-btn { position: relative; display: flex; flex-direction: column; align-items: center; margin-top: calc(var(--s) * -30); padding: 0; border: 0; background: none; color: #d9c494; transition: transform .14s ease, filter .14s ease; }
+.dock-btn img { display: block; width: calc(var(--s) * 57); height: auto; pointer-events: none; }
+.dock-name { margin-top: calc(var(--s) * -5); font: 600 clamp(7.4px, 2.4vw, calc(var(--s) * 9.6)) / 1.15 var(--display); letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; text-shadow: 0 -1px 0 rgba(0, 0, 0, .95), 0 1px 0 rgba(255, 226, 160, .1); }
+.dn-corto { display: none; }
+@media (max-width: 560px) { .dn-lungo { display: none; } .dn-corto { display: inline; } }
+.dock-btn:hover { filter: brightness(1.18); transform: translateY(calc(var(--s) * -2)); }
+.dock-btn:active { transform: translateY(calc(var(--s) * 1)) scale(.97); filter: brightness(.9); }
+.sala-dock .mode-badge { position: absolute; top: calc(var(--s) * -3); left: 50%; margin-left: calc(var(--s) * 9); pointer-events: none; }
+.sala-dock .mode-badge:empty { display: none; }
+.sala-dock .new-badge { display: grid; place-items: center; width: calc(var(--s) * 27); height: calc(var(--s) * 28); margin: 0; padding: 0 0 calc(var(--s) * 2); border-radius: 0; background: url("art/ui/cera.webp?v=2") center / 100% 100% no-repeat; color: #ffe9c9; font: 700 calc(var(--s) * 11.5) / 1 var(--display); text-shadow: 0 1px 1px rgba(60, 0, 0, .8); }
+.sala-dock .new-badge .nb-word { display: none; }
+
+/* «Altro»: il foglio del Custode */
+.sala > .sala-more { position: fixed; z-index: 30; }
+.sala-more .sala-lore { margin: 6px 0 14px; font-family: var(--serif); font-style: italic; font-size: 16px; line-height: 1.35; color: var(--parch-2); }
+.sala-more .menu-meta { margin-top: 0; }
+.sala-more .menu-links { flex-wrap: wrap; margin: 12px 0 4px -8px; }
+
+/* l'avviso del registro (veglie contate): un cartiglio in alto */
+.sala .sync-note { position: fixed; z-index: 5; left: 50%; top: calc(var(--s) * 78); transform: translateX(-50%); width: min(92vw, 460px); }
+
+/* la ruota delle impostazioni: un tondo di ferro. Sulla soglia ha il suo posto sotto le ricchezze (#salaGear),
+   così i fogli che si aprono sopra (grimorio, giuramento) la coprono; altrove resta quella che galleggia. */
+.settings-fab { width: 46px; height: 49px; padding: 0 0 4px; border: 0; border-radius: 50%; background: url("art/ui/tondo.webp?v=2") center / 100% 100% no-repeat; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; color: #e9c77e; font-size: 19px; text-shadow: 0 -1px 0 #000; }
+.settings-fab:hover { transform: none; filter: brightness(1.2); }
+html.sala-on .settings-fab { display: none; }
+.sala > .sala-gear { position: absolute; z-index: 2; right: max(calc(var(--s) * 10), env(safe-area-inset-right)); top: calc(max(calc(var(--s) * 8), env(safe-area-inset-top)) + var(--s) * 66); width: calc(var(--s) * 40); height: calc(var(--s) * 42.4); font-size: calc(var(--s) * 17); line-height: 1; }
+
+/* l'intro: prima la sala da sola con la scritta d'oro, poi i pezzi entrano */
+.sala > .sala-hud, .sala > .sala-logo, .sala > .sala-stage, .sala > .sala-play, .sala > .sala-dock, .sala > .sala-gear { transition: opacity 1.1s ease .3s, transform 1.1s ease .3s; }
+body.intro-on .sala > .sala-hud, body.intro-on .sala > .sala-logo, body.intro-on .sala > .sala-stage, body.intro-on .sala > .sala-play, body.intro-on .sala > .sala-dock, body.intro-on .sala > .sala-gear { opacity: 0; transform: translateY(10px); pointer-events: none; }
+.intro h1 { width: min(84vw, 620px); aspect-ratio: 320 / 100; margin: 0 auto; font-size: 0; letter-spacing: 0; background: url("art/ui/logo.webp?v=2") center / contain no-repeat; -webkit-background-clip: border-box; background-clip: border-box; }
+
+/* schermi bassi: via la scritta, la carta ha più aria */
+@media (max-height: 620px) { .sala-logo { display: none; } }
+/* schermi larghi (computer, tablet in orizzontale): la sala si vede tutta; i pezzi restano al centro */
+@media (min-aspect-ratio: 1/1) {
+  .menu-sheet.sala { --s: clamp(.78px, min(100vw / 760, 100dvh / 760), 1.42px); }
+  .sala-hud { padding: 0 calc(var(--s) * 8); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .play-shine::before { animation: none; display: none; }
+  .mode-pick button, .dock-btn, .play-big { transition: none; }
+}
+
+/* ───────────────────────── 3. IL RESTO DEL GIOCO ───────────────────────── */
+/* I tasti: oro per l'azione principale, ferro per le altre. */
+.button.primary, .commit {
+  --k: .86px;
+  border: 0 solid transparent; border-radius: 0; background: none; box-shadow: none;
+  border-image: url("art/ui/placca-oro.webp?v=2") 66 78 84 78 fill / calc(22 * var(--k)) calc(26 * var(--k)) calc(28 * var(--k)) calc(26 * var(--k)) / calc(6 * var(--k)) calc(8 * var(--k)) calc(12 * var(--k)) calc(8 * var(--k));
+  color: #1a0f04; text-shadow: 0 1px 0 rgba(255, 238, 190, .55);
+}
+.button.ghost, .button.danger, .snap, .quiet {
+  --k: .86px;
+  border: 0 solid transparent; border-radius: 0; background: none; box-shadow: none;
+  border-image: url("art/ui/placca.webp?v=2") 66 78 84 78 fill / calc(22 * var(--k)) calc(26 * var(--k)) calc(28 * var(--k)) calc(26 * var(--k)) / calc(6 * var(--k)) calc(8 * var(--k)) calc(12 * var(--k)) calc(8 * var(--k));
+  color: #e9c77e; text-shadow: 0 -1px 0 rgba(0, 0, 0, .85);
+}
+.button.danger { color: #ffab98; }
+.quiet { color: #b9ae98; }
+.button.tiny { --k: .68px; }
+.button, .commit, .snap, .quiet, .icon-button { transition: filter .12s ease, transform .12s ease; }
+.button:not(:disabled):hover, .commit:not(:disabled):hover, .snap:not(:disabled):hover, .quiet:not(:disabled):hover, .icon-button:hover { filter: brightness(1.14); background-color: transparent; }
+.button:not(:disabled):active, .commit:not(:disabled):active, .snap:not(:disabled):active, .quiet:not(:disabled):active, .icon-button:active { transform: translateY(1px); filter: brightness(.9); }
+.button:disabled, .commit:disabled, .snap:disabled, .quiet:disabled { filter: grayscale(.75) brightness(.72); }
+.commit.ready { animation: ui-ready 1.8s ease-in-out infinite; }
+@keyframes ui-ready { 50% { filter: brightness(1.14) drop-shadow(0 0 9px rgba(255, 200, 110, .55)); } }
+
+/* I tasti tondi delle icone */
+.icon-button { border: 0; border-radius: 50%; background: url("art/ui/tondo.webp?v=2") center / 100% 100% no-repeat; color: #e9c77e; padding: 0 0 3px; text-shadow: 0 -1px 0 #000; }
+.icon-button:hover { border: 0; }
+
+/* Le finestre: cornice di ferro, fondo d'ardesia */
+.modal-card, .end-card {
+  --k: 1px;
+  border: calc(11 * var(--k)) solid transparent; border-radius: calc(12 * var(--k));
+  border-image: url("art/ui/pannello.webp?v=2") 80 / calc(40 * var(--k)) / calc(12 * var(--k)) calc(14 * var(--k)) calc(16 * var(--k)) calc(14 * var(--k));
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 190, 100, .13), rgba(0, 0, 0, 0) 62%), linear-gradient(180deg, rgba(10, 9, 13, .25), rgba(10, 9, 13, .62)), #17171b url("art/ui/pietra.webp?v=2") 0 0 / 192px 192px;
+  background-clip: padding-box; box-shadow: none;
+}
+.modal { background: rgba(4, 3, 6, .78); }
+
+/* I riquadri di lato, in partita */
+.inspector, .chronicle {
+  --k: .7px;
+  border: calc(10 * var(--k)) solid transparent; border-radius: calc(12 * var(--k));
+  border-image: url("art/ui/pannello.webp?v=2") 80 / calc(40 * var(--k)) / calc(12 * var(--k)) calc(14 * var(--k)) calc(16 * var(--k)) calc(14 * var(--k));
+  background: linear-gradient(180deg, rgba(10, 9, 13, .5), rgba(10, 9, 13, .72)), #17171b url("art/ui/pietra.webp?v=2") 0 0 / 192px 192px;
+  background-clip: padding-box;
+}
+
+/* Lumi e pegno: due targhe di ferro */
+.lume, .pegno {
+  --k: .8px;
+  border: 0 solid transparent; border-radius: 0; background: none;
+  border-image: url("art/ui/placca.webp?v=2") 66 78 84 78 fill / calc(22 * var(--k)) calc(26 * var(--k)) calc(28 * var(--k)) calc(26 * var(--k)) / calc(6 * var(--k)) calc(8 * var(--k)) calc(12 * var(--k)) calc(8 * var(--k));
+}
+.lume b, .pegno b { color: #f1d596; text-shadow: 0 -1px 0 #000; }
+
+/* Le barre di avanzamento: un solco nel ferro, pieno d'ambra */
+.xp-bar { border-radius: 5px; background: #0a090c; box-shadow: inset 0 1px 2px #000, 0 0 0 1px #2e2a23, 0 1px 0 1px rgba(255, 226, 160, .12); }
+.xp-bar i { border-radius: 5px; background: linear-gradient(180deg, #ffd98a, #e79a2f 55%, #b96a16); box-shadow: 0 0 6px rgba(255, 170, 60, .55); }
+
+/* Le testate delle schermate: una fascia d'ardesia col filo d'oro */
+.journey-head { background: linear-gradient(180deg, rgba(8, 7, 11, .3), rgba(8, 7, 11, .62)), #17171b url("art/ui/pietra.webp?v=2") 0 0 / 192px 192px; border-bottom: 0; box-shadow: 0 1px 0 rgba(217, 171, 91, .4), 0 8px 18px rgba(0, 0, 0, .55); }
+
+/* Le lastrine: filtri, mazzi, atlanti, schede della bottega, livelli della carta, celle del pass */
+.house-chip, .deck-slot, .journey-books button, .shop-tabs button, .evo-dot, .pass-cell {
+  --k: .62px;
+  border: 0 solid transparent; border-radius: 0; background: none; box-shadow: none;
+  border-image: url("art/ui/tessera.webp?v=2") 60 72 78 72 fill / calc(20 * var(--k)) calc(24 * var(--k)) calc(26 * var(--k)) calc(24 * var(--k)) / calc(6 * var(--k)) calc(8 * var(--k)) calc(12 * var(--k)) calc(8 * var(--k));
+  color: #cdc1a8; text-shadow: 0 -1px 0 rgba(0, 0, 0, .85);
+  transition: filter .15s ease, color .15s ease, transform .15s ease;
+}
+.house-chip:hover, .deck-slot:hover, .journey-books button:not(:disabled):hover, .shop-tabs button:hover, .evo-dot:hover { filter: brightness(1.18); color: #efe4cd; }
+.house-chip[aria-checked="true"], .deck-slot.on, .journey-books button[aria-selected="true"], .shop-tabs button[aria-selected="true"], .evo-dot.on, .pass-cell.ready {
+  border-image-source: url("art/ui/tessera-on.webp?v=2");
+  background: none; box-shadow: none; color: #ffe6ad;
+}
+.house-chip[aria-checked="true"] svg { filter: drop-shadow(0 0 5px var(--house)); }
+.deck-slot.add { border-style: solid; filter: sepia(.5) saturate(1.3); }
+.shop-tabs { gap: 8px; padding: 12px 18px 12px; border-bottom: 0; background: linear-gradient(180deg, rgba(8, 7, 11, .45), rgba(8, 7, 11, .7)), #17171b url("art/ui/pietra.webp?v=2") 0 0 / 192px 192px; box-shadow: 0 1px 0 rgba(217, 171, 91, .28), 0 8px 16px rgba(0, 0, 0, .45); position: relative; z-index: 1; }
+.shop-tabs button { border-bottom: 0 solid transparent; padding: 8px 16px 9px; }
+.shop-tabs button[aria-selected="true"] { border-bottom-color: transparent; }
+.pass-cell { --k: .8px; }
+.pass-cell.premium { background: none; color: #f2b566; }
+.pass-cell.ready { animation: ui-ready 2.4s ease-in-out infinite; }
+.evo-dot.on { border-color: transparent; }
+
+/* I riquadri: obiettivi, offerte della bottega, la rovina vista da vicino */
+.obj-item, .shop-offer, .peek .place-card, .pass-head {
+  --k: .6px;
+  border: calc(9 * var(--k)) solid transparent; border-radius: calc(12 * var(--k));
+  border-image: url("art/ui/pannello.webp?v=2") 80 / calc(40 * var(--k)) / calc(12 * var(--k)) calc(14 * var(--k)) calc(16 * var(--k)) calc(14 * var(--k));
+  background: linear-gradient(180deg, rgba(10, 9, 13, .3), rgba(10, 9, 13, .6)), #17171b url("art/ui/pietra.webp?v=2") 0 0 / 192px 192px;
+  background-clip: padding-box; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+.obj-item.ready { box-shadow: none; filter: drop-shadow(0 0 8px rgba(255, 190, 90, .35)); }
+.pass-head { padding: 12px 16px; }
+
+/* Il pannello del mazzo: una parete d'ardesia */
+.deck-panel { background: linear-gradient(180deg, rgba(10, 9, 13, .4), rgba(10, 9, 13, .7)), #17171b url("art/ui/pietra.webp?v=2") 0 0 / 192px 192px; border-right: 0; box-shadow: 1px 0 0 rgba(217, 171, 91, .3), 8px 0 18px rgba(0, 0, 0, .45); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.deck-list li { background: rgba(0, 0, 0, .28); box-shadow: inset 0 1px 0 rgba(0, 0, 0, .5), 0 1px 0 rgba(255, 226, 160, .05); }
+
+/* Evoluzioni: il tasto d'oro, il tasto piccolo sotto la carta, la chiusura */
+.evo-up {
+  --k: .86px;
+  border: 0 solid transparent; border-radius: 0; background: none; box-shadow: none;
+  border-image: url("art/ui/placca-oro.webp?v=2") 66 78 84 78 fill / calc(22 * var(--k)) calc(26 * var(--k)) calc(28 * var(--k)) calc(26 * var(--k)) / calc(6 * var(--k)) calc(8 * var(--k)) calc(12 * var(--k)) calc(8 * var(--k));
+  color: #23160a; text-shadow: 0 1px 0 rgba(255, 232, 170, .5); padding: 12px 24px;
+}
+.evo-up small { background: rgba(35, 22, 10, .2); text-shadow: none; }
+.evo-open-btn {
+  --k: .5px;
+  border: 0 solid transparent; border-radius: 0; background: none; box-shadow: none;
+  border-image: url("art/ui/placca.webp?v=2") 66 78 84 78 fill / calc(22 * var(--k)) calc(26 * var(--k)) calc(28 * var(--k)) calc(26 * var(--k)) / calc(6 * var(--k)) calc(8 * var(--k)) calc(12 * var(--k)) calc(8 * var(--k));
+  color: #e9c77e; padding: 6px 13px;
+}
+.evo-open-btn.can { box-shadow: none; filter: drop-shadow(0 0 6px rgba(255, 200, 110, .5)); }
+.evo-close, .atlas-tools .icon-button { border: 0; background: url("art/ui/tondo.webp?v=2") center / 100% 100% no-repeat; color: #e9c77e; padding: 0 0 3px; }
+
+/* Il grado nel Duello e la barra dell'analisi: targhe di ferro */
+.rank-badge, .review-bar {
+  --k: .8px;
+  border: 0 solid transparent; border-radius: 0; background: none; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none;
+  border-image: url("art/ui/placca.webp?v=2") 66 78 84 78 fill / calc(22 * var(--k)) calc(26 * var(--k)) calc(28 * var(--k)) calc(26 * var(--k)) / calc(6 * var(--k)) calc(8 * var(--k)) calc(12 * var(--k)) calc(8 * var(--k));
+}
+.rank-badge { padding: 7px 14px 8px 10px; }
+.review-bar { padding: 10px 12px 12px 20px; }
+
+/* Le ricchezze nelle testate: le stesse monete della soglia */
+.wallet { align-items: center; gap: 12px; }
+.wallet > span { display: inline-flex; align-items: center; gap: 4px; font-size: 0; }
+.wallet > span::before { content: ""; width: 24px; height: 25px; background: url("art/ui/pegno.webp?v=2") center / contain no-repeat; }
+.wallet > span.amber::before { background-image: url("art/ui/ambra.webp?v=2"); }
+.wallet > span.deck-ink::before { background-image: url("art/ui/inchiostro.webp?v=2"); }
+.wallet > span .ink-ico { display: none; }
+.wallet b { font-size: 18px; margin-left: 0; color: #f0d596; text-shadow: 0 -1px 0 #000; }
+
+/* Il divisorio d'oro sotto i titoli delle finestre */
+.modal-card > h2::after, .end-card > h2::after, .rules-inner > h2::after { content: ""; display: block; height: 14px; margin: 8px auto 2px; background: url("art/ui/fregio.webp?v=2") center / auto 100% no-repeat; }
+
+@media (prefers-reduced-motion: reduce) {
+  .commit.ready, .pass-cell.ready { animation: none; }
+  .button, .commit, .snap, .quiet, .icon-button, .house-chip, .deck-slot { transition: none; }
+}
+
+/* telefoni: il tasto dell'ora ha due righe, la cornice si fa più sottile */
+.commit { line-height: 1.1; }
+@media (max-width: 700px) {
+  .commit { --k: .68px; }
+  .app.playing .commit { font-size: 13.5px; letter-spacing: .07em; }
+}
+@media (max-width: 560px) {
+  .wallet { gap: 7px; }
+  .wallet > span { gap: 2px; }
+  .wallet > span::before { width: 19px; height: 20px; }
+  .wallet b { font-size: 15px; }
+}

@@ -1,9 +1,8 @@
 "use strict";
 
 /*
- * SIGIL — scelta della versione della soglia e modalità anteprima.
+ * SIGIL — modalità anteprima.
  *
- * ?menu=a|b|c   sceglie la versione della schermata principale (resta ricordata).
  * ?anteprima    apre la soglia di un Custode finto, senza intro, senza registro
  *               online e senza salvare nulla: serve a fotografare le schermate
  *               a ogni formato (telefono, Fold, Flip, desktop).
@@ -11,37 +10,14 @@
  */
 (function () {
   var q = new URLSearchParams(location.search);
-  // La "a" (la prima soglia) è stata tolta il 14 nov: chi l'aveva scelta passa alla b.
-  var MENUS = ["b", "c"];
-  var pick = q.get("menu");
-  try {
-    if (pick && MENUS.indexOf(pick) >= 0) localStorage.setItem("sigil-menu", pick);
-    pick = localStorage.getItem("sigil-menu");
-  } catch (e) { /* navigazione privata */ }
-  if (!pick || MENUS.indexOf(pick) < 0) pick = "b";
-  document.documentElement.setAttribute("data-menu", pick);
-
-  // Selettore provvisorio, finché non si sceglie la versione definitiva.
-  var links = document.querySelector(".menu-links");
-  if (links) {
-    var box = document.createElement("span");
-    box.className = "menu-pick";
-    box.innerHTML = "Soglia: " + MENUS.map(function (m) {
-      return '<button type="button" class="text-button' + (m === pick ? " on" : "") + '" data-menu-pick="' + m + '">' + m.toUpperCase() + "</button>";
-    }).join("");
-    links.appendChild(box);
-    box.addEventListener("click", function (e) {
-      var b = e.target.closest("[data-menu-pick]");
-      if (!b) return;
-      try { localStorage.setItem("sigil-menu", b.dataset.menuPick); } catch (x) { /* ignora */ }
-      document.documentElement.setAttribute("data-menu", b.dataset.menuPick);
-      Array.prototype.forEach.call(box.children, function (c) { c.classList.toggle("on", c === b); });
-    });
-  }
+  // Dal 16 nov c'è una sola soglia, la sala del Custode (soglia.js): niente più versioni B e C.
+  document.documentElement.setAttribute("data-menu", "sala");
+  try { localStorage.removeItem("sigil-menu"); } catch (e) { /* navigazione privata */ }
 
   if (!q.has("anteprima")) return;
   window.SIGIL_ANTEPRIMA = true;
-  try { sessionStorage.setItem("sigil-intro", "1"); } catch (e) { /* ignora */ }
+  // ?anteprima&intro lascia vedere anche l'intro
+  try { if (!q.has("intro")) sessionStorage.setItem("sigil-intro", "1"); } catch (e) { /* ignora */ }
   var E = window.Lume;
   var mine = E.CARDS.filter(function (c) { return c.house === "congrega"; }).slice(0, 13)
     .concat(E.CARDS.filter(function (c) { return c.house !== "congrega"; }).slice(0, 7));
@@ -50,7 +26,7 @@
   var fake = {
     sworn: "congrega", house: "congrega", name: "Custode", collection: col,
     deck: mine.slice(0, 12).map(function (c) { return c.id; }),
-    level: 4, xp: 62, gettoni: 48, ambra: 300, wins: 7, losses: 4, ties: 1, streak: 2, bestStreak: 3,
+    level: 4, xp: 62, gettoni: 48, ambra: 300, inchiostro: 85, evo: (function () { var e = {}; mine.slice(0, 12).forEach(function (c, i) { e[c.id] = i < 2 ? 5 : 2; }); return e; })(), wins: 7, losses: 4, ties: 1, streak: 2, bestStreak: 3,
     journey: { unlocked: 5, stars: { 1: 3, 2: 2, 3: 3, 4: 1 } },
     pass: { season: 1, xp: 340, premium: false, claimed: {} }, pvp: { w: 5, l: 3, t: 1, rating: 1043 }, daily: {}, sound: false
   };
