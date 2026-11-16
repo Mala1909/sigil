@@ -665,5 +665,7 @@
   G.onMenu = function () { if (prevMenu) prevMenu(); label(); };
   label();
 
-  window.SigilViaggio = { open: open, LEVELS: LEVELS, CHAPTERS: CHAPTERS };
+  // La soglia (soglia.js) mostra la prossima tappa in una finestra sull'atlante: le servono i luoghi delle tappe.
+  window.SigilViaggio = { open: open, LEVELS: LEVELS, CHAPTERS: CHAPTERS, BOOKS: BOOKS, NODES: NODES, ROUTES: ROUTES, ROMAN: ROMAN,
+    state: J, totalStars: totalStars, showLevel: function (n) { open(); if (LEVELS[n - 1] && n <= J().unlocked) showLevel(n); } };
 })();

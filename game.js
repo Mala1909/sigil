@@ -856,13 +856,14 @@
     $("codexFilters").innerHTML = list.map(function (h) {
       return '<button type="button" class="house-chip" data-house="' + (h.id === "tutte" ? "misto" : h.id) + '" data-filter="' + h.id + '" aria-checked="' + (codexFilter === h.id) + '">' +
         (h.id === "tutte" ? glyph("misto") : glyph(h.id)) + "<span>" + esc(h.name) + "</span></button>";
-    }).join("");
+    }).join("") + (window.SigilCollezione && window.SigilCollezione.sortChips ? window.SigilCollezione.sortChips() : "");
     var h = HOUSE[codexFilter];
     var blurb = $("codexBlurb");
     blurb.setAttribute("data-house", h ? h.id : "misto");
     blurb.innerHTML = h ? "<em>" + esc(h.motto) + "</em> " + esc(h.text) : ALL.length + " carte, cinque casate: le " + E.CARDS.length + " del set base e le " + (ALL.length - E.CARDS.length) + " del Risveglio. Il tuo mazzo ne raccoglie dodici.";
-    var cards = ALL.filter(function (c) { return codexFilter === "tutte" || c.house === codexFilter; })
-      .slice().sort(function (a, b) { return a.cost - b.cost || a.name.localeCompare(b.name); });
+    var cards = ALL.filter(function (c) { return codexFilter === "tutte" || c.house === codexFilter; });
+    cards = window.SigilCollezione && window.SigilCollezione.sortCards ? window.SigilCollezione.sortCards(cards)
+      : cards.slice().sort(function (a, b) { return a.cost - b.cost || a.name.localeCompare(b.name); });
     $("codexGrid").innerHTML = cards.map(function (card) {
       var mine = !window.SigilCollezione || !window.SigilCollezione.ready() || window.SigilCollezione.owns(card.id);
       return '<div class="codex-item" data-evo-open="' + esc(card.id) + '">' + cardHTML(card, { cls: mine ? "" : "locked" }) + (mine ? (card.text ? "<p>" + esc(card.lore) + "</p>" : "") : '<p class="locked-label">Non ancora tua</p>') + "</div>";
@@ -966,6 +967,8 @@
   $("codexButton").addEventListener("click", openCodex);
   $("closeCodex").addEventListener("click", function () { $("codex").setAttribute("hidden", ""); });
   $("codexFilters").addEventListener("click", function (event) {
+    var o = event.target.closest("[data-sort]");
+    if (o && window.SigilCollezione) { window.SigilCollezione.setSort(o.dataset.sort); openCodex(); return; }
     var b = event.target.closest("[data-filter]");
     if (!b) return;
     codexFilter = b.dataset.filter;

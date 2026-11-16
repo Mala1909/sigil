@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap">
   <link rel="stylesheet" href="styles.css?v=43">
-  <link rel="stylesheet" href="ui.css?v=2">
+  <link rel="stylesheet" href="ui.css?v=4">
 </head>
 <body>
   <!-- Simboli: il Sigillo e i sigilli delle cinque casate -->
@@ -167,8 +167,13 @@
       <div class="sala-logo" aria-hidden="true"><img src="art/ui/logo.webp?v=2" alt="" width="320" height="100"></div>
 
       <div class="sala-stage">
-        <div class="sala-hero" id="salaHero" aria-label="La tua carta in vetrina"></div>
-        <button type="button" class="hero-deck ui-pergamena" id="heroDeck"><span id="heroDeckName">Il tuo mazzo</span><small id="heroDeckInfo"></small></button>
+        <!-- LA FINESTRA (17 nov): un quadro che cambia con la modalita scelta (soglia.js). L id salaHero resta. -->
+        <div class="finestra" id="salaHero" role="button" tabindex="0" aria-label="La modalita scelta">
+          <div class="fin-scene" id="finScene"></div>
+          <div class="fin-testo" id="finTesto"></div>
+          <div class="fin-cornice" aria-hidden="true"></div>
+        </div>
+        <button type="button" class="hero-deck ui-pergamena" id="heroDeck" tabindex="-1" aria-hidden="true"><span id="heroDeckName">Il tuo mazzo</span><small id="heroDeckInfo"></small></button>
       </div>
 
       <div class="sala-play">
@@ -211,6 +216,7 @@
         </div>
         <div class="menu-links">
           <button id="rulesFromMenu" class="text-button" type="button">Il giuramento del Custode</button>
+          <button id="moreSettings" class="text-button" type="button">Impostazioni</button>
         </div>
         <details class="seed-details">
           <summary>Evoca una notte già vissuta, dal suo seme</summary>
@@ -329,11 +335,11 @@
   <script src="anteprima.js?v=5"></script>
   <script src="paint.js?v=7"></script>
   <script src="live.js?v=13"></script>
-  <script src="game.js?v=26"></script>
-  <script src="cloud.js?v=9"></script>
-  <script src="viaggio.js?v=18"></script>
+  <script src="game.js?v=27"></script>
+  <script src="cloud.js?v=10"></script>
+  <script src="viaggio.js?v=19"></script>
   <script src="duello.js?v=16"></script>
-  <script src="collezione.js?v=20"></script>
+  <script src="collezione.js?v=21"></script>
   <script src="carta3d.js?v=2"></script>
   <script src="tavolo.js?v=2"></script>
   <script src="effetti.js?v=4"></script>
@@ -341,7 +347,7 @@
   <script src="account.js?v=1"></script>
   <script src="musica.js?v=2"></script>
   <script src="impostazioni.js?v=3"></script>
-  <script src="soglia.js?v=2"></script>
+  <script src="soglia.js?v=3"></script>
   <script>if ("serviceWorker" in navigator && location.protocol !== "file:") { var hadSW = !!navigator.serviceWorker.controller, reloaded = false; navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(function (r) { r.update(); }).catch(function () {}); navigator.serviceWorker.addEventListener("controllerchange", function () { if (hadSW && !reloaded && !document.body.hasAttribute("data-mode")) { reloaded = true; location.reload(); } }); }</script>
 </body>
 </html>

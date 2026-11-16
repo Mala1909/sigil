@@ -37,6 +37,50 @@
   function ownedIds() { var c = S().collection || {}; return Object.keys(c).filter(function (k) { return c[k] && BY_ID[k]; }); }
   function byCost(a, b) { return BY_ID[a].cost - BY_ID[b].cost || BY_ID[a].name.localeCompare(BY_ID[b].name); }
 
+  /* ───────── ordine delle carte (16 nov) ─────────
+   * Costo (dal più basso), Potenza (dalla più forte), Arrivo (dalla più recente).
+   * Toccare di nuovo l'ordine già scelto lo rovescia. Le carte non ancora tue stanno in fondo.
+   * L'arrivo viene dal server (collezione in ordine di acquired_at → s.acquired);
+   * le carte senza data (salvataggi vecchi) contano come le più vecchie. */
+  var SORTS = [{ id: "costo", name: "Costo" }, { id: "potenza", name: "Potenza" }, { id: "arrivo", name: "Arrivo" }];
+  function sortState() {
+    var o = S().cardSort;
+    if (!o || !SORTS.some(function (x) { return x.id === o.by; })) o = { by: "costo", rev: false };
+    return o;
+  }
+  function setSort(by) {
+    var s = S(), o = sortState();
+    s.cardSort = o.by === by ? { by: by, rev: !o.rev } : { by: by, rev: false };
+    G.persist();
+  }
+  function sortCards(list) {
+    var o = sortState(), rank = {};
+    (S().acquired || []).forEach(function (id, i) { rank[id] = i; });
+    var dir = o.rev ? -1 : 1;
+    return list.slice().sort(function (a, b) {
+      var ha = owns(a.id), hb = owns(b.id);
+      if (o.by === "arrivo" && ha !== hb) return ha ? -1 : 1;
+      var d = 0;
+      if (o.by === "potenza") d = (b.power - a.power) * dir;
+      else if (o.by === "arrivo") d = ((b.id in rank ? rank[b.id] : -1) - (a.id in rank ? rank[a.id] : -1)) * dir;
+      else d = (a.cost - b.cost) * dir;
+      return d || a.cost - b.cost || b.power - a.power || a.name.localeCompare(b.name);
+    });
+  }
+  function sortChips() {
+    var o = sortState();
+    var hint = { costo: ["dal più basso", "dal più alto"], potenza: ["dalla più forte", "dalla più debole"], arrivo: ["dalla più recente", "dalla più vecchia"] };
+    return '<span class="chip-sep"></span><span class="sort-label">Ordina</span>' + SORTS.map(function (x) {
+      var on = o.by === x.id;
+      return '<button type="button" class="house-chip sort-chip" data-house="misto" data-sort="' + x.id + '" aria-checked="' + on + '" title="' + x.name + ": " + hint[x.id][on && o.rev ? 1 : 0] + '"><span>' + x.name + "</span>" + (on ? '<i class="sort-dir" aria-hidden="true">' + (o.rev ? "↑" : "↓") + "</i>" : "") + "</button>";
+    }).join("");
+  }
+  function noteAcquired(id) {
+    var s = S();
+    if (!Array.isArray(s.acquired)) s.acquired = [];
+    if (s.acquired.indexOf(id) < 0) s.acquired.push(id);
+  }
+
   function starter(house) {
     var mine = E.CARDS.filter(function (c) { return c.house === house; }).map(function (c) { return c.id; }).sort(byCost);
     var base = BASE.filter(function (id) { return BY_ID[id].house !== house; }).slice(0, 7);
@@ -89,6 +133,7 @@
       if (!locked.length) { s.gettoni = (s.gettoni || 0) + 3; rewards.push({ type: "pegni", amount: 3, reason: reason }); continue; }
       var pick = locked.splice(Math.floor(Math.random() * locked.length), 1)[0];
       s.collection[pick.id] = 1;
+      noteAcquired(pick.id);
       s.fresh = s.fresh || {};
       s.fresh[pick.id] = 1;
       rewards.push({ type: "card", id: pick.id, reason: reason });
@@ -436,11 +481,11 @@
       return '<button type="button" class="house-chip" data-house="misto" data-show="' + c.id + '" aria-checked="' + (filter.show === c.id) + '"><span>' + c.name + "</span></button>";
     }).join("") + '<span class="chip-sep"></span>' + [{ id: "tutte", name: "Ogni casata" }].concat(E.HOUSES).map(function (h) {
       return '<button type="button" class="house-chip" data-house="' + (h.id === "tutte" ? "misto" : h.id) + '" data-hfilter="' + h.id + '" aria-checked="' + (filter.house === h.id) + '">' + G.glyph(h.id === "tutte" ? "misto" : h.id) + "<span>" + G.esc(h.name) + "</span></button>";
-    }).join("");
+    }).join("") + sortChips();
 
     var inDeck = {};
     deck.forEach(function (id) { inDeck[id] = 1; });
-    var list = ALL.slice().sort(function (a, b) { return byCost(a.id, b.id); }).filter(function (c) {
+    var list = sortCards(ALL).filter(function (c) {
       if (filter.house !== "tutte" && c.house !== filter.house) return false;
       if (filter.show === "mie" && !owns(c.id)) return false;
       if (filter.show === "nuove" && owns(c.id)) return false;
@@ -499,6 +544,7 @@
     if ((t = e.target.closest("#deckBack"))) { closeDeck(); return; }
     if ((t = e.target.closest("[data-show]"))) { filter.show = t.dataset.show; paintDeck(); return; }
     if ((t = e.target.closest("[data-hfilter]"))) { filter.house = t.dataset.hfilter; paintDeck(); return; }
+    if ((t = e.target.closest("[data-sort]"))) { setSort(t.dataset.sort); paintDeck(); return; }
     if ((t = e.target.closest("[data-remove]"))) {
       s.deck = s.deck.filter(function (id) { return id !== t.dataset.remove; });
       G.persist(); paintDeck(); return;
@@ -602,6 +648,9 @@
   window.SigilCollezione = {
     ready: ready,
     owns: owns,
+    sortCards: sortCards,
+    sortChips: sortChips,
+    setSort: setSort,
     needOath: needOath,
     deckForPlay: deckForPlay,
     grant: grant,

@@ -10,7 +10,7 @@
 // Pagina, script e stili si chiedono sempre al sito (cache "no-cache": il browser
 // ricontrolla anche se GitHub Pages dice di tenerli 10 minuti), così l'app non
 // resta mai indietro di una versione.
-var CACHE = "sigil-v37";
+var CACHE = "sigil-v39";
 var CORE = ["./", "index.html", "styles.css", "ui.css", "manifest.webmanifest", "icon.svg", "icons/icon-192.png",
   "engine.js", "paint.js", "live.js", "game.js", "cloud.js", "viaggio.js", "duello.js", "collezione.js", "carta3d.js", "tavolo.js", "effetti.js", "negozio.js", "account.js", "anteprima.js", "musica.js", "impostazioni.js", "soglia.js"];
 

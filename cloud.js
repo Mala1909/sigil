@@ -61,6 +61,7 @@
       Object.keys(col).forEach(function (id) { if (!s.collection[id]) s.fresh[id] = 1; });
     }
     s.collection = col;
+    s.acquired = (p.collection || []).slice(); // in ordine di arrivo (acquired_at)
     s.sworn = p.house;
     s.house = p.house;
     s.name = p.name;
