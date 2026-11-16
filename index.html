@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap">
   <link rel="stylesheet" href="styles.css?v=43">
-  <link rel="stylesheet" href="ui.css?v=4">
+  <link rel="stylesheet" href="ui.css?v=5">
 </head>
 <body>
   <!-- Simboli: il Sigillo e i sigilli delle cinque casate -->
@@ -167,11 +167,21 @@
       <div class="sala-logo" aria-hidden="true"><img src="art/ui/logo.webp?v=2" alt="" width="320" height="100"></div>
 
       <div class="sala-stage">
-        <!-- LA FINESTRA (17 nov): un quadro che cambia con la modalita scelta (soglia.js). L id salaHero resta. -->
+        <!-- LA FINESTRA (17 nov): un'apertura dipinta a rotazione (finestra, libro, vetrata, arazzo) e dentro la scena
+             della modalita scelta (soglia.js). L id salaHero resta. -->
         <div class="finestra" id="salaHero" role="button" tabindex="0" aria-label="La modalita scelta">
-          <div class="fin-scene" id="finScene"></div>
+          <div class="fin-vista" id="finVista">
+            <div class="fin-tela" id="finTela">
+              <div class="fin-foro" id="finForo">
+                <div class="fin-scene" id="finScene"></div>
+                <div class="fin-pieghe" id="finPieghe" aria-hidden="true"></div>
+                <div class="fin-pagina" id="finPagina" aria-hidden="true"></div>
+              </div>
+              <img class="fin-telaio" id="finTelaio" alt="" draggable="false">
+              <div class="fin-luce" id="finLuce" aria-hidden="true"></div>
+            </div>
+          </div>
           <div class="fin-testo" id="finTesto"></div>
-          <div class="fin-cornice" aria-hidden="true"></div>
         </div>
         <button type="button" class="hero-deck ui-pergamena" id="heroDeck" tabindex="-1" aria-hidden="true"><span id="heroDeckName">Il tuo mazzo</span><small id="heroDeckInfo"></small></button>
       </div>
@@ -346,8 +356,8 @@
   <script src="negozio.js?v=8"></script>
   <script src="account.js?v=1"></script>
   <script src="musica.js?v=2"></script>
-  <script src="impostazioni.js?v=3"></script>
-  <script src="soglia.js?v=3"></script>
+  <script src="impostazioni.js?v=4"></script>
+  <script src="soglia.js?v=4"></script>
   <script>if ("serviceWorker" in navigator && location.protocol !== "file:") { var hadSW = !!navigator.serviceWorker.controller, reloaded = false; navigator.serviceWorker.register("sw.js", { updateViaCache: "none" }).then(function (r) { r.update(); }).catch(function () {}); navigator.serviceWorker.addEventListener("controllerchange", function () { if (hadSW && !reloaded && !document.body.hasAttribute("data-mode")) { reloaded = true; location.reload(); } }); }</script>
 </body>
 </html>
