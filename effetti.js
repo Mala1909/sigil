@@ -41,6 +41,10 @@
 
   var HOUSE = { guardia: [1, .72, .32], selva: [.5, .95, .55], congrega: [.78, .55, 1], tesoro: [.35, .85, .95], fondo: [1, .45, .32], misto: [.95, .88, .75] };
   var GOLD = [1, .78, .36], CURSE = [.66, .42, 1];
+  // Quanto durano (secondi) la carta che si ricompone quando si rivela e quando la posi, per peso
+  // (leggera, media, grossa), e la maledizione. Più alti = più lenti. game.js rivela una carta ogni
+  // 900 ms: le rivelazioni si accavallano appena, e reggono anche se il tavolo viene ridisegnato.
+  var T_REVEAL = [.88, .96, 1.04], T_PLACE = [.74, .8, .88], T_CURSE = 1;
 
   /* ───────── i due strati ───────── */
   // Due livelli separati: la luce si fonde "a schermo" con tutto quello che c'è sotto (per questo il
@@ -544,7 +548,7 @@
           drawShards(gl, L.shard, GEO[e.geo].l, e, k, formAlpha(e, k));
           var t = e.to, c = e.col, P9 = L.quad;
           if (e.mode === 2) { // faville viola che salgono dalle crepe
-            if (k > .1 && k < .7 && Math.random() < .45) spark(t.x + rnd(-.5, .5) * t.w, t.y + rnd(-.5, .5) * t.h, rnd(-25, 25), rnd(-110, -40), mix(c, [.9, .8, 1]), rnd(.3, .5), { g: -30, w: 1.4 });
+            if (k > .1 && k < .7 && Math.random() < .3) spark(t.x + rnd(-.5, .5) * t.w, t.y + rnd(-.5, .5) * t.h, rnd(-25, 25), rnd(-110, -40), mix(c, [.9, .8, 1]), rnd(.3, .5), { g: -30, w: 1.4 });
             break;
           }
           setQuad(gl, P9, QL); gl.uniform2f(P9.u.u_aux, t.w + 36, t.h + 36);
@@ -563,7 +567,7 @@
                 drawQuad(gl, P9, e, 8, 0, lx, ly, len, sl, cs, ang);
                 var ux = rnd(-.5, .5) * len * .68; sx = lx + Math.cos(ang) * ux; sy = ly + Math.sin(ang) * ux;
               }
-              if (f > 0 && f < 1 && Math.random() < (e.big ? 1 : .65)) {
+              if (f > 0 && f < 1 && Math.random() < (e.big ? .7 : .45)) {
                 if (st === 5) spark(sx, sy, rnd(-30, 30), rnd(-190, -70), mix(c, [1, .8, .5]), rnd(.3, .55), { g: -60, w: 1.5 });       // braci che salgono
                 else if (st === 2) spark(sx, sy, rnd(60, 150) * ((e.seed * .37) % 1 < .5 ? -1 : 1), rnd(-60, 20), mix(c, [1, .95, .85]), rnd(.25, .45), { g: 60, w: 1.4 });
                 else spark(sx, sy, rnd(-50, 50), rnd(-130, -30), mix(c, [1, .95, .85]), rnd(.22, .42), { g: 260, w: 1.4 });
@@ -577,7 +581,7 @@
             if (I2 > 0) { gl.uniform1f(P9.u.u_p, 2); drawQuad(gl, P9, e, 9, 0, t.x, t.y, t.w + 36, t.h + 36, [c[0] * I2, c[1] * I2, c[2] * I2]); }
             // qualche scintilla resta indietro lungo la scia
             var m2 = Math.max(0, Math.min(1, (k - .1) / .55));
-            if (k > .08 && k < .7 && Math.random() < .6) spark(e.from.x + (t.x - e.from.x) * m2 + rnd(-14, 14), e.from.y + (t.y - e.from.y) * m2 + rnd(-14, 14), rnd(-40, 40), rnd(-40, 40), mix(c, [1, .95, .85]), rnd(.2, .38), { g: 90, w: 1.4 });
+            if (k > .08 && k < .7 && Math.random() < .4) spark(e.from.x + (t.x - e.from.x) * m2 + rnd(-14, 14), e.from.y + (t.y - e.from.y) * m2 + rnd(-14, 14), rnd(-40, 40), rnd(-40, 40), mix(c, [1, .95, .85]), rnd(.2, .38), { g: 90, w: 1.4 });
           }
           break;
         }
@@ -743,29 +747,45 @@
     return e;
   }
   // la carta vera è nascosta mentre le tessere lavorano, poi riappare sotto di loro con un ultimo bagliore
-  function veil(el, secs, back) {
+  var veiled = {};
+  function veil(el, secs, back, uid, done) {
     if (!el.animate) return;
-    var op = getComputedStyle(el).opacity, T = secs + .1, a = Math.max(.05, (secs - back) / T), b = (secs - back * .45) / T;
-    el.animate([
+    if (uid && !done) veiled[uid] = { t0: performance.now(), secs: secs, back: back };
+    el._fxVeil = true;
+    var op = getComputedStyle(el).opacity, T = secs + .16, a = Math.max(.05, (secs - back) / T), b = (secs - back * .45) / T;
+    var main = el.animate([
       { opacity: 0, filter: "brightness(1.25)", offset: 0 }, { opacity: 0, filter: "brightness(1.25)", offset: a },
       { opacity: op, filter: "brightness(1.25)", offset: b }, { opacity: op, filter: "brightness(1.25)", offset: secs / T }, { opacity: op, filter: "brightness(1)", offset: 1 }
     ], { duration: T * 1000 });
+    if (done) main.currentTime = done * 1000;
     var marks = el.querySelectorAll(".p-power, .p-cost");
-    for (var i = 0; i < marks.length; i++) marks[i].animate([{ transform: "scale(0)" }, { transform: "scale(1.35)", offset: .55 }, { transform: "scale(1)" }],
-      { duration: 170, delay: (secs - back * .6) * 1000, fill: "backwards", easing: "cubic-bezier(.2,.8,.3,1)" });
+    for (var i = 0; i < marks.length; i++) {
+      var pop = marks[i].animate([{ transform: "scale(0)" }, { transform: "scale(1.35)", offset: .55 }, { transform: "scale(1)" }],
+        { duration: 240, delay: (secs - back * .6) * 1000, fill: "backwards", easing: "cubic-bezier(.2,.8,.3,1)" });
+      if (done) pop.currentTime = done * 1000;
+    }
   }
-  // rivelazione: la carta si spacca in tessere, la riga di luce la percorre e la ricompone
+  // il tavolo è stato ridisegnato: le carte che si stanno ancora ricomponendo tornano nascoste, dal punto giusto
+  function reveil() {
+    Object.keys(veiled).forEach(function (uid) {
+      var v = veiled[uid], done = (performance.now() - v.t0) / 1000;
+      if (done >= v.secs + .16) { delete veiled[uid]; return; }
+      var el = pieceAt(uid);
+      if (el && !el._fxVeil) { el.classList.remove("fresh"); veil(el, v.secs, v.back, uid, done); }
+    });
+  }
+  function revealTime(cost) { return T_REVEAL[cost >= 5 ? 2 : cost >= 3 ? 1 : 0]; }
   function reveal(c, i) {
     var el = pieceAt(c.uid);
     if (!el || frozen != null) return;
     el.classList.remove("fresh"); // niente giravolta: la misura deve essere quella vera
     var rc = el.getBoundingClientRect();
     if (!rc.width) return;
-    var col = HOUSE[c.house] || GOLD, st = STYLE[c.house] || 0, d = i * .05;
-    var tier = c.cost >= 5 ? 2 : c.cost >= 3 ? 1 : 0, big = tier === 2, dur = [.46, .5, .52][tier]; // leggera, media, grossa: coda compresa sta nei 620 ms tra una carta e la successiva
+    var col = HOUSE[c.house] || GOLD, st = STYLE[c.house] || 0, d = i * .12;
+    var tier = c.cost >= 5 ? 2 : c.cost >= 3 ? 1 : 0, big = tier === 2, dur = T_REVEAL[tier]; // leggera, media, grossa
     var b = box(rc), W = Math.max(b.w, 56), base = rc.bottom - 2, lock = d + dur * .78;
     form({ mode: 0, style: st, to: b, col: col, amp: W * [.09, .12, .2][tier], big: big, start: c.side !== "rival", dur: dur, delay: d }, el, 1.3);
-    veil(el, d + dur, dur * .2);
+    veil(el, d + dur, dur * .2, c.uid);
     // quando l'ultima tessera va a posto: qualche scintilla dal bordo (e un'onda a terra per le carte grosse)
     for (var s2 = 0; s2 < [5, 9, 22][tier]; s2++) { var an = rnd(Math.PI * 1.05, Math.PI * 1.95), sp = rnd(120, big ? 380 : 220); spark(b.x + rnd(-W * .5, W * .5), base, Math.cos(an) * sp * .7, Math.sin(an) * sp, col, rnd(.35, .7), { delay: lock, g: 420 }); }
     if (big) {
@@ -783,7 +803,7 @@
       if (live && live.width) {
         // la carta si incrina dal lato da cui arriva il colpo; più forte la maledizione, più si scuote
         var b = box(live);
-        form({ mode: 2, to: b, from: { x: from ? from[0] : b.x, y: from ? from[1] : b.y - b.h, w: 1, h: 1 }, col: col, amp: Math.max(b.w, 56) * (.07 + .025 * Math.min(4, power || 1)), dur: .62, marks: true }, el, 1.3);
+        form({ mode: 2, to: b, from: { x: from ? from[0] : b.x, y: from ? from[1] : b.y - b.h, w: 1, h: 1 }, col: col, amp: Math.max(b.w, 56) * (.07 + .025 * Math.min(4, power || 1)), dur: T_CURSE, marks: true }, el, 1.3);
       } else react(el, "fx-hurt");
       for (var i = 0; i < 2; i++) sprite({ tex: "fumo", x: p[0] + rnd(-10, 10), y: p[1] + rnd(-10, 10), vx: rnd(-90, 90), vy: rnd(-90, -30), w: W * 1.3, h: W * 1.3, s0: .4, s1: 1.4, rot: Math.random() * 6, spin: rnd(-.8, .8), fin: .15, fout: .7, dur: rnd(1, 1.5), a: .18, dis: .6, delay: .1 + i * .08 });
       for (var j = 0; j < 2; j++) add({ kind: "smoke", x: p[0] + rnd(-12, 12), y: p[1] + rnd(-12, 12), vx: rnd(-40, 40), vy: rnd(10, 50), size: W * rnd(.9, 1.4), col: [.5, .2, .9], dur: rnd(1, 1.4), delay: .12 });
@@ -868,12 +888,12 @@
     var A = from && from.width ? center(from) : [B[0], window.innerHeight - 40];
     if (OK && frozen == null) {
       var fw = from && from.width ? Math.min(from.width, to.width * 2.6) : to.width * 1.4, dist = Math.hypot(A[0] - B[0], A[1] - B[1]);
-      var st = STYLE[info.house] || 0, tier = info.cost >= 5 ? 2 : info.cost >= 3 ? 1 : 0, dur = [.46, .5, .54][tier];
+      var st = STYLE[info.house] || 0, tier = info.cost >= 5 ? 2 : info.cost >= 3 ? 1 : 0, dur = T_PLACE[tier];
       var W = Math.max(to.width, 56), base = to.bottom - 2;
       // la curva del volo: la Guardia va dritta, la Selva fa un giro largo, il Tesoro quasi un filo teso
       form({ mode: 1, style: st, to: box(to), from: { x: A[0], y: A[1], w: fw, h: fw * to.height / to.width }, col: col, edge: "rgb(" + Math.round(col[0] * 255) + "," + Math.round(col[1] * 255) + "," + Math.round(col[2] * 255) + ")",
         amp: Math.min(60, 16 + dist * .07), bend: (A[0] > B[0] ? -1 : 1) * Math.min(70, dist * .12) * [1, 0, 2.2, .6, .25, 1.3][st], dur: dur }, el, Math.min(2, fw / to.width));
-      veil(el, dur, dur * .18);
+      veil(el, dur, dur * .18, el.getAttribute("data-uid"));
       sprite({ tex: "anello", x: B[0], y: base, w: W * [1.8, 2.2, 3][tier], h: W * [1.8, 2.2, 3][tier] * .38, s0: .2, s1: 1, fin: .03, fout: .7, dur: .42, tint: col, tintAmt: .5, a: [.4, .55, .75][tier], delay: dur * .8 });
       for (var i = 0; i < [5, 8, 16][tier]; i++) { var an = rnd(Math.PI * 1.1, Math.PI * 1.9), sp = rnd(70, tier === 2 ? 260 : 180); spark(B[0] + rnd(-W * .4, W * .4), base, Math.cos(an) * sp, Math.sin(an) * sp * .4, mix(col, [1, .9, .7]), rnd(.25, .45), { g: 300, w: 1.6, delay: dur * .8 }); }
       return;
@@ -927,6 +947,7 @@
     var m = G.match && G.match();
     var cur = snapshot();
     if (!cur || m !== prevMatch || !prev || !OK) { prev = cur; prevMatch = m; return; }
+    reveil();
     var revealed = [], deltas = [];
     Object.keys(cur.map).forEach(function (uid) {
       var a = prev.map[uid], b = cur.map[uid];
@@ -950,10 +971,11 @@
     deltas.forEach(function (dl, i) {
       var curse = dl.d < 0, T = center(dl.card.rect), r = dl.card.rect;
       var src = revealed.filter(function (x) { return x.uid !== dl.card.uid; });
-      var S = null, col = curse ? CURSE : GOLD;
+      var S = null, col = curse ? CURSE : GOLD, wait = .12 + i * .08;
       if (src.length) {
         src.sort(function (x, y) { return (x.lane === dl.card.lane ? 0 : 1) - (y.lane === dl.card.lane ? 0 : 1); });
         S = center(src[0].rect);
+        wait = revealTime(src[0].cost) * .8 + i * .08; // la carta che lancia il colpo deve prima essersi ricomposta
         if (curse && HOUSE[src[0].house]) { var hc = HOUSE[src[0].house]; col = [(hc[0] + CURSE[0] * 2) / 3, (hc[1] + CURSE[1] * 2) / 3, (hc[2] + CURSE[2] * 2) / 3]; } // un'ombra del colore di chi la lancia
         if (!curse && HOUSE[src[0].house]) { var h = HOUSE[src[0].house]; col = [(h[0] + GOLD[0]) / 2, (h[1] + GOLD[1]) / 2, (h[2] + GOLD[2]) / 2]; }
       } else S = plaqueCenter(dl.card.lane);
@@ -961,8 +983,8 @@
       var hit = function () { impact(T, r, curse, col, dl.card.uid, S, Math.abs(dl.d)); number(T, label, curse, dl.card.lane, dl.card.side); };
       if (!S || Math.hypot(S[0] - T[0], S[1] - T[1]) < 14) { setTimeout(hit, i * 70); return; }
       var C = [(S[0] + T[0]) / 2 + (T[1] - S[1]) * .2, (S[1] + T[1]) / 2 - Math.max(50, Math.abs(T[0] - S[0]) * .28 + Math.abs(T[1] - S[1]) * .1)];
-      add({ kind: "beam", a: S, b: T, c: C, col: col, curse: curse, travel: .38, dur: .9, delay: .12 + i * .08 });
-      setTimeout(hit, (.12 + i * .08 + .38) * 1000); // il colpo a tempo, anche se i fotogrammi rallentano
+      add({ kind: "beam", a: S, b: T, c: C, col: col, curse: curse, travel: .38, dur: .9, delay: wait });
+      setTimeout(hit, (wait + .38) * 1000); // il colpo a tempo, anche se i fotogrammi rallentano
     });
     prev = cur;
   }

@@ -711,7 +711,7 @@
       E.step(match);
       blip("flip");
       pump();
-    }, reduced() ? 80 : 620);
+    }, reduced() ? 80 : 900); // il tempo di vedere la carta ricomporsi (effetti.js, T_REVEAL)
   }
   function skip() {
     if (!match || match.phase !== "reveal") return;
