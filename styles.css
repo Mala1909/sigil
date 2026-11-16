@@ -2852,32 +2852,60 @@ body[data-mode] .arena-media { filter: blur(3px) brightness(.62) saturate(.9); t
     url("art/arene/tavolo.jpg") center / cover no-repeat,
     linear-gradient(160deg, #2a251d, #1b1813 45%, #120f0c); }
 
-/* ───────── Effetti tra le carte (effetti.js) ───────── */
+/* ───────── Effetti tra le carte (effetti.js, seconda versione) ───────── */
 .fx-layer { position: fixed; inset: 0; z-index: 14; pointer-events: none; }
 .fx-layer canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.fx-dark-layer, .fx-light-layer { opacity: 0; transition: opacity .15s; }
+.fx-dark-layer.on, .fx-light-layer.on { opacity: 1; }
+.fx-light-layer { mix-blend-mode: screen; }
 .fx-num {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  font-family: var(--display);
-  font-weight: 700;
-  font-size: 30px;
-  letter-spacing: .02em;
-  pointer-events: none;
-  animation: fxNum 1.25s cubic-bezier(.2, .8, .2, 1) forwards;
+  position: absolute; left: 0; top: 0; z-index: 2;
+  font-family: var(--display); font-weight: 700; font-size: 34px; letter-spacing: .02em; line-height: 1;
+  pointer-events: none; will-change: transform, opacity;
+  -webkit-text-stroke: 1.5px rgba(20, 10, 2, .85); paint-order: stroke fill;
 }
-.fx-num.up { color: #ffe3a0; text-shadow: 0 0 12px rgba(255, 190, 80, .9), 0 0 28px rgba(255, 160, 40, .6), 0 2px 2px #000; }
-.fx-num.down { color: #e2ccff; text-shadow: 0 0 12px rgba(160, 100, 255, .95), 0 0 28px rgba(120, 60, 220, .6), 0 2px 2px #000; }
-@keyframes fxNum {
-  0% { opacity: 0; transform: translate(-50%, -50%) scale(.4); }
-  18% { opacity: 1; transform: translate(-50%, -70%) scale(1.25); }
-  35% { transform: translate(-50%, -80%) scale(1); }
-  100% { opacity: 0; transform: translate(-50%, -190%) scale(.9); }
+.fx-num.up { color: #fff0c4; text-shadow: 0 0 10px rgba(255, 200, 90, .95), 0 0 26px rgba(255, 160, 40, .75), 0 0 50px rgba(255, 140, 30, .45); }
+.fx-num.down { color: #efe2ff; -webkit-text-stroke-color: rgba(30, 6, 50, .9); text-shadow: 0 0 10px rgba(170, 110, 255, .95), 0 0 26px rgba(120, 60, 230, .75), 0 0 50px rgba(90, 30, 200, .45); }
+/* le carte reagiscono */
+.piece.fx-boost { animation: fxBoost .75s cubic-bezier(.2, .8, .2, 1); z-index: 3; }
+@keyframes fxBoost {
+  0% { transform: none; }
+  25% { transform: translateY(-9px) scale(1.12); filter: brightness(1.55) saturate(1.2); box-shadow: 0 0 0 2px rgba(255, 220, 140, .95), 0 0 26px rgba(255, 190, 80, .9), 0 14px 22px rgba(0, 0, 0, .55); }
+  70% { transform: translateY(-3px) scale(1.04); filter: brightness(1.15); box-shadow: 0 0 0 1px rgba(255, 220, 140, .5), 0 0 14px rgba(255, 190, 80, .4); }
+  100% { transform: none; }
 }
-.piece.fx-boost { animation: fxBoost .6s ease-out; }
-@keyframes fxBoost { 30% { transform: scale(1.12); filter: brightness(1.5) drop-shadow(0 0 10px rgba(255, 200, 90, .9)); } }
-.piece.fx-hurt { animation: fxHurt .5s ease-out; }
-@keyframes fxHurt { 20% { transform: translateX(-4px) rotate(-2deg); filter: brightness(.7) saturate(.5) hue-rotate(40deg); } 45% { transform: translateX(4px) rotate(2deg); } 70% { transform: translateX(-2px); } }
-.app.fx-quake { animation: fxQuake .4s ease-out; }
-@keyframes fxQuake { 15% { transform: translate(3px, -2px); } 35% { transform: translate(-3px, 2px); } 55% { transform: translate(2px, 1px); } 75% { transform: translate(-1px, -1px); } }
-@media (max-width: 699px) { .fx-num { font-size: 24px; } }
-@media (prefers-reduced-motion: reduce) { .fx-layer { display: none; } .piece.fx-boost, .piece.fx-hurt, .app.fx-quake { animation: none; } }
+.piece.fx-hurt { animation: fxHurt .7s ease-out; z-index: 3; }
+@keyframes fxHurt {
+  0% { transform: none; }
+  12% { transform: translate(-5px, 2px) rotate(-3deg) scale(.96); filter: brightness(.55) saturate(.3) hue-rotate(35deg); box-shadow: 0 0 0 2px rgba(170, 110, 255, .9), 0 0 24px rgba(130, 70, 240, .9); }
+  28% { transform: translate(5px, -1px) rotate(2.5deg) scale(.97); }
+  44% { transform: translate(-3px, 1px) rotate(-1.5deg); filter: brightness(.7) saturate(.5); }
+  60% { transform: translate(2px, 0) rotate(1deg); }
+  100% { transform: none; filter: none; }
+}
+/* la carta si alza in 3D, si gira verso di te e sbatte sul tavolo */
+.piece.fx-arrive { animation: fxArrive .55s cubic-bezier(.25, .9, .25, 1); z-index: 3; }
+@keyframes fxArrive {
+  0% { transform: perspective(500px) translateY(-26px) rotateX(38deg) scale(1.35); filter: brightness(2.1) saturate(1.2); box-shadow: 0 30px 30px rgba(0, 0, 0, .6); }
+  55% { transform: perspective(500px) translateY(2px) rotateX(-4deg) scale(.96); filter: brightness(1.35); box-shadow: 0 2px 4px rgba(0, 0, 0, .8); }
+  78% { transform: perspective(500px) translateY(-1px) rotateX(1deg) scale(1.01); }
+  100% { transform: none; filter: none; }
+}
+.piece.fx-arrive-big { animation: fxArriveBig .75s cubic-bezier(.25, .9, .25, 1); z-index: 4; }
+@keyframes fxArriveBig {
+  0% { transform: perspective(500px) translateY(-70px) rotateX(48deg) rotate(-6deg) scale(1.8); filter: brightness(2.6) saturate(1.3); box-shadow: 0 60px 50px rgba(0, 0, 0, .65); }
+  50% { transform: perspective(500px) translateY(4px) rotateX(-6deg) scale(.93); filter: brightness(1.5); box-shadow: 0 2px 4px rgba(0, 0, 0, .8); }
+  70% { transform: perspective(500px) translateY(-3px) rotateX(2deg) scale(1.03); }
+  100% { transform: none; filter: none; }
+}
+.app.playing .score.fx-take { animation: fxTake .45s cubic-bezier(.2, 1.6, .3, 1); }
+@keyframes fxTake { 0% { transform: scale(1); } 35% { transform: scale(1.45); filter: brightness(1.8); box-shadow: 0 0 24px currentColor, 0 0 0 3px currentColor; } 100% { transform: scale(1); } }
+.app.fx-quake { animation: fxQuake .45s ease-out; }
+@keyframes fxQuake { 10% { transform: translate(4px, -3px); } 25% { transform: translate(-4px, 3px); } 40% { transform: translate(3px, 2px); } 55% { transform: translate(-2px, -2px); } 75% { transform: translate(1px, 1px); } }
+@media (max-width: 699px) { .fx-num { font-size: 26px; } }
+@media (prefers-reduced-motion: reduce) { .fx-layer { display: none; } .piece.fx-boost, .piece.fx-hurt, .piece.fx-arrive, .piece.fx-arrive-big, .app.fx-quake, .score.fx-take { animation: none; } }
+
+/* la carta posata vola dalla mano alla rovina sopra a tutto (effetti.js, place) */
+.app.fx-flying .board-wrap { position: relative; z-index: 6; }
+.app.fx-flying .lane, .app.fx-flying .slots { overflow: visible; }
+.piece.fx-fly { position: relative; z-index: 9; box-shadow: 0 18px 30px rgba(0, 0, 0, .6), 0 0 18px rgba(255, 220, 150, .35); }
