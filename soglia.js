@@ -4,8 +4,7 @@
  * SIGIL — la soglia: la sala del Custode (16 nov 2026).
  *
  * - In alto il medaglione del livello (l'arco d'ambra è l'esperienza), il nome, le tre ricchezze.
- * - Al centro LA FINESTRA: un'apertura dipinta (finestra di pietra, libro, vetrata o arazzo, a rotazione) e dentro
- *   una scena che cambia con la modalità scelta.
+ * - Al centro LA FINESTRA: un quadro in cornice intrecciata che cambia con la modalità scelta.
  *     Viaggio ... un ritaglio dell'atlante sulla prossima tappa (toccandolo si apre quella tappa)
  *     Duello .... la medaglia del grado, i punti, i duelli fatti
  *     Libera .... le carte del mazzo a ventaglio sul tavolo di pietra (toccandolo si apre la collezione)
@@ -297,41 +296,8 @@
     return { start: start, stop: stop, wake: wake, on: function () { return !!cur; } };
   })();
 
-  /* ───────── la finestra: quattro telai a rotazione, una scena per modalità ─────────
-   * Il telaio è un dipinto scontornato (art/ui/telaio-<nome>-<q|l>.webp, fatti da _fucina/telai.py): una finestra di
-   * pietra con la candela, un libro aperto, una vetrata in rovina, un arazzo. La scena sta sotto, ritagliata sulla forma
-   * dell'apertura (la maschera …-m.webp). Cambia a ogni apertura del gioco e dopo ogni partita, mai due volte la stessa;
-   * dalle Impostazioni se ne può fissare una. Misure: frazioni dell'immagine (w, h in px; a = apertura; f = "fuoco",
-   * la parte che deve entrare nello spazio; c = centro del foro; p = quanta parte del suo rettangolo occupa il foro). */
-  var TELAI = {
-    finestra: { nome: "Finestra", sfuma: true,
-      q: { w: 1270, h: 1280, a: [.3055, .1855, .6945, .8069], f: [.1643, .0525, .8357, .9743], c: [.4994, .5167], p: .848, fiamma: [.3707, .7188], t: [.3055, .1855, .6945, .70] },
-      l: { w: 1600, h: 1061, a: [.2185, .1636, .7843, .7915], f: [.1222, .0634, .8913, .9316], c: [.5001, .5098], p: .812, fiamma: [.2717, .7248], t: [.33, .1636, .7843, .7915] } },
-    libro: { nome: "Libro",
-      q: { w: 1280, h: 1204, a: [.1872, .1113, .8271, .7302], f: [-.0088, -.0101, 1.0093, 1.0087], c: [.5069, .42], p: .997, t: [.1872, .1113, .8271, .7302] },
-      l: { w: 1600, h: 1043, a: [.1514, .1149, .8558, .7411], f: [-.0088, -.0079, 1.0075, 1.0045], c: [.6996, .4279], p: .873,
-        pagine: [[.1514, .1149, .455, .7411], [.5438, .1149, .8558, .7411]], t: [.1514, .1149, .455, .7411] } },
-    vetrata: { nome: "Vetrata", sfuma: true,
-      q: { w: 1236, h: 1280, a: [.3306, .1836, .6684, .8022], f: [.2619, .12, .7381, .85], c: [.509, .5465], p: .525, t: [.3306, .40, .6684, .79] },
-      l: { w: 1600, h: 1043, a: [.302, .1587, .7012, .8848], f: [.2599, .1, .7421, .93], c: [.5269, .682], p: .358, t: [.32, .48, .69, .875] } },
-    arazzo: { nome: "Arazzo", pieghe: true,
-      q: { w: 1280, h: 1262, a: [.2165, .27, .783, .8165], f: [-.0125, .0625, 1.014, 1.0099], c: [.5001, .5426], p: .969, t: [.2165, .27, .783, .8165] },
-      l: { w: 1600, h: 1045, a: [.1783, .288, .8144, .7762], f: [-.0136, .0305, 1.0116, 1.0073], c: [.4966, .5332], p: .941, t: [.1783, .288, .8144, .7762] } }
-  };
-  var NOMI = Object.keys(TELAI), TV = "?v=1";
-  var fin = $("salaHero"), finVista = $("finVista"), finTela = $("finTela"), finForo = $("finForo"), finScene = $("finScene"),
-    finTelaio = $("finTelaio"), finLuce = $("finLuce"), finPieghe = $("finPieghe"), finPagina = $("finPagina"), finTesto = $("finTesto");
-  function leggi(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
-  function scrivi(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* navigazione privata */ } }
-  function altro(escluso) { var r = NOMI.filter(function (n) { return n !== escluso; }); return r[Math.floor(Math.random() * r.length)]; }
-  // la scelta: "giro" (a rotazione) oppure il nome di un telaio
-  var scelta = leggi("sigil-cornice"); if (scelta !== "giro" && !TELAI[scelta]) scelta = "giro";
-  var telaio = scelta !== "giro" ? scelta : altro(leggi("sigil-cornice-ultima"));
-  scrivi("sigil-cornice-ultima", telaio);
-  var prossimo = altro(telaio), forma = "q";
-  // la forma del foro adesso: rapporto, centro (frazioni del foro), pagine (libro largo)
-  var ASP = 1.1, FC = [.5, .5], PAG = null;
-
+  /* ───────── la finestra: una scena per modalità ───────── */
+  var fin = $("salaHero"), finScene = $("finScene"), finTesto = $("finTesto");
   function deckIds() {
     var s = G.save();
     var ids = (s.deck || []).filter(function (id) { return BY_ID[id]; });
@@ -343,8 +309,6 @@
     return m ? m[1] : "art/cards/" + id + ".jpg";
   }
   function el(cls, html) { var d = document.createElement("div"); d.className = cls; if (html) d.innerHTML = html; return d; }
-  function pc(v) { return (v * 100).toFixed(2) + "%"; }
-  function firma() { return telaio + forma + ASP.toFixed(2); }
 
   var SCENE = {
     /* Il Viaggio: l'atlante, sulla prossima tappa */
@@ -355,19 +319,19 @@
       var L = V.LEVELS[n - 1], ch = V.CHAPTERS[L.chapter], bk = V.BOOKS[L.book];
       var uv = function (p) { return [(p[0] + 54) / 2808, (p[1] + 44) / 2288]; };
       var node = function (i) { return [V.NODES[i].x, V.NODES[i].y]; };
-      // quanto è ingrandita la mappa rispetto al foro, in larghezza e in altezza: almeno 2,6 volte in tutti e due i versi
-      var MA = 2400 / 1792, Z = Math.max(3.2, 2.7 * MA / ASP), Zy = Z * ASP / MA, c = uv(node(n - 1));
-      // la tappa di oggi sta nel centro del foro, un po' in alto: sotto c'è la scritta
-      var tx = clamp(FC[0] / Z - c[0], -(1 - 1 / Z), 0), ty = clamp((FC[1] - .17) / Zy - c[1], -(1 - 1 / Zy), 0);
+      // quanto è ingrandita la mappa rispetto alla finestra, in larghezza e in altezza (la finestra può essere più alta)
+      var Z = ASP < 1.1 ? 4.2 : 3.4, Zy = Z * ASP / (2400 / 1792), c = uv(node(n - 1));
+      // la tappa sta un po' sopra il centro: sotto c'è la scritta
+      var tx = clamp(.5 / Z - c[0], -(1 - 1 / Z), 0), ty = clamp(.38 / Zy - c[1], -(1 - 1 / Zy), 0);
       var roads = "", pins = "";
       V.LEVELS.forEach(function (l, i) {
         if (l.book !== L.book) return;
         var p = uv(node(i));
-        if (Math.abs(p[0] - c[0]) > 1 / Z || Math.abs(p[1] - c[1]) > 1 / Zy) return; // lontana: fuori dal ritaglio
+        if (Math.abs(p[0] - c[0]) > .9 / Z || Math.abs(p[1] - c[1]) > .9 / Zy) return; // lontana: fuori dal ritaglio
         var st = (j.stars && j.stars[l.n]) || 0;
         var cls = l.n === n ? "qui" : l.n < n ? "fatta" : "poi";
         pins += '<i class="fin-tappa ' + cls + (l.boss ? " capo" : "") + '" style="left:' + (p[0] * 100).toFixed(3) + "%;top:" + (p[1] * 100).toFixed(3) + '%">' +
-          (st && l.n !== n ? "<em>" + "★★★".slice(0, st) + "</em>" : "") + "</i>";
+          (l.n === n ? "<b>" + l.n + "</b>" : "") + (st && l.n !== n ? '<em>' + "★★★".slice(0, st) + "</em>" : "") + "</i>";
         var next = V.LEVELS[i + 1];
         if (next && next.book === L.book) {
           var pts = [node(i)].concat(V.ROUTES[next.n] || [], [node(i + 1)]);
@@ -375,11 +339,11 @@
         }
       });
       var box = el("fin-atlante",
-        '<div class="fin-mappa" style="width:' + (Z * 100).toFixed(1) + "%;background-image:url('" + bk.map + "');transform:translate(" + (tx * 100).toFixed(3) + "%," + (ty * 100).toFixed(3) + '%)">' +
+        '<div class="fin-mappa" style="width:' + (Z * 100) + "%;background-image:url('" + bk.map + "');transform:translate(" + (tx * 100).toFixed(3) + "%," + (ty * 100).toFixed(3) + '%)">' +
         '<svg viewBox="-54 -44 2808 2288" preserveAspectRatio="none" aria-hidden="true">' + roads + "</svg>" + pins + "</div>");
       var stars = V.totalStars();
       return {
-        key: "v" + n + "." + stars + "." + (j.finished ? 1 : 0) + "." + firma(),
+        key: "v" + n + "." + stars + "." + (j.finished ? 1 : 0) + "." + ASP.toFixed(2),
         el: box,
         eyebrow: "Il Viaggio · tappa " + n + " di " + V.LEVELS.length,
         title: j.finished ? "Il Viaggio è compiuto" : ch.name,
@@ -395,19 +359,14 @@
       var r = G.save().pvp || {}, D = window.SigilDuello;
       var rk = D && D.rank ? D.rank(r.rating) : { tier: 2, label: "Candela III", pct: 0, toNext: null };
       var w = r.w || 0, l = r.l || 0, t = r.t || 0, played = w + l + t, pts = r.rating || 1000;
-      // la medaglia nel centro del foro, un po' in alto (sotto c'è la scritta); nel libro largo sta sulla pagina destra
-      // e i punti sulla sinistra; nei fori larghi i punti stanno accanto alla medaglia, in quelli stretti nella scritta
-      var largo = !PAG && ASP >= 1.3, mx = FC[0], my = PAG ? FC[1] : FC[1] - .14, px = null, py = null;
-      if (PAG) { px = (PAG[0][0] + PAG[0][2]) / 2; py = PAG[0][1] + (PAG[0][3] - PAG[0][1]) * .26; }
-      else if (largo) { mx = FC[0] - .13; my = FC[1] - .22; px = FC[0] + .15; py = my - .03; }
-      var barra = rk.toNext != null ? '<span class="xp-bar fin-barra"><i style="width:' + clamp(rk.pct, 3, 100) + '%"></i></span>' : "";
-      var box = el("fin-duello rank-" + rk.tier + (PAG ? " due" : largo ? " largo" : ""),
-        '<div class="fin-grado" style="left:' + pc(mx) + ";top:" + pc(my) + '"><span class="fin-alone"></span><img src="art/ui/medaglia.webp?v=1" alt="" draggable="false">' + (px == null ? barra : "") + "</div>" +
-        (px != null ? '<div class="fin-punti" style="left:' + pc(px) + ";top:" + pc(py) + '"><b>' + pts + "</b><small>punti</small>" + barra + "</div>" : ""));
+      var box = el("fin-duello rank-" + rk.tier,
+        '<div class="fin-grado"><span class="fin-alone"></span><img src="art/ui/medaglia.webp?v=1" alt="" draggable="false"></div>' +
+        '<div class="fin-punti"><b>' + pts + "</b><small>punti</small></div>" +
+        (rk.toNext != null ? '<span class="xp-bar fin-barra"><i style="width:' + clamp(rk.pct, 3, 100) + '%"></i></span>' : ""));
       return {
-        key: "d" + pts + "." + w + "." + l + "." + t + "." + firma(),
+        key: "d" + pts + "." + w + "." + l + "." + t,
         el: box,
-        eyebrow: "Duello tra Custodi" + (px == null ? " · " + pts + " punti" : ""),
+        eyebrow: "Duello tra Custodi",
         title: rk.label,
         sub: rk.toNext != null && rk.nextLabel ? "Mancano " + rk.toNext + " punti a " + rk.nextLabel : "Il grado più alto della valle",
         note: played ? w + (w === 1 ? " vinto" : " vinti") + " · " + l + (l === 1 ? " perso" : " persi") + " · " + t + " pari" : "Il primo duello decide da dove parti",
@@ -420,40 +379,22 @@
     free: function () {
       var s = G.save(), ids = deckIds().slice(0, 12);
       ids.sort(function (a, b) { return (BY_ID[a].cost - BY_ID[b].cost) || ((BY_ID[a].power || 0) - (BY_ID[b].power || 0)); });
-      // le carte si dispongono a file, quante ne chiede la forma del foro: una zona per pagina nel libro largo
-      var zone = PAG ? PAG.map(function (p) { return { x: p[0], y: p[1], w: p[2] - p[0], h: p[3] - p[1] }; }) : [{ x: 0, y: 0, w: 1, h: 1 }];
-      var perZona = Math.ceil(ids.length / zone.length), html = "", zi = 0;
-      zone.forEach(function (z, k) {
-        var mie = ids.slice(k * perZona, (k + 1) * perZona);
-        if (!mie.length) return;
-        var asp = ASP * z.w / z.h;                                   // rapporto della zona
-        // le carte stanno nella parte alta (sotto c'è la scritta): hz = quanta altezza della zona possono usare
-        var hz = PAG ? .66 : .58, a2 = asp / hz;
-        var file = a2 > 1.75 ? 1 : a2 > .7 ? 2 : 3;
-        file = Math.min(file, mie.length);
-        var per = Math.ceil(mie.length / file);
-        // larghezza della carta (in frazione della larghezza della zona): le carte si accavallano per il 38%
-        var cw = Math.min(.9 / (1 + .62 * (per - 1)), hz * .92 / (asp * 1.42 * (1 + .58 * (file - 1))));
-        var chh = cw * 1.42 * asp;                                   // altezza della carta in frazione dell'altezza della zona
-        // nei fori irregolari (la vetrata sfondata) le carte vanno dove il vetro manca davvero
-        var irregolare = TELAI[telaio][forma].p < .7;
-        var cy0 = (PAG ? hz / 2 + .03 : irregolare ? FC[1] - .1 : Math.min(FC[1] - .08, hz / 2 + .04)) - chh * .58 * (file - 1) / 2;
-        for (var r = 0; r < file; r++) {
-          var row = mie.slice(r * per, (r + 1) * per), m = row.length;
-          row.forEach(function (id, i) {
-            var t = m > 1 ? (i - (m - 1) / 2) / ((m - 1) / 2) : 0, c = BY_ID[id];
-            var x = z.x + z.w * ((PAG ? .5 : FC[0]) + t * cw * .62 * (m - 1) / 2), y = z.y + z.h * (cy0 + r * chh * .58 + t * t * chh * .06);
-            html += '<span class="fin-carta" data-house="' + esc(c.house || "misto") + '" style="left:' + pc(x) + ";top:" + pc(y) + ";width:" + pc(cw * z.w) +
-              ";--r:" + (t * (6 + 5 * (m > 3)) + ((i * 37 + r * 11 + zi * 5) % 5 - 2) * .6).toFixed(2) + "deg;z-index:" + (r * 20 + i) + '"><img src="' + esc(artSrc(id)) + '" alt="" draggable="false"><b>' + c.cost + "</b></span>";
-          });
-        }
-        zi++;
+      var half = Math.ceil(ids.length / 2), html = "", alta = ASP < 1.12;
+      var yBack = alta ? 25 : 24, yFront = alta ? 47 : 45, wBack = alta ? 21 : 15, wFront = alta ? 24 : 17;
+      [ids.slice(0, half), ids.slice(half)].forEach(function (row, r) {
+        var m = row.length;
+        row.forEach(function (id, k) {
+          var t = m > 1 ? (k - (m - 1) / 2) / ((m - 1) / 2) : 0;
+          var c = BY_ID[id];
+          html += '<span class="fin-carta' + (r ? " davanti" : "") + '" data-house="' + esc(c.house || "misto") + '" style="left:' + (50 + t * (r ? 33 : 30)).toFixed(2) + "%;top:" + ((r ? yFront : yBack) + t * t * (alta ? 3.5 : 5)).toFixed(2) + "%;width:" + (r ? wFront : wBack) +
+            "%;--r:" + (t * (r ? 13 : 11) + ((k * 37 + r * 11) % 5 - 2) * .6).toFixed(2) + "deg;z-index:" + (r * 10 + k) + '"><img src="' + esc(artSrc(id)) + '" alt="" draggable="false" loading="lazy"><b>' + c.cost + "</b></span>";
+        });
       });
       var d = s.decks && s.decks[s.activeDeck || 0];
       var name = d && d.name ? d.name : "Mazzo " + ((s.activeDeck || 0) + 1);
       var avg = ids.length ? ids.reduce(function (a, id) { return a + BY_ID[id].cost; }, 0) / ids.length : 0;
       return {
-        key: "f" + (s.activeDeck || 0) + "." + name + "." + ids.join(",") + "." + firma(),
+        key: "f" + (s.activeDeck || 0) + "." + name + "." + ids.join(",") + "." + (alta ? 1 : 0),
         el: el("fin-mazzo", '<div class="fin-ventaglio">' + html + "</div>"),
         eyebrow: "Partita libera",
         title: name,
@@ -482,7 +423,7 @@
         return (done ? "Stanotte: " + (done.winner === "you" ? "retta" : done.winner === "tie" ? "in bilico" : "caduta") + " · la prossima notte tra " : "La prossima notte tra ") + left();
       }
       return {
-        key: "n" + today + "." + hero.id + "." + (done ? done.winner : "") + "." + firma(),
+        key: "n" + today + "." + hero.id + "." + (done ? done.winner : ""),
         el: box,
         eyebrow: "Veglia di stanotte · " + ($("dailyLabel").textContent || today),
         title: hero.name,
@@ -518,20 +459,18 @@
     var old = cur;
     cur = { mode: m, layer: layer, sc: sc, on: false };
     fin.setAttribute("data-mode", m);
-    var liscio = !(instant || REDUCED || !old);
     if (old) {
       if (old.on && old.sc.stop) old.sc.stop();
       old.layer.classList.add("via");
       var gone = old.layer;
-      setTimeout(function () { if (gone.parentNode) gone.parentNode.removeChild(gone); }, liscio ? 560 : 0);
+      setTimeout(function () { if (gone.parentNode) gone.parentNode.removeChild(gone); }, instant || REDUCED ? 0 : 560);
     }
     finScene.appendChild(layer);
-    if (!liscio) { layer.classList.add("su"); paintText(sc); }
+    if (instant || REDUCED || !old) { layer.classList.add("su"); paintText(sc); }
     else {
       void layer.offsetWidth; layer.classList.add("su");
       finTesto.classList.add("cambia");
       setTimeout(function () { if (cur && cur.sc === sc) paintText(sc); finTesto.classList.remove("cambia"); }, 200);
-      if (telaio === "libro") { finPagina.classList.remove("gira"); void finPagina.offsetWidth; finPagina.classList.add("gira"); } // nel libro si gira pagina
     }
     wake();
   }
@@ -550,89 +489,27 @@
     if (k !== cur.sc.key) show(cur.mode, true); else wake();
   }
   function act() { if (cur && cur.sc.act) cur.sc.act(); }
-
-  /* la misura: il "fuoco" del telaio entra nello spazio tra la scritta e le lastre; tra la forma quadrata e quella
-     larga vince quella che dà il foro più grande. Quello che deborda (muro, pietre) sfuma ai bordi. */
-  function misura(T, W, H) {
-    var fw = (T.f[2] - T.f[0]) * T.w, fh = (T.f[3] - T.f[1]) * T.h, k = Math.min(W / fw, H / fh);
-    return { k: k, area: (T.a[2] - T.a[0]) * T.w * k * (T.a[3] - T.a[1]) * T.h * k * T.p };
-  }
+  // la misura della finestra: riempie lo spazio tra la scritta e le lastre, da quasi quadrata (telefono in piedi)
+  // a panoramica come i dipinti delle rovine (computer)
+  var ASP = 1.34;
   function layout() {
-    var med = document.querySelector(".hud-med");
+    var stage = fin.parentNode, med = document.querySelector(".hud-med");
     var s = med && med.offsetWidth ? med.offsetWidth / 60 : 1;
-    var W = fin.clientWidth, H = fin.clientHeight;
-    if (W < 80 || H < 80) return;
-    var Tn = TELAI[telaio], orlo = Math.round(22 * s), pad = Tn.sfuma ? 0 : Math.round(8 * s);
-    var mq = misura(Tn.q, W - 2 * pad, H - 2 * pad), ml = misura(Tn.l, W - 2 * pad, H - 2 * pad);
-    var nuova = ml.area > mq.area * (forma === "l" ? .92 : 1.08) ? "l" : "q";
-    var T = Tn[nuova], k = (nuova === "l" ? ml : mq).k, tw = T.w * k, th = T.h * k;
-    // la tela (l'immagine intera) dentro la vista (lo spazio più un orlo che sfuma)
-    finVista.style.inset = -orlo + "px";
-    finVista.style.setProperty("--orlo", Math.round(orlo * 1.7) + "px");
-    finTela.style.width = tw.toFixed(1) + "px";
-    finTela.style.height = th.toFixed(1) + "px";
-    finTela.style.left = (orlo + W / 2 - (T.f[0] + T.f[2]) / 2 * tw).toFixed(1) + "px";
-    finTela.style.top = (orlo + H / 2 - (T.f[1] + T.f[3]) / 2 * th).toFixed(1) + "px";
-    var sw = (T.a[2] - T.a[0]) * tw, sh = (T.a[3] - T.a[1]) * th;
-    [finScene, finPieghe].forEach(function (e) { e.style.left = pc(T.a[0]); e.style.top = pc(T.a[1]); e.style.width = pc(T.a[2] - T.a[0]); e.style.height = pc(T.a[3] - T.a[1]); });
-    fin.style.setProperty("--fw", sw.toFixed(1) + "px");
-    fin.style.setProperty("--fh", sh.toFixed(1) + "px");
-    fin.style.setProperty("--tw", tw.toFixed(1) + "px");
-    var base = "art/ui/telaio-" + telaio + "-" + nuova;
-    if (finTelaio.getAttribute("data-src") !== base) {
-      finTelaio.setAttribute("data-src", base);
-      finTelaio.src = base + ".webp" + TV;
-      finForo.style.webkitMaskImage = finForo.style.maskImage = 'url("' + base + "-m.webp" + TV + '")';
-      finPieghe.style.backgroundImage = Tn.pieghe ? 'url("' + base + "-o.webp" + TV + '")' : "";
-      finLuce.style.webkitMaskImage = finLuce.style.maskImage = telaio === "vetrata" ? 'url("' + base + "-v.webp" + TV + '")' : "";
-    }
-    fin.setAttribute("data-telaio", telaio);
-    fin.setAttribute("data-forma", nuova);
-    finVista.classList.toggle("sfuma", !!Tn.sfuma);
-    if (T.fiamma) { finLuce.style.setProperty("--lx", pc(T.fiamma[0])); finLuce.style.setProperty("--ly", pc(T.fiamma[1])); }
-    else { finLuce.style.setProperty("--lx", pc((T.a[0] + T.a[2]) / 2)); finLuce.style.setProperty("--ly", pc((T.a[1] + T.a[3]) / 2)); }
-    // la scritta: in basso nel foro (fuori dalla vista, così non sfuma), in coordinate della finestra
-    var L0 = orlo + W / 2 - (T.f[0] + T.f[2]) / 2 * tw - orlo, T0 = orlo + H / 2 - (T.f[1] + T.f[3]) / 2 * th - orlo, tt = T.t || T.a;
-    finTesto.style.left = (L0 + tt[0] * tw).toFixed(1) + "px";
-    finTesto.style.top = (T0 + tt[1] * th).toFixed(1) + "px";
-    finTesto.style.width = ((tt[2] - tt[0]) * tw).toFixed(1) + "px";
-    finTesto.style.height = ((tt[3] - tt[1]) * th).toFixed(1) + "px";
-    finTesto.style.setProperty("--tt", ((tt[2] - tt[0]) * tw).toFixed(1) + "px");
-    // dove si gira la pagina del libro: la pagina destra (o la metà destra del foro)
-    var pg = T.pagine ? T.pagine[1] : [(T.a[0] + T.a[2]) / 2, T.a[1], T.a[2], T.a[3]];
-    finPagina.style.left = pc(pg[0]); finPagina.style.top = pc(pg[1]); finPagina.style.width = pc(pg[2] - pg[0]); finPagina.style.height = pc(pg[3] - pg[1]);
-    // la forma del foro, per le scene
-    var asp = sw / sh, aw = T.a[2] - T.a[0], ah = T.a[3] - T.a[1];
-    var fc = [(T.c[0] - T.a[0]) / aw, (T.c[1] - T.a[1]) / ah];
-    var pag = T.pagine ? T.pagine.map(function (p) { return [(p[0] - T.a[0]) / aw, (p[1] - T.a[1]) / ah, (p[2] - T.a[0]) / aw, (p[3] - T.a[1]) / ah]; }) : null;
-    var cambia = nuova !== forma || Math.abs(asp - ASP) > .03;
-    forma = nuova; ASP = asp; FC = fc; PAG = pag;
-    if (cambia && cur) refresh();
+    var W = stage.clientWidth, H = stage.clientHeight;
+    if (!W || !H) return;
+    var band = 36 * s, aw = Math.min(W * .97 - band - 16 * s, 680 * s), ah = H - band - 24 * s;
+    if (aw < 120 || ah < 90) return;
+    var asp = clamp(aw / ah, .9, 1.34);
+    var iw = Math.floor(Math.min(aw, ah * asp)), ih = Math.floor(iw / asp);
+    fin.style.width = Math.round(iw + band) + "px";
+    fin.style.height = Math.round(ih + band) + "px";
+    fin.style.setProperty("--fw", iw + "px");
+    fin.style.setProperty("--fh", ih + "px");
+    fin.style.setProperty("--fk", s + "px");
+    if (Math.abs(asp - ASP) > .03) { ASP = asp; if (cur) refresh(); }
   }
-  if (window.ResizeObserver) new ResizeObserver(layout).observe(fin);
+  if (window.ResizeObserver) new ResizeObserver(layout).observe(fin.parentNode);
   window.addEventListener("resize", layout);
-
-  // la rotazione: un telaio diverso a ogni apertura e dopo ogni partita; il prossimo è già caricato
-  function precarica(nome) { ["q", "l"].forEach(function (f) { if (f === forma) { new Image().src = "art/ui/telaio-" + nome + "-" + f + ".webp" + TV; new Image().src = "art/ui/telaio-" + nome + "-" + f + "-m.webp" + TV; } }); }
-  function metti(nome, senzaSalvare) {
-    if (!TELAI[nome]) return;
-    var cambia = nome !== telaio;
-    telaio = nome;
-    if (!senzaSalvare) scrivi("sigil-cornice-ultima", nome);
-    prossimo = altro(nome);
-    layout();
-    if (cambia && cur && !menu.hidden) show(cur.mode, true);
-    setTimeout(function () { precarica(prossimo); }, 1200);
-  }
-  function ruota() { if (scelta === "giro") metti(prossimo); }
-  function scegli(v) {
-    scelta = v === "giro" || !TELAI[v] ? "giro" : v;
-    scrivi("sigil-cornice", scelta);
-    if (scelta !== "giro") metti(scelta);
-  }
-  var giocato = false;
-  new MutationObserver(function () { if (document.getElementById("app").classList.contains("playing")) giocato = true; })
-    .observe(document.getElementById("app"), { attributes: true, attributeFilter: ["class"] });
 
   // tocco (o Invio) apre; un colpo di dito di lato cambia modalità
   var drag = null, swiped = false;
@@ -650,7 +527,6 @@
   fin.addEventListener("pointercancel", function () { drag = null; });
   fin.addEventListener("click", function (e) { if (swiped) { swiped = false; e.preventDefault(); return; } act(); });
   fin.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); act(); } });
-  $("finTesto").addEventListener("click", act);
   $("heroDeck").addEventListener("click", function () { $("deckButton").click(); });
 
   /* ───────── le modalità e «Gioca» ───────── */
@@ -704,7 +580,7 @@
   function sync() {
     var on = !menu.hidden;
     root.classList.toggle("sala-on", on);
-    if (on) { if (giocato) { giocato = false; ruota(); } layout(); if (scene) scene.kick(); luogo.wake(); refresh(); }
+    if (on) { layout(); if (scene) scene.kick(); luogo.wake(); refresh(); }
     else { closeMore(); wake(); }
   }
   new MutationObserver(sync).observe(menu, { attributes: true, attributeFilter: ["hidden"] });
@@ -719,9 +595,5 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
   window.addEventListener("load", layout);
 
-  setTimeout(function () { precarica(prossimo); }, 2500);
-  window.SigilSoglia = { mode: function () { return mode; }, setMode: setMode, refresh: paintHud,
-    // le cornici della finestra: per le Impostazioni (e per le prove: metti("libro"))
-    telai: function () { return NOMI.map(function (n) { return { id: n, nome: TELAI[n].nome }; }); },
-    cornice: function () { return scelta; }, scegliCornice: scegli, telaio: function () { return telaio; }, metti: function (n) { metti(n, true); } };
+  window.SigilSoglia = { mode: function () { return mode; }, setMode: setMode, refresh: paintHud };
 })();
